@@ -2,15 +2,21 @@ import { Request, Response } from 'express';
 import { getSql, runSql } from '../config/db.js';
 import { Payment, Transaction } from '../models/types.js';
 import { sendSuccess, sendError } from '../utils/response.js';
-import { getPaymentProvider } from '../providers/index.js';
+import { getPaymentProviderByCode } from '../providers/index.js';
 import { validateStateTransition, getInvalidTransitionMessage } from '../utils/paymentStateMachine.js';
 
 export async function handleMockWebhook(req: Request, res: Response) {
   try {
     const payload = req.body;
-    const provider = getPaymentProvider('mock');
+    const provider = await getPaymentProviderByCode('mock');
 
-    const webhookResult = await provider.handleWebhook(payload, req.headers);
+    let webhookResult;
+    try {
+      webhookResult = await provider.handleWebhook(payload, req.headers);
+    } catch (err: any) {
+      console.error('Provider failed to handle mock webhook:', err);
+      return sendError(res, err.message || 'Provider failed to process webhook.', 400);
+    }
 
     if (!webhookResult.isValid || !webhookResult.providerReference) {
       return sendError(res, 'Webhook payload tidak valid.', 400);
@@ -96,8 +102,15 @@ export async function handleMockWebhook(req: Request, res: Response) {
 
 export async function handleDanaWebhook(req: Request, res: Response) {
   try {
-    const provider = getPaymentProvider('dana');
-    const webhookResult = await provider.handleWebhook(req.body, req.headers);
+    const provider = await getPaymentProviderByCode('dana');
+
+    let webhookResult;
+    try {
+      webhookResult = await provider.handleWebhook(req.body, req.headers);
+    } catch (err: any) {
+      console.error('Provider failed to handle DANA webhook:', err);
+      return sendError(res, err.message || 'Provider failed to process webhook.', 400);
+    }
 
     return sendSuccess(
       res,

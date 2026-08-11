@@ -5,6 +5,7 @@ import {
   PaymentStatusResult,
   WebhookResult,
 } from '../PaymentProvider.js';
+import { ProviderError } from '../../utils/errors.js';
 
 export class MockPaymentProvider implements PaymentProvider {
   code = 'mock';
@@ -61,7 +62,7 @@ export class MockPaymentProvider implements PaymentProvider {
     const { reference, status, paid_at } = payload || {};
 
     if (!reference) {
-      throw new Error('Webhook mock tidak valid: reference tidak ditemukan.');
+      throw new ProviderError(this.code, 'Webhook mock tidak valid: reference tidak ditemukan.', 400);
     }
 
     const mappedStatus = ['PAID', 'FAILED', 'EXPIRED', 'CANCELLED', 'REFUNDED'].includes(status)

@@ -4,7 +4,7 @@ import { querySql, getSql, runSql } from '../config/db.js';
 import { Transaction, Payment, PaymentLog } from '../models/types.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 import { AuthenticatedRequest } from '../middleware/auth.js';
-import { getPaymentProvider } from '../providers/index.js';
+import { getActivePaymentProvider } from '../providers/index.js';
 import { validateStateTransition, getInvalidTransitionMessage } from '../utils/paymentStateMachine.js';
 
 const createPaymentSchema = z.object({
@@ -72,16 +72,30 @@ export async function createPayment(req: AuthenticatedRequest, res: Response) {
     const transactionId = txInsert.lastInsertRowid;
 
     // Execute Payment Provider Abstraction
-    const provider = getPaymentProvider();
-    const providerResult = await provider.createPayment({
-      transactionId,
-      invoiceNumber,
-      amount,
-      customerName,
-      customerPhone,
-      description,
-      expiryMinutes,
-    });
+    const provider = await getActivePaymentProvider();
+    let providerResult;
+    try {
+      providerResult = await provider.createPayment({
+        transactionId,
+        invoiceNumber,
+        amount,
+        customerName,
+        customerPhone,
+        description,
+        expiryMinutes,
+      });
+    } catch (err: any) {
+      console.error('Provider failed to create payment:', err);
+      // Fail the transaction safely to avoid orphans
+      await runSql(`UPDATE transactions SET status = 'FAILED', updated_at = ? WHERE id = ?`, [nowStr, transactionId]);
+      return sendError(res, err.message || 'Payment provider failed to process the transaction.', 500);
+    }
+
+    // Defensive check: Ensure no duplicate payment exists for this transaction
+    const existingPayment = await getSql<{ id: number }>('SELECT id FROM payments WHERE transaction_id = ?', [transactionId]);
+    if (existingPayment) {
+      return sendError(res, 'Payment already exists for this transaction.', 400);
+    }
 
     // Get Provider ID
     const providerModel = await getSql<{ id: number }>('SELECT id FROM payment_providers WHERE code = ?', [provider.code]);
