@@ -3,6 +3,7 @@ import { getSql, runSql } from '../config/db.js';
 import { Payment, Transaction } from '../models/types.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 import { getPaymentProvider } from '../providers/index.js';
+import { validateStateTransition, getInvalidTransitionMessage } from '../utils/paymentStateMachine.js';
 
 export async function handleMockWebhook(req: Request, res: Response) {
   try {
@@ -39,6 +40,14 @@ export async function handleMockWebhook(req: Request, res: Response) {
           idempotent: true,
         },
         'Webhook telah diproses sebelumnya (Idempotent call).'
+      );
+    }
+
+    if (!validateStateTransition(payment.status, webhookResult.status)) {
+      return sendError(
+        res,
+        getInvalidTransitionMessage(payment.status, webhookResult.status),
+        400
       );
     }
 

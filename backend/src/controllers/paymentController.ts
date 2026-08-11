@@ -5,6 +5,7 @@ import { Transaction, Payment, PaymentLog } from '../models/types.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 import { AuthenticatedRequest } from '../middleware/auth.js';
 import { getPaymentProvider } from '../providers/index.js';
+import { validateStateTransition, getInvalidTransitionMessage } from '../utils/paymentStateMachine.js';
 
 const createPaymentSchema = z.object({
   customerName: z.string().min(1, 'Nama Customer wajib diisi'),
@@ -153,11 +154,24 @@ export async function getPaymentDetail(req: AuthenticatedRequest, res: Response)
     const expiredAt = new Date(transaction.expired_at.replace(' ', 'T') + 'Z');
     let currentStatus = transaction.status;
 
-    if (currentStatus === 'PENDING' && now > expiredAt) {
+    if (now > expiredAt && validateStateTransition(currentStatus, 'EXPIRED')) {
       currentStatus = 'EXPIRED';
       const nowStr = now.toISOString().replace('T', ' ').substring(0, 19);
       await runSql(`UPDATE transactions SET status = 'EXPIRED', updated_at = ? WHERE id = ?`, [nowStr, transaction.id]);
       await runSql(`UPDATE payments SET status = 'EXPIRED', updated_at = ? WHERE transaction_id = ?`, [nowStr, transaction.id]);
+
+      if (transaction.payment_id) {
+        await runSql(`
+          INSERT INTO payment_logs (payment_id, event_type, reference, payload, created_at)
+          VALUES (?, ?, ?, ?, ?)
+        `, [
+          transaction.payment_id,
+          'AUTO_EXPIRED',
+          transaction.provider_reference || 'N/A',
+          JSON.stringify({ note: 'Transaction automatically expired by system check' }),
+          nowStr
+        ]);
+      }
       transaction.status = 'EXPIRED';
     }
 
@@ -202,8 +216,8 @@ export async function simulatePayment(req: AuthenticatedRequest, res: Response) 
       return sendError(res, 'Data pembayaran tidak ditemukan.', 404);
     }
 
-    if (transaction.status !== 'PENDING') {
-      return sendError(res, `Simulasi gagal: Status transaksi saat ini sudah '${transaction.status}'.`, 400);
+    if (!validateStateTransition(transaction.status, targetStatus)) {
+      return sendError(res, getInvalidTransitionMessage(transaction.status, targetStatus), 400);
     }
 
     const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
