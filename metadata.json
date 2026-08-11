@@ -1,0 +1,6 @@
+{
+  "name": "ADMS QRIS INTERNAL",
+  "description": "Sistem Manajemen Transaksi Pembayaran QRIS Internal Kantor",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

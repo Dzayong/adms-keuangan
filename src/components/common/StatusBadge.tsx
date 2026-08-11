@@ -1,0 +1,44 @@
+import React from 'react';
+import { TransactionStatus } from '../../types/index.js';
+
+interface Props {
+  status: TransactionStatus;
+  size?: 'sm' | 'md' | 'lg';
+}
+
+export const StatusBadge: React.FC<Props> = ({ status, size = 'md' }) => {
+  const getBadgeStyle = () => {
+    switch (status) {
+      case 'PAID':
+        return 'bg-green-100 text-green-700 border-green-200';
+      case 'PENDING':
+        return 'bg-yellow-100 text-yellow-700 border-yellow-200 animate-pulse';
+      case 'FAILED':
+        return 'bg-red-100 text-red-700 border-red-200';
+      case 'EXPIRED':
+        return 'bg-slate-100 text-slate-600 border-slate-300';
+      case 'CANCELLED':
+        return 'bg-rose-100 text-rose-800 border-rose-200';
+      case 'REFUNDED':
+        return 'bg-purple-100 text-purple-700 border-purple-200';
+      default:
+        return 'bg-slate-100 text-slate-700 border-slate-200';
+    }
+  };
+
+  const sizeClass =
+    size === 'sm'
+      ? 'px-2 py-0.5 text-[10px]'
+      : size === 'lg'
+      ? 'px-3 py-1 text-xs'
+      : 'px-2 py-0.5 text-[10px]';
+
+  return (
+    <span
+      className={`inline-block font-mono font-bold uppercase rounded border ${sizeClass} ${getBadgeStyle()}`}
+    >
+      {status}
+    </span>
+  );
+};
+
