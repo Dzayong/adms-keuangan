@@ -59,6 +59,7 @@ async function initSchemaAndSeed(db: Database) {
       status TEXT NOT NULL DEFAULT 'PENDING',
       expired_at TEXT NOT NULL,
       paid_at TEXT,
+      idempotency_key TEXT UNIQUE,
       created_by INTEGER NOT NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
@@ -224,4 +225,19 @@ export async function runSql(sql: string, params: any[] = []): Promise<{ lastIns
   
   saveDb();
   return { lastInsertRowid, changes };
+}
+
+export async function runTransaction(queries: { sql: string; params?: any[] }[]): Promise<void> {
+  const db = await getDb();
+  try {
+    db.exec('BEGIN TRANSACTION');
+    for (const query of queries) {
+      db.run(query.sql, query.params || []);
+    }
+    db.exec('COMMIT');
+    saveDb();
+  } catch (error) {
+    db.exec('ROLLBACK');
+    throw error;
+  }
 }

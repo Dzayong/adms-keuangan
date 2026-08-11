@@ -59,15 +59,40 @@ export async function createPayment(req: AuthenticatedRequest, res: Response) {
     const nowStr = now.toISOString().replace('T', ' ').substring(0, 19);
     const expiredAtStr = expiredAtDate.toISOString().replace('T', ' ').substring(0, 19);
 
+    // Check Idempotency Key
+    const idempotencyKey = req.headers['x-idempotency-key'] as string | undefined;
+    if (idempotencyKey) {
+      const existingTx = await getSql<Transaction>('SELECT * FROM transactions WHERE idempotency_key = ?', [idempotencyKey]);
+      if (existingTx) {
+        // Return existing transaction and payment instead of creating a new one
+        const existingPayment = await getSql<Payment>('SELECT * FROM payments WHERE transaction_id = ?', [existingTx.id]);
+        if (existingPayment) {
+          return sendSuccess(res, {
+            transactionId: existingTx.id,
+            paymentId: existingPayment.id,
+            invoiceNumber: existingTx.invoice_number,
+            amount: existingTx.amount,
+            customerName: existingTx.customer_name,
+            customerPhone: existingTx.customer_phone,
+            description: existingTx.description,
+            status: existingTx.status,
+            expiredAt: existingTx.expired_at,
+            qrContent: existingPayment.qr_content,
+            providerReference: existingPayment.provider_reference,
+          }, 'Idempotent request: returning existing transaction.', 200);
+        }
+      }
+    }
+
     // Generate unique invoice number from backend
     const invoiceNumber = await generateUniqueInvoiceNumber();
 
     // Insert Transaction
     const txInsert = await runSql(`
-      INSERT INTO transactions 
-      (invoice_number, customer_name, customer_phone, amount, description, status, expired_at, created_by, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, 'PENDING', ?, ?, ?, ?)
-    `, [invoiceNumber, customerName, customerPhone, amount, description, expiredAtStr, userId, nowStr, nowStr]);
+      INSERT INTO transactions
+      (invoice_number, customer_name, customer_phone, amount, description, status, expired_at, idempotency_key, created_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, 'PENDING', ?, ?, ?, ?, ?)
+    `, [invoiceNumber, customerName, customerPhone, amount, description, expiredAtStr, idempotencyKey || null, userId, nowStr, nowStr]);
 
     const transactionId = txInsert.lastInsertRowid;
 
@@ -86,8 +111,23 @@ export async function createPayment(req: AuthenticatedRequest, res: Response) {
       });
     } catch (err: any) {
       console.error('Provider failed to create payment:', err);
-      // Fail the transaction safely to avoid orphans
+      // Create a FAILED payment record and PROVIDER_ERROR log to accurately record the failure
+      const providerModel = await getSql<{ id: number }>('SELECT id FROM payment_providers WHERE code = ?', [provider.code]);
+      const providerId = providerModel?.id || 1;
+
       await runSql(`UPDATE transactions SET status = 'FAILED', updated_at = ? WHERE id = ?`, [nowStr, transactionId]);
+
+      const failedPaymentInsert = await runSql(`
+        INSERT INTO payments
+        (transaction_id, provider_id, provider_reference, qr_content, payment_method, status, created_at, updated_at)
+        VALUES (?, ?, 'FAILED', '', 'QRIS', 'FAILED', ?, ?)
+      `, [transactionId, providerId, nowStr, nowStr]);
+
+      await runSql(`
+        INSERT INTO payment_logs (payment_id, event_type, reference, payload, created_at)
+        VALUES (?, 'PROVIDER_ERROR', 'FAILED', ?, ?)
+      `, [failedPaymentInsert.lastInsertRowid, JSON.stringify({ error: err.message || 'Unknown provider error' }), nowStr]);
+
       return sendError(res, err.message || 'Payment provider failed to process the transaction.', 500);
     }
 
@@ -103,7 +143,7 @@ export async function createPayment(req: AuthenticatedRequest, res: Response) {
 
     // Insert Payment Record
     const paymentInsert = await runSql(`
-      INSERT INTO payments 
+      INSERT INTO payments
       (transaction_id, provider_id, provider_reference, qr_content, payment_method, status, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, 'PENDING', ?, ?)
     `, [transactionId, providerId, providerResult.providerReference, providerResult.qrContent, providerResult.paymentMethod, nowStr, nowStr]);
@@ -144,8 +184,8 @@ export async function getPaymentDetail(req: AuthenticatedRequest, res: Response)
     }
 
     const transaction = await getSql<Transaction>(`
-      SELECT 
-        t.*, 
+      SELECT
+        t.*,
         u.name as creator_name,
         p.id as payment_id,
         p.qr_content,
@@ -171,21 +211,27 @@ export async function getPaymentDetail(req: AuthenticatedRequest, res: Response)
     if (now > expiredAt && validateStateTransition(currentStatus, 'EXPIRED')) {
       currentStatus = 'EXPIRED';
       const nowStr = now.toISOString().replace('T', ' ').substring(0, 19);
-      await runSql(`UPDATE transactions SET status = 'EXPIRED', updated_at = ? WHERE id = ?`, [nowStr, transaction.id]);
-      await runSql(`UPDATE payments SET status = 'EXPIRED', updated_at = ? WHERE transaction_id = ?`, [nowStr, transaction.id]);
+
+      const queries = [
+        { sql: `UPDATE transactions SET status = 'EXPIRED', updated_at = ? WHERE id = ?`, params: [nowStr, transaction.id] },
+        { sql: `UPDATE payments SET status = 'EXPIRED', updated_at = ? WHERE transaction_id = ?`, params: [nowStr, transaction.id] }
+      ];
 
       if (transaction.payment_id) {
-        await runSql(`
-          INSERT INTO payment_logs (payment_id, event_type, reference, payload, created_at)
-          VALUES (?, ?, ?, ?, ?)
-        `, [
-          transaction.payment_id,
-          'AUTO_EXPIRED',
-          transaction.provider_reference || 'N/A',
-          JSON.stringify({ note: 'Transaction automatically expired by system check' }),
-          nowStr
-        ]);
+        queries.push({
+          sql: `INSERT INTO payment_logs (payment_id, event_type, reference, payload, created_at) VALUES (?, ?, ?, ?, ?)`,
+          params: [
+            transaction.payment_id,
+            'AUTO_EXPIRED',
+            transaction.provider_reference || 'N/A',
+            JSON.stringify({ note: 'Transaction automatically expired by system check' }),
+            nowStr
+          ]
+        });
       }
+
+      const { runTransaction } = await import('../config/db.js');
+      await runTransaction(queries);
       transaction.status = 'EXPIRED';
     }
 

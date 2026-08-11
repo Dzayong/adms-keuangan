@@ -50,40 +50,44 @@ export async function handleMockWebhook(req: Request, res: Response) {
     }
 
     if (!validateStateTransition(payment.status, webhookResult.status)) {
-      return sendError(
+      return sendSuccess(
         res,
-        getInvalidTransitionMessage(payment.status, webhookResult.status),
-        400
+        {
+          reference: webhookResult.providerReference,
+          status: payment.status,
+          ignored: true
+        },
+        `Webhook diabaikan: ${getInvalidTransitionMessage(payment.status, webhookResult.status)}`
       );
     }
 
     const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
     const paidAtStr = webhookResult.status === 'PAID' ? webhookResult.paidAt || nowStr : null;
 
-    // Update Payment
-    await runSql(
-      'UPDATE payments SET status = ?, paid_at = ?, updated_at = ? WHERE id = ?',
-      [webhookResult.status, paidAtStr, nowStr, payment.id]
-    );
+    const queries = [
+      {
+        sql: 'UPDATE payments SET status = ?, paid_at = ?, updated_at = ? WHERE id = ?',
+        params: [webhookResult.status, paidAtStr, nowStr, payment.id]
+      },
+      {
+        sql: 'UPDATE transactions SET status = ?, paid_at = ?, updated_at = ? WHERE id = ?',
+        params: [webhookResult.status, paidAtStr, nowStr, payment.transaction_id]
+      },
+      {
+        sql: `INSERT INTO payment_logs (payment_id, event_type, reference, payload, created_at)
+              VALUES (?, ?, ?, ?, ?)`,
+        params: [
+          payment.id,
+          webhookResult.eventType,
+          webhookResult.providerReference,
+          JSON.stringify(webhookResult.rawPayload),
+          nowStr,
+        ]
+      }
+    ];
 
-    // Update Transaction
-    await runSql(
-      'UPDATE transactions SET status = ?, paid_at = ?, updated_at = ? WHERE id = ?',
-      [webhookResult.status, paidAtStr, nowStr, payment.transaction_id]
-    );
-
-    // Audit Payment Log
-    await runSql(
-      `INSERT INTO payment_logs (payment_id, event_type, reference, payload, created_at)
-       VALUES (?, ?, ?, ?, ?)`,
-      [
-        payment.id,
-        webhookResult.eventType,
-        webhookResult.providerReference,
-        JSON.stringify(webhookResult.rawPayload),
-        nowStr,
-      ]
-    );
+    const { runTransaction } = await import('../config/db.js');
+    await runTransaction(queries);
 
     return sendSuccess(
       res,

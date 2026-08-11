@@ -39,6 +39,7 @@ export interface Transaction {
   status: TransactionStatus;
   expired_at: string;
   paid_at?: string | null;
+  idempotency_key?: string;
   created_by: number;
   created_at: string;
   updated_at: string;
