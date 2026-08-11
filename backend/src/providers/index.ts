@@ -5,8 +5,7 @@ import { ENV } from '../config/env.js';
 import { getSql, querySql } from '../config/db.js';
 
 export async function getActivePaymentProvider(): Promise<PaymentProvider> {
-  const activeProvider = await getSql<{ code: string }>('SELECT code FROM payment_providers WHERE is_active = 1 LIMIT 1');
-  const code = activeProvider?.code || ENV.PAYMENT_PROVIDER || 'mock';
+  const code = ENV.PAYMENT_PROVIDER || 'mock';
   return getPaymentProviderByCode(code);
 }
 
@@ -22,7 +21,11 @@ export async function getPaymentProviderByCode(code: string): Promise<PaymentPro
     );
   }
 
-  return new MockPaymentProvider();
+  if (code === 'mock') {
+    return new MockPaymentProvider();
+  }
+
+  throw new Error(`Invalid payment provider configuration: ${code}`);
 }
 
 export * from './PaymentProvider.js';
