@@ -10,8 +10,11 @@ export async function getSettings(req: AuthenticatedRequest, res: Response) {
 
     const settingsMap: Record<string, string> = {};
     for (const r of rows) {
-      // Hide secret keys in response if present
-      if (r.key.includes('secret') || r.key.includes('password')) {
+      const isSensitive = r.key.includes('secret') || r.key.includes('password');
+      if (req.user?.role !== 'ADMIN' && isSensitive) {
+        continue; // Don't even send masked sensitive keys to operators
+      }
+      if (isSensitive) {
         settingsMap[r.key] = r.value ? '********' : 'Not configured';
       } else {
         settingsMap[r.key] = r.value;

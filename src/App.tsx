@@ -7,8 +7,11 @@ import { CreatePaymentPage } from './pages/CreatePaymentPage.js';
 import { PaymentDetailPage } from './pages/PaymentDetailPage.js';
 import { ReportsPage } from './pages/ReportsPage.js';
 import { SettingsPage } from './pages/SettingsPage.js';
+import { UsersPage } from './pages/UsersPage.js';
+import { ProvidersPage } from './pages/ProvidersPage.js';
 import { Navbar } from './components/layout/Navbar.js';
 import { Sidebar } from './components/layout/Sidebar.js';
+import { AccessDenied } from './components/ui/AccessDenied.js';
 import { RefreshCw } from 'lucide-react';
 
 function AppContent() {
@@ -85,7 +88,15 @@ function AppContent() {
 
           {activeTab === 'reports' && <ReportsPage />}
 
-          {activeTab === 'settings' && <SettingsPage />}
+          {(activeTab === 'settings' || activeTab === 'users' || activeTab === 'providers') && user.role !== 'ADMIN' ? (
+            <AccessDenied />
+          ) : (
+            <>
+              {activeTab === 'settings' && <SettingsPage />}
+              {activeTab === 'users' && <UsersPage />}
+              {activeTab === 'providers' && <ProvidersPage />}
+            </>
+          )}
         </main>
       </div>
     </div>

@@ -7,6 +7,8 @@ import {
   Settings,
   QrCode,
   Info,
+  Users,
+  ServerCrash
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.js';
 
@@ -16,16 +18,20 @@ interface Props {
   userRole?: string;
 }
 
-export const Sidebar: React.FC<Props> = ({ currentTab, onSelectTab }) => {
+export const Sidebar: React.FC<Props> = ({ currentTab, onSelectTab, userRole }) => {
   const { user } = useAuth();
 
-  const navItems = [
+  const allNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'transactions', label: 'Transactions', icon: Receipt },
     { id: 'create_payment', label: 'Create Payment', icon: PlusCircle },
     { id: 'reports', label: 'Reports', icon: BarChart3 },
-    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'users', label: 'Users', icon: Users, requireAdmin: true },
+    { id: 'providers', label: 'Providers', icon: ServerCrash, requireAdmin: true },
+    { id: 'settings', label: 'Settings', icon: Settings, requireAdmin: true },
   ];
+
+  const navItems = allNavItems.filter(item => !item.requireAdmin || userRole === 'ADMIN');
 
   return (
     <aside className="w-64 shrink-0 flex flex-col bg-slate-900 border-r border-slate-800 text-slate-300 hidden md:flex min-h-[calc(100vh-4rem)] select-none">

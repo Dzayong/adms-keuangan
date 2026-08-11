@@ -18,6 +18,7 @@ import {
   ShieldAlert,
   Send,
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext.js';
 
 interface Props {
   transactionId: number;
@@ -25,6 +26,7 @@ interface Props {
 }
 
 export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) => {
+  const { user } = useAuth();
   const [tx, setTx] = useState<Transaction | null>(null);
   const [logs, setLogs] = useState<PaymentLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -309,70 +311,72 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
         </div>
       </div>
 
-      {/* Interactive Mock Payment Simulator Panel */}
-      <div className="bg-slate-900 border border-slate-800 text-white rounded-xl p-6 shadow-xl space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded bg-yellow-500 text-slate-900 font-bold flex items-center justify-center shrink-0">
-              <Play className="w-4 h-4 fill-slate-900" />
+      {/* Interactive Mock Payment Simulator Panel - ADMIN ONLY */}
+      {user?.role === 'ADMIN' && (
+        <div className="bg-slate-900 border border-slate-800 text-white rounded-xl p-6 shadow-xl space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded bg-yellow-500 text-slate-900 font-bold flex items-center justify-center shrink-0">
+                <Play className="w-4 h-4 fill-slate-900" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">Mock Payment Sandbox Controls</h3>
+                <p className="text-[11px] text-slate-400">
+                  Simulate instant callbacks and state transitions without real funds.
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-sm font-bold text-white">Mock Payment Sandbox Controls</h3>
-              <p className="text-[11px] text-slate-400">
-                Simulate instant callbacks and state transitions without real funds.
-              </p>
+            <span className="px-2 py-0.5 bg-yellow-500/20 border border-yellow-500/40 text-yellow-400 font-mono font-bold text-[10px] uppercase rounded">
+              SANDBOX ACTIVE
+            </span>
+          </div>
+
+          {simMessage && (
+            <div className="p-3 bg-slate-800 border border-yellow-500/50 rounded-lg text-xs text-yellow-300 font-mono font-semibold flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-yellow-400 shrink-0" />
+              <span>{simMessage}</span>
             </div>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-1">
+            <button
+              disabled={isSimulating || tx.status !== 'PENDING'}
+              onClick={() => handleSimulate('PAID')}
+              className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-30 text-white font-bold text-xs rounded-lg transition-all flex items-center justify-center gap-1.5"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>Simulate PAID</span>
+            </button>
+
+            <button
+              disabled={isSimulating || tx.status !== 'PENDING'}
+              onClick={() => handleSimulate('FAILED')}
+              className="px-3 py-2 bg-rose-600 hover:bg-rose-500 disabled:opacity-30 text-white font-bold text-xs rounded-lg transition-all flex items-center justify-center gap-1.5"
+            >
+              <XCircle className="w-3.5 h-3.5" />
+              <span>Simulate FAILED</span>
+            </button>
+
+            <button
+              disabled={isSimulating || tx.status !== 'PENDING'}
+              onClick={() => handleSimulate('EXPIRED')}
+              className="px-3 py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-30 text-slate-300 font-bold text-xs rounded-lg transition-all border border-slate-700 flex items-center justify-center gap-1.5"
+            >
+              <AlertCircle className="w-3.5 h-3.5" />
+              <span>Simulate EXPIRED</span>
+            </button>
+
+            <button
+              disabled={isSimulating || tx.status !== 'PENDING'}
+              onClick={handleSimulateWebhook}
+              className="px-3 py-2 bg-yellow-500 hover:bg-yellow-400 text-slate-900 disabled:opacity-30 font-bold text-xs rounded-lg transition-all flex items-center justify-center gap-1.5"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>Trigger Webhook</span>
+            </button>
           </div>
-          <span className="px-2 py-0.5 bg-yellow-500/20 border border-yellow-500/40 text-yellow-400 font-mono font-bold text-[10px] uppercase rounded">
-            SANDBOX ACTIVE
-          </span>
         </div>
-
-        {simMessage && (
-          <div className="p-3 bg-slate-800 border border-yellow-500/50 rounded-lg text-xs text-yellow-300 font-mono font-semibold flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-yellow-400 shrink-0" />
-            <span>{simMessage}</span>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-1">
-          <button
-            disabled={isSimulating || tx.status !== 'PENDING'}
-            onClick={() => handleSimulate('PAID')}
-            className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-30 text-white font-bold text-xs rounded-lg transition-all flex items-center justify-center gap-1.5"
-          >
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>Simulate PAID</span>
-          </button>
-
-          <button
-            disabled={isSimulating || tx.status !== 'PENDING'}
-            onClick={() => handleSimulate('FAILED')}
-            className="px-3 py-2 bg-rose-600 hover:bg-rose-500 disabled:opacity-30 text-white font-bold text-xs rounded-lg transition-all flex items-center justify-center gap-1.5"
-          >
-            <XCircle className="w-3.5 h-3.5" />
-            <span>Simulate FAILED</span>
-          </button>
-
-          <button
-            disabled={isSimulating || tx.status !== 'PENDING'}
-            onClick={() => handleSimulate('EXPIRED')}
-            className="px-3 py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-30 text-slate-300 font-bold text-xs rounded-lg transition-all border border-slate-700 flex items-center justify-center gap-1.5"
-          >
-            <AlertCircle className="w-3.5 h-3.5" />
-            <span>Simulate EXPIRED</span>
-          </button>
-
-          <button
-            disabled={isSimulating || tx.status !== 'PENDING'}
-            onClick={handleSimulateWebhook}
-            className="px-3 py-2 bg-yellow-500 hover:bg-yellow-400 text-slate-900 disabled:opacity-30 font-bold text-xs rounded-lg transition-all flex items-center justify-center gap-1.5"
-          >
-            <Send className="w-3.5 h-3.5" />
-            <span>Trigger Webhook</span>
-          </button>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

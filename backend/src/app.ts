@@ -10,6 +10,8 @@ import paymentRoutes from './routes/paymentRoutes.js';
 import webhookRoutes from './routes/webhookRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import settingRoutes from './routes/settingRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+import providerRoutes from './routes/providerRoutes.js';
 
 export async function createApp() {
   const app = express();
@@ -30,6 +32,8 @@ export async function createApp() {
 
   // API Routes
   app.use('/api/auth', authRoutes);
+  app.use('/api/users', userRoutes);
+  app.use('/api/providers', providerRoutes);
   app.use('/api/transactions', transactionRoutes);
   app.use('/api/payments', paymentRoutes);
   app.use('/api/webhooks', webhookRoutes);
