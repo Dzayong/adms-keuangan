@@ -1,6 +1,7 @@
 import initSqlJs, { Database } from 'sql.js';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 
 let dbInstance: Database | null = null;
@@ -107,7 +108,25 @@ async function initSchemaAndSeed(db: Database) {
       value TEXT NOT NULL,
       updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
     );
+
+    CREATE TABLE IF NOT EXISTS api_keys (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      key_hash TEXT NOT NULL,
+      permissions TEXT NOT NULL DEFAULT '["payments:create", "payments:read"]',
+      is_active INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+    );
   `);
+
+  // Migration: Add idempotency_key if missing
+  try {
+    db.exec('SELECT idempotency_key FROM transactions LIMIT 1');
+  } catch (e) {
+    console.log('Migration: Adding idempotency_key to transactions table');
+    db.exec('ALTER TABLE transactions ADD COLUMN idempotency_key TEXT');
+    db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_idempotency_key ON transactions(idempotency_key)');
+  }
 
   // Seed Users if empty
   const userCheck = db.exec("SELECT COUNT(*) as count FROM users");
@@ -138,6 +157,27 @@ async function initSchemaAndSeed(db: Database) {
     db.run(
       `INSERT INTO payment_providers (id, name, code, environment, is_active) VALUES (2, 'DANA QRIS (Placeholder)', 'dana', 'sandbox', 0)`
     );
+  }
+
+  // Seed API Keys if empty
+  const apiKeyCheck = db.exec("SELECT COUNT(*) as count FROM api_keys");
+  const apiKeyCount = apiKeyCheck[0]?.values[0]?.[0] || 0;
+
+  if (apiKeyCount === 0) {
+    const randomSecret = crypto.randomBytes(32).toString('hex');
+    const plaintextKey = `adms_sk_test_${randomSecret}`;
+    const keyHash = bcrypt.hashSync(plaintextKey, 10);
+
+    db.run(
+      `INSERT INTO api_keys (name, key_hash) VALUES (?, ?)`,
+      ['Default Internal Application', keyHash]
+    );
+
+    console.log('\n=============================================================');
+    console.log('⚠ IMPORTANT: API KEY GENERATED ⚠');
+    console.log('This key is only displayed ONCE and its hash is saved.');
+    console.log(`API Key: ${plaintextKey}`);
+    console.log('=============================================================\n');
   }
 
   // Seed Settings if empty

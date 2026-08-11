@@ -12,6 +12,7 @@ import reportRoutes from './routes/reportRoutes.js';
 import settingRoutes from './routes/settingRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import providerRoutes from './routes/providerRoutes.js';
+import apiV1PaymentRoutes from './routes/api/v1/paymentRoutes.js';
 
 export async function createApp() {
   const app = express();
@@ -40,14 +41,30 @@ export async function createApp() {
   app.use('/api/reports', reportRoutes);
   app.use('/api/settings', settingRoutes);
 
+  // Internal API v1 Routes
+  app.use('/api/v1/payments', apiV1PaymentRoutes);
+
   // Healthcheck Endpoint
   app.get('/api/health', (req, res) => {
     res.json({
-      status: 'ok',
-      app: 'ADMS QRIS INTERNAL',
-      version: '1.0.0',
-      timestamp: new Date().toISOString(),
+      success: true,
+      data: { status: 'OK', timestamp: new Date().toISOString() }
     });
+  });
+
+  // Global Error Handler (e.g. for malformed JSON)
+  app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    if (err instanceof SyntaxError && 'body' in err && (err as any).status === 400) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'MALFORMED_JSON',
+          message: 'Invalid JSON payload'
+        }
+      });
+    }
+    // Pass other errors to the existing errorHandler
+    next(err);
   });
 
   // Centralized Error Handler
