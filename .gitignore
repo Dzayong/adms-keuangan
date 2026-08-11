@@ -7,3 +7,8 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Local SQLite database
+*.sqlite
+*.sqlite3
+*.db
