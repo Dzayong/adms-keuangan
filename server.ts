@@ -4,7 +4,7 @@ import { createServer as createViteServer } from 'vite';
 import { createApp } from './backend/src/app.js';
 
 async function startServer() {
-  const PORT = parseInt(process.env.PORT || '3000', 10);
+  const PORT = parseInt(process.env.PORT || '3010', 10);
   const expressApp = await createApp();
 
   if (process.env.NODE_ENV !== 'production') {

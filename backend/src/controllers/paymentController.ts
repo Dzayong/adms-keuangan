@@ -150,7 +150,7 @@ export async function getPaymentDetail(req: AuthenticatedRequest, res: Response)
 
     // Auto-check expiry
     const now = new Date();
-    const expiredAt = new Date(transaction.expired_at.replace(' ', 'T'));
+    const expiredAt = new Date(transaction.expired_at.replace(' ', 'T') + 'Z');
     let currentStatus = transaction.status;
 
     if (currentStatus === 'PENDING' && now > expiredAt) {
