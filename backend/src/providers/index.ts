@@ -1,8 +1,7 @@
 import { PaymentProvider } from './PaymentProvider.js';
 import { MockPaymentProvider } from './mock/MockPaymentProvider.js';
-import { DanaPaymentProvider } from './dana/DanaPaymentProvider.js';
+import { DanaPaymentProvider, DanaConfig } from './dana/DanaPaymentProvider.js';
 import { ENV } from '../config/env.js';
-import { getSql, querySql } from '../config/db.js';
 
 export async function getActivePaymentProvider(): Promise<PaymentProvider> {
   const code = ENV.PAYMENT_PROVIDER || 'mock';
@@ -11,14 +10,18 @@ export async function getActivePaymentProvider(): Promise<PaymentProvider> {
 
 export async function getPaymentProviderByCode(code: string): Promise<PaymentProvider> {
   if (code === 'dana') {
-    const settings = await querySql<{key: string, value: string}>('SELECT key, value FROM settings WHERE key LIKE "dana_%"');
-    const danaConfig = settings.reduce((acc, row) => ({...acc, [row.key]: row.value}), {} as any);
+    // DANA credentials are never stored in the database.
+    // They are injected purely via environment variables.
+    const config: DanaConfig = {
+      merchantId: process.env.DANA_MERCHANT_ID || '',
+      partnerId: process.env.DANA_X_PARTNER_ID || '',
+      privateKey: process.env.DANA_PRIVATE_KEY || '',
+      origin: process.env.DANA_ORIGIN || '',
+      environment: process.env.DANA_ENVIRONMENT || 'sandbox',
+      externalStoreId: process.env.DANA_EXTERNAL_STORE_ID || ''
+    };
 
-    return new DanaPaymentProvider(
-      danaConfig.dana_client_id || ENV.DANA_CLIENT_ID,
-      danaConfig.dana_client_secret || ENV.DANA_CLIENT_SECRET,
-      danaConfig.dana_environment || ENV.DANA_ENVIRONMENT
-    );
+    return new DanaPaymentProvider(config);
   }
 
   if (code === 'mock') {
