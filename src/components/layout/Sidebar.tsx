@@ -8,7 +8,8 @@ import {
   QrCode,
   Info,
   Users,
-  ServerCrash
+  ServerCrash,
+  Key
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.js';
 
@@ -29,6 +30,7 @@ export const Sidebar: React.FC<Props> = ({ currentTab, onSelectTab, userRole }) 
     { id: 'users', label: 'Users', icon: Users, requireAdmin: true },
     { id: 'providers', label: 'Providers', icon: ServerCrash, requireAdmin: true },
     { id: 'settings', label: 'Settings', icon: Settings, requireAdmin: true },
+    { id: 'api_keys', label: 'API Management', icon: Key, requireAdmin: true },
   ];
 
   const navItems = allNavItems.filter(item => !item.requireAdmin || userRole === 'ADMIN');

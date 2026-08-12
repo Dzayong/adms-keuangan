@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import { getDb } from './config/db.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
+import { authMiddleware, roleMiddleware } from './middleware/auth.js';
 import authRoutes from './routes/authRoutes.js';
 import transactionRoutes from './routes/transactionRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
@@ -12,6 +13,7 @@ import reportRoutes from './routes/reportRoutes.js';
 import settingRoutes from './routes/settingRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import providerRoutes from './routes/providerRoutes.js';
+import apiKeyRoutes from './routes/apiKeyRoutes.js';
 import apiV1PaymentRoutes from './routes/api/v1/paymentRoutes.js';
 import apiV1InternalMerchantRoutes from './routes/api/v1/internalMerchantRoutes.js';
 import path from 'path';
@@ -45,6 +47,8 @@ export async function createApp() {
   app.use('/api/webhooks', webhookRoutes);
   app.use('/api/reports', reportRoutes);
   app.use('/api/settings', settingRoutes);
+
+  app.use('/api/api-keys', authMiddleware, roleMiddleware(['ADMIN']), apiKeyRoutes);
 
   // Other Internal API v1 Routes
   app.use('/api/v1/payments', apiV1PaymentRoutes);

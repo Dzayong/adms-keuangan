@@ -9,6 +9,7 @@ import { ReportsPage } from './pages/ReportsPage.js';
 import { SettingsPage } from './pages/SettingsPage.js';
 import { UsersPage } from './pages/UsersPage.js';
 import { ProvidersPage } from './pages/ProvidersPage.js';
+import { ApiKeysPage } from './pages/ApiKeysPage.js';
 import { Navbar } from './components/layout/Navbar.js';
 import { Sidebar } from './components/layout/Sidebar.js';
 import { AccessDenied } from './components/ui/AccessDenied.js';
@@ -88,13 +89,14 @@ function AppContent() {
 
           {activeTab === 'reports' && <ReportsPage />}
 
-          {(activeTab === 'settings' || activeTab === 'users' || activeTab === 'providers') && user.role !== 'ADMIN' ? (
+          {(activeTab === 'settings' || activeTab === 'users' || activeTab === 'providers' || activeTab === 'api_keys') && user.role !== 'ADMIN' ? (
             <AccessDenied />
           ) : (
             <>
               {activeTab === 'settings' && <SettingsPage />}
               {activeTab === 'users' && <UsersPage />}
               {activeTab === 'providers' && <ProvidersPage />}
+              {activeTab === 'api_keys' && <ApiKeysPage />}
             </>
           )}
         </main>

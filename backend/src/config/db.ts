@@ -138,6 +138,15 @@ async function initSchemaAndSeed(db: Database) {
     db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_idempotency_key ON transactions(idempotency_key)');
   }
 
+  // Migration: Add last_used_at and key_hint to api_keys if missing
+  try {
+    db.exec('SELECT last_used_at FROM api_keys LIMIT 1');
+  } catch (e) {
+    console.log('Migration: Adding last_used_at and key_hint to api_keys table');
+    db.exec('ALTER TABLE api_keys ADD COLUMN last_used_at TEXT');
+    db.exec('ALTER TABLE api_keys ADD COLUMN key_hint TEXT');
+  }
+
   // Seed Users if empty
   const userCheck = db.exec("SELECT COUNT(*) as count FROM users");
   const count = userCheck[0]?.values[0]?.[0] || 0;
@@ -191,10 +200,11 @@ async function initSchemaAndSeed(db: Database) {
     const randomSecret = crypto.randomBytes(32).toString('hex');
     const plaintextKey = `adms_sk_test_${randomSecret}`;
     const keyHash = bcrypt.hashSync(plaintextKey, 10);
+    const keyHint = `adms_sk_test_••••••••••••${randomSecret.slice(-4)}`;
 
     db.run(
-      `INSERT INTO api_keys (name, key_hash) VALUES (?, ?)`,
-      ['Default Internal Application', keyHash]
+      `INSERT INTO api_keys (name, key_hash, key_hint) VALUES (?, ?, ?)`,
+      ['Default Internal Application', keyHash, keyHint]
     );
 
     console.log('\n=============================================================');
