@@ -6,13 +6,16 @@ import {
   WebhookResult,
 } from '../PaymentProvider.js';
 import { ProviderError } from '../../utils/errors.js';
-import { DanaHttpClient } from './DanaHttpClient.js';
+import { Dana } from 'dana-node';
+import { PaymentGatewayApi, CreateOrderByApiRequest, QueryPaymentRequest, PayOptionDetailPayMethodEnum, PayOptionDetailPayOptionEnum } from 'dana-node/payment_gateway/v1';
+import { WebhookParser } from 'dana-node/webhook/v1';
 import crypto from 'crypto';
 
 export interface DanaConfig {
   merchantId: string;
   partnerId: string;
   privateKey: string;
+  publicKey: string;
   origin: string;
   environment: string;
   externalStoreId: string;
@@ -23,16 +26,25 @@ export class DanaPaymentProvider implements PaymentProvider {
   name = 'DANA Gapura QRIS';
 
   private config: DanaConfig;
-  public httpClient: DanaHttpClient;
+  public danaClient: Dana;
+  public paymentGateway: PaymentGatewayApi;
 
   constructor(config: DanaConfig) {
     this.config = config;
-    this.httpClient = new DanaHttpClient();
+
+    // Explicit environment mapping to SDK constructor
+    this.danaClient = new Dana({
+      partnerId: this.config.partnerId,
+      privateKey: this.config.privateKey,
+      origin: this.config.origin,
+      env: this.config.environment
+    });
+    this.paymentGateway = this.danaClient.paymentGatewayApi;
   }
 
   private validateConfig() {
     if (this.config.environment !== 'sandbox') {
-      throw new ProviderError(this.code, 'Only sandbox environment is supported in Phase 3.2', 400);
+      throw new ProviderError(this.code, 'Only sandbox environment is supported in Phase 3.3', 400);
     }
 
     if (!this.config.partnerId || !this.config.privateKey || !this.config.merchantId) {
@@ -44,64 +56,51 @@ export class DanaPaymentProvider implements PaymentProvider {
     }
   }
 
-  private async generateSnapAsymmetricSignature(token: string, payload: any, timestamp: string): Promise<string> {
-    // NOT PRODUCTION READY
-    // Placeholder for official Asymmetric Signature method.
-    // The official DANA Create Order API (/payment-gateway/v1.0/debit/payment-host-to-host.htm)
-    // requires X-SIGNATURE to be generated using the asymmetricSignature method.
-    // In production (Phase 3.3), we will strictly use `dana-node` SDK to generate this securely.
-    if (!this.config.privateKey) {
-      throw new ProviderError(this.code, 'Private key required for Asymmetric Signature', 500);
-    }
-    return 'MOCK_ASYMMETRIC_SIGNATURE_TO_BE_REPLACED_BY_DANA_NODE';
-  }
-
-  private async authenticate(): Promise<string> {
-    try {
-      // B2B Access Token API mapping placeholder (SNAP /access-token/b2b)
-      // Uses Asymmetric RSA-SHA256 signature for authentication.
-      const timestamp = new Date().toISOString();
-      const headers = {
-        'X-TIMESTAMP': timestamp,
-        'X-CLIENT-KEY': this.config.partnerId,
-        'X-SIGNATURE': await this.generateSnapAsymmetricSignature('', {}, timestamp)
-      };
-
-      const response = await this.httpClient.post('/v1.0/access-token/b2b', {
-        grantType: 'client_credentials'
-      }, headers);
-
-      return response.data.accessToken || 'mock_token';
-    } catch (error: any) {
-      this.httpClient.handleNetworkError(error);
-    }
-  }
-
   async createPayment(data: CreatePaymentDTO): Promise<PaymentResult> {
     this.validateConfig();
-    const token = await this.authenticate();
-    const timestamp = new Date().toISOString();
 
     try {
-      // Internal Idempotency mapped to DANA partnerReferenceNo (Max 25 chars for QRIS)
+      // ADMS controls idempotency. Max 25 chars for QRIS.
       const txIdStr = String(data.transactionId);
       const hashPart = crypto.createHash('sha256').update(txIdStr).digest('hex').substring(0, 20);
       const partnerReferenceNo = `ADMS-${hashPart}`;
 
-      // Gapura Create Order URL
-      const payload = {
+      // Custom Checkout QRIS payload mapping
+      const payload: CreateOrderByApiRequest = {
         partnerReferenceNo,
         merchantId: this.config.merchantId,
-        externalStoreId: this.config.externalStoreId, // MANDATORY for QRIS
+        externalStoreId: this.config.externalStoreId, // Top level field
         amount: {
           value: data.amount.toFixed(2),
           currency: "IDR"
         },
-        validUpTo: new Date(Date.now() + 30 * 60000).toISOString(), // <= 30 mins
+        validUpTo: new Date(Date.now() + 30 * 60000).toISOString(),
+        urlParams: [
+          {
+            url: `${this.config.origin}/api/payments/webhook/dana`,
+            type: 'NOTIFICATION',
+            isDeeplink: 'FALSE'
+          },
+          {
+            url: `${this.config.origin}/payments/success`,
+            type: 'PAY_RETURN',
+            isDeeplink: 'FALSE'
+          }
+        ],
+        additionalInfo: {
+          mcc: '5499',
+          envInfo: {
+            terminalType: 'SYSTEM'
+          },
+          order: {
+            orderTitle: data.description || `Payment ${partnerReferenceNo}`,
+            scenario: 'API'
+          }
+        },
         payOptionDetails: [
           {
-            payMethod: "NETWORK_PAY",
-            payOption: "NETWORK_PAY_PG_QRIS",
+            payMethod: PayOptionDetailPayMethodEnum.NetworkPay,
+            payOption: PayOptionDetailPayOptionEnum.NetworkPayPgQris,
             transAmount: {
               value: data.amount.toFixed(2),
               currency: "IDR"
@@ -110,65 +109,49 @@ export class DanaPaymentProvider implements PaymentProvider {
         ]
       };
 
-      const headers = {
-        Authorization: `Bearer ${token}`,
-        'X-TIMESTAMP': timestamp,
-        'X-PARTNER-ID': this.config.partnerId,
-        'X-EXTERNAL-ID': data.invoiceNumber,
-        'X-SIGNATURE': await this.generateSnapAsymmetricSignature(token, payload, timestamp),
-        'ORIGIN': this.config.origin
-      };
-
-      const response = await this.httpClient.post('/payment-gateway/v1.0/debit/payment-host-to-host.htm', payload, headers);
+      const response = await this.paymentGateway.createOrder(payload);
 
       return {
         providerId: 2,
-        providerReference: partnerReferenceNo, // Used response.data.partnerReferenceNo normally
-        qrContent: response.data.qrContent || 'MOCK_QR_CONTENT',
+        providerReference: partnerReferenceNo, // deterministic
+        qrContent: response.additionalInfo?.paymentCode || 'MOCK_QR_CONTENT_OR_MISSING',
         paymentMethod: 'DANA_QRIS',
         status: 'PENDING',
-        rawPayload: response.data
+        rawPayload: response
       };
     } catch (error: any) {
-      this.httpClient.handleNetworkError(error);
+      this.handleSdkError(error);
     }
   }
 
   async checkPayment(providerReference: string): Promise<PaymentStatusResult> {
     this.validateConfig();
-    const token = await this.authenticate();
-    const timestamp = new Date().toISOString();
 
     try {
-      const payload = {
+      const payload: QueryPaymentRequest = {
         merchantId: this.config.merchantId,
-        partnerReferenceNo: providerReference
+        originalPartnerReferenceNo: providerReference,
+        serviceCode: '54',
+        externalStoreId: this.config.externalStoreId
       };
 
-      const headers = {
-        Authorization: `Bearer ${token}`,
-        'X-TIMESTAMP': timestamp,
-        'X-PARTNER-ID': this.config.partnerId,
-        'X-EXTERNAL-ID': providerReference,
-        'X-SIGNATURE': await this.generateSnapAsymmetricSignature(token, payload, timestamp),
-        'ORIGIN': this.config.origin
-      };
+      const response = await this.paymentGateway.queryPayment(payload);
 
-      const response = await this.httpClient.post('/payment-gateway/v1.0/debit/payment-host-to-host.htm', payload, headers);
-
-      const statusMap: Record<string, any> = {
-        'SUCCESS': 'PAID',
-        'PENDING': 'PENDING',
-        'FAILED': 'FAILED'
+      const statusMap: Record<string, 'PAID' | 'PENDING' | 'FAILED' | 'CANCELLED' | 'REFUNDED'> = {
+        '00': 'PAID',
+        '01': 'PENDING',
+        '02': 'PENDING',
+        '05': 'FAILED',
+        '07': 'FAILED'
       };
 
       return {
         providerReference,
-        status: statusMap[response.data.status] || 'PENDING',
-        rawPayload: response.data,
+        status: statusMap[response.latestTransactionStatus] || 'PENDING',
+        rawPayload: response,
       };
     } catch (error: any) {
-      this.httpClient.handleNetworkError(error);
+      this.handleSdkError(error);
     }
   }
 
@@ -188,27 +171,56 @@ export class DanaPaymentProvider implements PaymentProvider {
     };
   }
 
-  async handleWebhook(payload: any, headers?: any): Promise<WebhookResult> {
-    // NOT PRODUCTION READY
-    // DANA Finish Notify Verification Placeholder
-    // The official Finish Notify webhook requires verification using the DANA Public Key.
-    // The official dana-node SDK must be used to perform this signature verification.
-    const isValidSignature = headers?.['x-signature'] ? true : false;
-
-    if (!isValidSignature) {
-       throw new ProviderError(this.code, 'VALIDATION_ERROR: Invalid DANA Webhook Signature', 400);
+  async handleWebhook(payload: any, headers?: any, rawBody?: string): Promise<WebhookResult> {
+    if (!this.config.publicKey) {
+      throw new ProviderError(this.code, 'DANA Public Key is missing for webhook verification', 500);
     }
 
-    const reference = payload?.partnerReferenceNo || payload?.reference || 'DANA-UNKNOWN';
-    const status = payload?.orderStatus === 'SUCCESS' ? 'PAID' : 'PENDING';
+    try {
+      // DANA WebhookParser needs method, relative path, headers and raw JSON body
+      const parser = new WebhookParser(this.config.publicKey);
+      const parsedRequest = parser.parseWebhook('POST', '/v1.0/debit/notify', headers || {}, rawBody || JSON.stringify(payload));
 
-    return {
-      providerReference: reference,
-      status: status,
-      paidAt: status === 'PAID' ? new Date().toISOString() : null,
-      eventType: 'DANA_WEBHOOK_EVENT',
-      isValid: true,
-      rawPayload: payload,
-    };
+      const reference = parsedRequest.originalPartnerReferenceNo || parsedRequest.originalReferenceNo || 'DANA-UNKNOWN';
+      const status = parsedRequest.latestTransactionStatus === '00' ? 'PAID' : 'PENDING';
+
+      return {
+        providerReference: reference,
+        status: status,
+        paidAt: status === 'PAID' ? new Date().toISOString() : null,
+        eventType: 'DANA_WEBHOOK_EVENT',
+        isValid: true,
+        rawPayload: parsedRequest,
+      };
+    } catch (error: any) {
+      throw new ProviderError(this.code, `VALIDATION_ERROR: Invalid DANA Webhook Signature. ${error.message}`, 400);
+    }
+  }
+
+  private handleSdkError(error: any): never {
+    if (error.code === 'ECONNABORTED' || error.message?.includes('timeout') || error.name === 'TimeoutError') {
+      throw new ProviderError('dana', 'DANA Provider network timeout', 504);
+    }
+
+    const status = error.response?.status;
+    const data = error.response?.data;
+
+    if (status === 401 || status === 403) {
+      throw new ProviderError('dana', 'AUTHENTICATION_ERROR: Invalid DANA credentials', 401);
+    }
+
+    if (status === 400 || status === 422 || error.name === 'ValidationError') {
+      throw new ProviderError('dana', `VALIDATION_ERROR: ${data?.message || error.message || 'Invalid request payload'}`, 400);
+    }
+
+    if (status === 429) {
+      throw new ProviderError('dana', 'RATE_LIMITED: DANA API rate limit exceeded', 429);
+    }
+
+    if (status >= 500) {
+      throw new ProviderError('dana', 'PROVIDER_UNAVAILABLE: DANA API is currently unavailable', 502);
+    }
+
+    throw new ProviderError('dana', `UNKNOWN_PROVIDER_ERROR: An unknown error occurred with DANA API. ${error.message || ''}`, 500);
   }
 }

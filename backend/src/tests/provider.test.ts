@@ -70,8 +70,8 @@ test('Provider Abstraction Test Suite', async (t) => {
   });
 
   await t.test('H. No real provider credentials are required', async () => {
-    assert.strictEqual(ENV.DANA_CLIENT_ID, '');
-    assert.strictEqual(ENV.DANA_CLIENT_SECRET, '');
+    assert.strictEqual(ENV.DANA_X_PARTNER_ID, '');
+    assert.strictEqual(ENV.DANA_PRIVATE_KEY, '');
   });
 
   await t.test('J. Same idempotency key + same payload still works', async () => {
