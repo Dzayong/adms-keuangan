@@ -13,6 +13,8 @@ import settingRoutes from './routes/settingRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import providerRoutes from './routes/providerRoutes.js';
 import apiV1PaymentRoutes from './routes/api/v1/paymentRoutes.js';
+import apiV1InternalMerchantRoutes from './routes/api/v1/internalMerchantRoutes.js';
+import path from 'path';
 
 export async function createApp() {
   const app = express();
@@ -43,6 +45,10 @@ export async function createApp() {
 
   // Internal API v1 Routes
   app.use('/api/v1/payments', apiV1PaymentRoutes);
+  app.use('/api/v1/internal-merchants', apiV1InternalMerchantRoutes);
+
+  // Serve uploads
+  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
   // Healthcheck Endpoint
   app.get('/api/health', (req, res) => {

@@ -1,6 +1,7 @@
 import { PaymentProvider } from './PaymentProvider.js';
 import { MockPaymentProvider } from './mock/MockPaymentProvider.js';
 import { DanaPaymentProvider, DanaConfig } from './dana/DanaPaymentProvider.js';
+import { InternalOfficeQrisProvider } from './internal/InternalOfficeQrisProvider.js';
 import { ENV } from '../config/env.js';
 
 export async function getActivePaymentProvider(): Promise<PaymentProvider> {
@@ -27,6 +28,10 @@ export async function getPaymentProviderByCode(code: string): Promise<PaymentPro
 
   if (code === 'mock') {
     return new MockPaymentProvider();
+  }
+
+  if (code === 'internal_qris') {
+    return new InternalOfficeQrisProvider();
   }
 
   throw new Error(`Invalid payment provider configuration: ${code}`);

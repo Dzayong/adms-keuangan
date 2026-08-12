@@ -33,6 +33,13 @@ export const SettingsPage: React.FC = () => {
   const [mockActive, setMockActive] = useState(true);
   const [danaActive, setDanaActive] = useState(false);
 
+  // Internal Merchant Config
+  const [internalMerchantName, setInternalMerchantName] = useState('');
+  const [internalMerchantNmid, setInternalMerchantNmid] = useState('');
+  const [internalMerchantActive, setInternalMerchantActive] = useState(false);
+  const [internalMerchantImagePath, setInternalMerchantImagePath] = useState('');
+  const [internalMerchantImageBase64, setInternalMerchantImageBase64] = useState('');
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -61,6 +68,15 @@ export const SettingsPage: React.FC = () => {
       if (mockP) setMockActive(Boolean(mockP.is_active));
       if (danaP) setDanaActive(Boolean(danaP.is_active));
     }
+
+    const resInternal = await apiFetch('/v1/internal-merchants');
+    if (resInternal.success && resInternal.data) {
+      setInternalMerchantName(resInternal.data.name || '');
+      setInternalMerchantNmid(resInternal.data.nmid || '');
+      setInternalMerchantActive(Boolean(resInternal.data.is_active));
+      setInternalMerchantImagePath(resInternal.data.qris_image_path || '');
+    }
+
     setIsLoading(false);
   };
 
@@ -100,13 +116,48 @@ export const SettingsPage: React.FC = () => {
       }),
     });
 
+    const resInternal = await apiFetch('/v1/internal-merchants', {
+      method: 'PUT',
+      body: JSON.stringify({
+        name: internalMerchantName,
+        nmid: internalMerchantNmid,
+        isActive: internalMerchantActive,
+        qrisImageBase64: internalMerchantImageBase64
+      })
+    });
+
     setIsSaving(false);
 
-    if (res.success) {
+    if (res.success && resInternal.success) {
       setMessage('Pengaturan berhasil diperbarui!');
+      setInternalMerchantImageBase64(''); // Clear base64 buffer after save
       fetchSettings();
     } else {
-      setError(res.message || 'Gagal menyimpan pengaturan.');
+      setError(res.message || resInternal.message || 'Gagal menyimpan pengaturan.');
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        setError('Format file tidak didukung. Harap unggah PNG, JPEG, atau WebP.');
+        return;
+      }
+
+      if (file.size > 1024 * 1024) {
+        setError('Ukuran file maksimal 1MB.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        if (ev.target?.result) {
+          setInternalMerchantImageBase64(ev.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -330,6 +381,73 @@ export const SettingsPage: React.FC = () => {
                   disabled
                   value="/api/webhooks/dana"
                   className="w-full bg-slate-200/80 border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-mono text-slate-700"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Internal QRIS Settings */}
+          <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="font-bold text-xs text-slate-900">Internal Office QRIS (Static Configuration)</span>
+                <p className="text-[11px] text-slate-500">
+                  Used by internal applications to display the static office QR.
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  disabled={!isAdmin}
+                  checked={internalMerchantActive}
+                  onChange={(e) => setInternalMerchantActive(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+              </label>
+            </div>
+
+            <div className="pt-2 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Merchant Name</label>
+                <input
+                  type="text"
+                  disabled={!isAdmin}
+                  value={internalMerchantName}
+                  onChange={(e) => setInternalMerchantName(e.target.value)}
+                  className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-mono font-bold text-slate-800"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">NMID</label>
+                <input
+                  type="text"
+                  disabled={!isAdmin}
+                  value={internalMerchantNmid}
+                  onChange={(e) => setInternalMerchantNmid(e.target.value)}
+                  className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-mono font-bold text-slate-800"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">QRIS Image (PNG/JPEG/WebP, Max 1MB)</label>
+                {internalMerchantImagePath && !internalMerchantImageBase64 && (
+                  <div className="mb-2">
+                    <img src={internalMerchantImagePath} alt="QRIS" className="w-24 h-24 object-contain rounded border border-slate-200" />
+                  </div>
+                )}
+                {internalMerchantImageBase64 && (
+                  <div className="mb-2">
+                    <img src={internalMerchantImageBase64} alt="QRIS Preview" className="w-24 h-24 object-contain rounded border border-yellow-400" />
+                    <span className="text-[10px] text-yellow-600 font-bold ml-2">Preview (Unsaved)</span>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/png, image/jpeg, image/webp"
+                  disabled={!isAdmin}
+                  onChange={handleImageUpload}
+                  className="w-full text-xs"
                 />
               </div>
             </div>

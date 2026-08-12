@@ -18,6 +18,7 @@ export interface CreatePaymentParams {
   description?: string;
   idempotencyKey?: string;
   userId?: number;
+  providerCode?: string;
 }
 
 /**
@@ -51,7 +52,7 @@ export function generatePayloadFingerprint(payload: { amount: number, customerNa
 }
 
 export async function createPaymentService(params: CreatePaymentParams) {
-  const { amount, customerName, customerPhone = '', description = '', idempotencyKey, userId = 1 } = params;
+  const { amount, customerName, customerPhone = '', description = '', idempotencyKey, userId = 1, providerCode } = params;
 
   // Fetch expiry setting (default 15 mins)
   const expirySetting = await getSql<{ value: string }>('SELECT value FROM settings WHERE key = ?', ['mock_expiry_minutes']);
@@ -114,7 +115,13 @@ export async function createPaymentService(params: CreatePaymentParams) {
   const transactionId = txInsert.lastInsertRowid;
 
   // Execute Payment Provider Abstraction
-  const provider = await getActivePaymentProvider();
+  let provider;
+  if (providerCode) {
+    const { getPaymentProviderByCode } = await import('../providers/index.js');
+    provider = await getPaymentProviderByCode(providerCode);
+  } else {
+    provider = await getActivePaymentProvider();
+  }
   let providerResult;
   try {
     providerResult = await provider.createPayment({

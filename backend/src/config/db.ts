@@ -77,6 +77,16 @@ async function initSchemaAndSeed(db: Database) {
       updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
     );
 
+    CREATE TABLE IF NOT EXISTS internal_merchants (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      nmid TEXT UNIQUE NOT NULL,
+      qris_image_path TEXT NOT NULL,
+      is_active INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+    );
+
     CREATE TABLE IF NOT EXISTS payments (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       transaction_id INTEGER NOT NULL,
@@ -156,6 +166,20 @@ async function initSchemaAndSeed(db: Database) {
     );
     db.run(
       `INSERT INTO payment_providers (id, name, code, environment, is_active) VALUES (2, 'DANA QRIS (Placeholder)', 'dana', 'sandbox', 0)`
+    );
+    db.run(
+      `INSERT INTO payment_providers (id, name, code, environment, is_active) VALUES (3, 'Internal Office QRIS', 'internal_qris', 'sandbox', 1)`
+    );
+  }
+
+  // Seed Internal Merchants if empty
+  const merchantCheck = db.exec("SELECT COUNT(*) as count FROM internal_merchants");
+  const merchantCount = merchantCheck[0]?.values[0]?.[0] || 0;
+
+  if (merchantCount === 0) {
+    db.run(
+      `INSERT INTO internal_merchants (name, nmid, qris_image_path, is_active) VALUES (?, ?, ?, ?)`,
+      ['ARMADA DIGITAL MARKETING', 'ID1025438297117', '', 1]
     );
   }
 
