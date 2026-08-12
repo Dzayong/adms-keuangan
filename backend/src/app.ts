@@ -30,6 +30,9 @@ export async function createApp() {
     origin: '*',
     credentials: true,
   }));
+  // Internal API v1 Routes that require custom body parsing limits
+  app.use('/api/v1/internal-merchants', apiV1InternalMerchantRoutes);
+
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
@@ -43,9 +46,8 @@ export async function createApp() {
   app.use('/api/reports', reportRoutes);
   app.use('/api/settings', settingRoutes);
 
-  // Internal API v1 Routes
+  // Other Internal API v1 Routes
   app.use('/api/v1/payments', apiV1PaymentRoutes);
-  app.use('/api/v1/internal-merchants', apiV1InternalMerchantRoutes);
 
   // Serve uploads
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
