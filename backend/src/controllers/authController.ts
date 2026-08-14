@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
-import { getSql } from '../config/db.js';
+import { getSql, runSql } from '../config/db.js';
 import { User } from '../models/types.js';
 import { signToken } from '../utils/jwt.js';
 import { sendSuccess, sendError } from '../utils/response.js';
@@ -41,13 +41,26 @@ export async function login(req: Request, res: Response) {
       email: user.email,
       role: user.role,
       name: user.name,
+      profile_photo: user.profile_photo,
     });
+
+    try {
+      const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
+      const userAgent = req.headers['user-agent'] || '';
+      await runSql(
+        'INSERT INTO login_logs (user_id, user_name, ip_address, user_agent) VALUES (?, ?, ?, ?)',
+        [user.id, user.name, String(ip), userAgent]
+      );
+    } catch (logErr) {
+      console.error('Failed to save login log:', logErr);
+    }
 
     const userDto = {
       id: user.id,
       name: user.name,
       email: user.email,
       role: user.role,
+      profile_photo: user.profile_photo,
       is_active: user.is_active === 1,
       created_at: user.created_at,
     };
@@ -77,7 +90,7 @@ export async function getMe(req: AuthenticatedRequest, res: Response) {
     }
 
     const user = await getSql<User>(
-      'SELECT id, name, email, role, is_active, created_at, updated_at FROM users WHERE id = ?',
+      'SELECT id, name, email, role, is_active, profile_photo, created_at, updated_at FROM users WHERE id = ?',
       [req.user.userId]
     );
 
@@ -90,6 +103,7 @@ export async function getMe(req: AuthenticatedRequest, res: Response) {
       name: user.name,
       email: user.email,
       role: user.role,
+      profile_photo: user.profile_photo,
       is_active: user.is_active === 1,
       created_at: user.created_at,
       updated_at: user.updated_at,
@@ -98,5 +112,20 @@ export async function getMe(req: AuthenticatedRequest, res: Response) {
     return sendSuccess(res, { user: userDto });
   } catch (err: any) {
     return sendError(res, 'Gagal mengambil data pengguna.', 500);
+  }
+}
+
+export async function getLoginLogs(req: AuthenticatedRequest, res: Response) {
+  try {
+    if (req.user?.role !== 'ADMIN') {
+      return sendError(res, 'Akses ditolak.', 403);
+    }
+    const logs = await getSql(
+      'SELECT id, user_id, user_name, ip_address, user_agent, login_time FROM login_logs ORDER BY login_time DESC LIMIT 100'
+    );
+    return sendSuccess(res, logs);
+  } catch (err) {
+    console.error('Error fetching login logs:', err);
+    return sendError(res, 'Gagal mengambil riwayat login.', 500);
   }
 }

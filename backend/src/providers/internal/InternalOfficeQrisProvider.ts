@@ -7,8 +7,8 @@ export class InternalOfficeQrisProvider implements PaymentProvider {
 
   async createPayment(data: CreatePaymentDTO): Promise<PaymentResult> {
     const merchant = await getSql<{ name: string; nmid: string; qris_image_path: string; is_active: number }>(
-      'SELECT * FROM internal_merchants WHERE nmid = ?',
-      ['ID1025438297117']
+      'SELECT * FROM internal_merchants WHERE is_active = 1 LIMIT 1',
+      []
     );
 
     if (!merchant) {

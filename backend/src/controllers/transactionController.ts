@@ -127,6 +127,19 @@ export async function getTransactionById(req: AuthenticatedRequest, res: Respons
 
 export async function getDashboardStats(req: AuthenticatedRequest, res: Response) {
   try {
+    const { month, year } = req.query; 
+    
+    let whereClause = '';
+    let params: any[] = [];
+    
+    if (month && typeof month === 'string') {
+      whereClause = 'WHERE created_at LIKE ?';
+      params.push(`${month}%`);
+    } else if (year && typeof year === 'string') {
+      whereClause = 'WHERE created_at LIKE ?';
+      params.push(`${year}-%`);
+    }
+
     // Aggregates
     const statsResult = await querySql<{
       total_count: number;
@@ -148,7 +161,8 @@ export async function getDashboardStats(req: AuthenticatedRequest, res: Response
         COALESCE(SUM(CASE WHEN status IN ('FAILED', 'EXPIRED', 'CANCELLED') THEN 1 ELSE 0 END), 0) as failed_count,
         COALESCE(SUM(CASE WHEN status IN ('FAILED', 'EXPIRED', 'CANCELLED') THEN amount ELSE 0 END), 0) as failed_amount
       FROM transactions
-    `);
+      ${whereClause}
+    `, params);
 
     const stats = statsResult[0] || {
       total_count: 0,
@@ -168,19 +182,21 @@ export async function getDashboardStats(req: AuthenticatedRequest, res: Response
         COALESCE(SUM(CASE WHEN status = 'PAID' THEN amount ELSE 0 END), 0) as paid_amount,
         COUNT(*) as count
       FROM transactions
+      ${whereClause}
       GROUP BY DATE(created_at)
       ORDER BY date DESC
       LIMIT 7
-    `);
+    `, params);
 
     // Recent Transactions (Last 5)
     const recentTransactions = await querySql<Transaction>(`
       SELECT t.*, p.qr_content 
       FROM transactions t
       LEFT JOIN payments p ON p.transaction_id = t.id
+      ${whereClause ? whereClause.replace('created_at', 't.created_at') : ''}
       ORDER BY t.id DESC
       LIMIT 5
-    `);
+    `, params);
 
     return sendSuccess(res, {
       stats,
@@ -203,13 +219,12 @@ export async function cancelTransaction(req: AuthenticatedRequest, res: Response
     }
 
     if (transaction.status !== 'PENDING') {
-      return sendError(res, `Transaksi tidak dapat dibatalkan karena berstatus ${transaction.status}.`, 400);
+      return sendError(res, "Transaksi tidak dapat dibatalkan karena berstatus " + transaction.status + ".", 400);
     }
 
     const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
-
-    await runSql(`UPDATE transactions SET status = 'CANCELLED', updated_at = ? WHERE id = ?`, [now, id]);
-    await runSql(`UPDATE payments SET status = 'CANCELLED', updated_at = ? WHERE transaction_id = ?`, [now, id]);
+    await runSql("UPDATE transactions SET status = 'CANCELLED', updated_at = ? WHERE id = ?", [now, id]);
+    await runSql("UPDATE payments SET status = 'CANCELLED', updated_at = ? WHERE transaction_id = ?", [now, id]);
 
     return sendSuccess(res, {}, 'Transaksi berhasil dibatalkan.');
   } catch (err: any) {

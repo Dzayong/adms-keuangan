@@ -3,11 +3,66 @@ import { querySql, runSql } from '../config/db.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 import { AuthenticatedRequest } from '../middleware/auth.js';
 import { User, UserRole } from '../models/types.js';
+import bcrypt from 'bcryptjs';
+
+export async function createUser(req: AuthenticatedRequest, res: Response) {
+  try {
+    const { name, email, password, role, profile_photo } = req.body;
+
+    if (!name || !email || !password || !role) {
+      return sendError(res, 'Semua field (nama, email, password, role) wajib diisi.', 400);
+    }
+
+    if (!['ADMIN', 'OPERATOR'].includes(role)) {
+      return sendError(res, 'Role tidak valid.', 400);
+    }
+
+    // Check if email exists
+    const existing = await querySql<{ id: number }>(`SELECT id FROM users WHERE email = ?`, [email]);
+    if (existing.length > 0) {
+      return sendError(res, 'Email sudah terdaftar.', 400);
+    }
+
+    const passwordHash = bcrypt.hashSync(password, 10);
+    const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
+    await runSql(
+      `INSERT INTO users (name, email, password_hash, role, profile_photo, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 1, ?, ?)`,
+      [name, email, passwordHash, role, profile_photo || '', nowStr, nowStr]
+    );
+
+    return sendSuccess(res, {}, 'Pengguna baru berhasil ditambahkan.', 201);
+  } catch (err) {
+    console.error('Error creating user:', err);
+    return sendError(res, 'Gagal menambahkan pengguna.', 500);
+  }
+}
+
+export async function resetUserPassword(req: AuthenticatedRequest, res: Response) {
+  try {
+    const { id } = req.params;
+    const { password } = req.body;
+
+    if (!password || password.length < 6) {
+      return sendError(res, 'Password baru minimal 6 karakter.', 400);
+    }
+
+    const passwordHash = bcrypt.hashSync(password, 10);
+    const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
+    await runSql(`UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?`, [passwordHash, nowStr, id]);
+
+    return sendSuccess(res, {}, 'Password berhasil di-reset.');
+  } catch (err) {
+    console.error('Error resetting password:', err);
+    return sendError(res, 'Gagal mereset password.', 500);
+  }
+}
 
 export async function getAllUsers(req: AuthenticatedRequest, res: Response) {
   try {
     const users = await querySql<Omit<User, 'password_hash'>>(
-      `SELECT id, name, email, role, is_active, created_at, updated_at FROM users`
+      `SELECT id, name, email, role, profile_photo, is_active, created_at, updated_at FROM users`
     );
     return sendSuccess(res, users);
   } catch (err) {

@@ -13,6 +13,7 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
+  profile_photo?: string;
   is_active: boolean;
   created_at: string;
 }

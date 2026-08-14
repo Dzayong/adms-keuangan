@@ -78,4 +78,19 @@ router.post('/:id/revoke', async (req, res, next) => {
   }
 });
 
+router.delete('/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    
+    await runSql(
+      `DELETE FROM api_keys WHERE id = ?`,
+      [id]
+    );
+
+    res.json({ success: true, message: 'API key deleted successfully' });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

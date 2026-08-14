@@ -19,28 +19,35 @@ interface Props {
   userRole?: string;
 }
 
+interface NavItem {
+  id: string;
+  label: string;
+  icon: React.ElementType;
+  requireAdmin?: boolean;
+}
+
 export const Sidebar: React.FC<Props> = ({ currentTab, onSelectTab, userRole }) => {
   const { user } = useAuth();
 
-  const allNavItems = [
+  const allNavItems: NavItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'transactions', label: 'Transactions', icon: Receipt },
-    { id: 'create_payment', label: 'Create Payment', icon: PlusCircle },
+    { id: 'create_payment', label: 'Manual Payment', icon: PlusCircle },
     { id: 'reports', label: 'Reports', icon: BarChart3 },
     { id: 'users', label: 'Users', icon: Users, requireAdmin: true },
     { id: 'providers', label: 'Providers', icon: ServerCrash, requireAdmin: true },
     { id: 'settings', label: 'Settings', icon: Settings, requireAdmin: true },
-    { id: 'api_keys', label: 'API Management', icon: Key, requireAdmin: true },
+    { id: 'api_keys', label: 'Client Apps', icon: Key, requireAdmin: true },
   ];
 
   const navItems = allNavItems.filter(item => !item.requireAdmin || userRole === 'ADMIN');
 
   return (
-    <aside className="w-64 shrink-0 flex flex-col bg-slate-900 border-r border-slate-800 text-slate-300 hidden md:flex min-h-[calc(100vh-4rem)] select-none">
+    <aside className="w-64 shrink-0 flex flex-col bg-slate-950 border-r border-slate-800 text-slate-300 hidden md:flex min-h-[calc(100vh-4rem)] select-none">
       <div className="p-6 border-b border-slate-700/50">
         <div className="flex items-center gap-2.5">
           <img src="/logo.png" alt="ADMS Logo" className="h-10 w-auto object-contain bg-white rounded p-1" />
-          <span className="text-white font-black tracking-tight text-2xl ml-1">QRIS</span>
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1A2C59] via-[#1A2C59] to-amber-500 font-black tracking-tight text-2xl ml-1 drop-shadow-[0_0_2px_rgba(255,255,255,0.8)]">QRIS</span>
         </div>
         <p className="text-slate-400 text-[10px] mt-1 font-semibold uppercase tracking-widest">
           INTERNAL MANAGEMENT
@@ -61,13 +68,13 @@ export const Sidebar: React.FC<Props> = ({ currentTab, onSelectTab, userRole }) 
                 onClick={() => onSelectTab(item.id)}
                 className={`w-full flex items-center gap-3 px-6 py-3 text-sm font-semibold transition-colors text-left ${
                   isActive
-                    ? 'text-white bg-slate-800/60 border-r-4 border-yellow-500 font-bold'
+                    ? 'text-white bg-slate-800/60 border-r-4 border-indigo-600 font-bold'
                     : 'text-slate-400 hover:text-white hover:bg-slate-800/30'
                 }`}
               >
                 <div
                   className={`w-2 h-2 rounded-full transition-colors ${
-                    isActive ? 'bg-yellow-500 shadow-xs shadow-yellow-500' : 'bg-slate-600'
+                    isActive ? 'bg-indigo-600 shadow-xs shadow-yellow-500' : 'bg-slate-600'
                   }`}
                 />
                 <Icon className={`w-4 h-4 ${isActive ? 'text-yellow-400' : 'text-slate-500'}`} />
@@ -77,22 +84,18 @@ export const Sidebar: React.FC<Props> = ({ currentTab, onSelectTab, userRole }) 
           })}
         </div>
 
-        <div className="mx-4 mt-6 p-3 bg-slate-800/40 rounded-xl border border-slate-700/50">
-          <div className="flex items-center gap-2 text-yellow-400 font-bold text-xs mb-1">
-            <Info className="w-3.5 h-3.5" />
-            <span>SANDBOX MOCK ACTIVE</span>
-          </div>
-          <p className="text-[10px] text-slate-400 leading-normal">
-            Sistem terintegrasi dengan Mock QRIS engine & simulator callback webhook.
-          </p>
-        </div>
+
       </nav>
 
-      <div className="p-4 bg-slate-900 border-t border-slate-700/50">
+      <div className="p-4 bg-slate-950 border-t border-slate-700/50">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-xs font-bold text-yellow-400">
-            {user?.name?.substring(0, 2).toUpperCase() || 'AD'}
-          </div>
+          {user?.profile_photo ? (
+            <img src={user.profile_photo} alt={user.name} className="w-8 h-8 rounded-full object-cover border border-slate-600 shadow-xs" />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-xs font-bold text-yellow-400">
+              {user?.name?.substring(0, 2).toUpperCase() || 'AD'}
+            </div>
+          )}
           <div className="flex flex-col text-left overflow-hidden">
             <span className="text-xs text-white font-bold truncate">{user?.name || 'Administrator'}</span>
             <span className="text-[10px] text-slate-400 font-mono truncate">{user?.email || 'admin@admsqris.local'}</span>

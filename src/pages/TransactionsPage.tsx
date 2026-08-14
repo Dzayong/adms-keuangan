@@ -111,17 +111,17 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
     <div className="space-y-6 pb-12 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-xs">
         <div>
-          <h2 className="text-xl font-bold text-slate-800">Transactions Data Grid</h2>
+          <h2 className="text-xl font-bold text-slate-800">Daftar Transaksi</h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Audit history & state management for QRIS invoices.
+            Riwayat tagihan dan pembayaran QRIS dari semua aplikasi.
           </p>
         </div>
         <button
           onClick={() => fetchTransactions(pagination.page)}
           className="inline-flex items-center gap-2 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-colors border border-slate-200"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-yellow-600' : ''}`} />
-          <span>Refresh Data</span>
+          <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-indigo-700' : ''}`} />
+          <span>Segarkan Data</span>
         </button>
       </div>
 
@@ -134,8 +134,8 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search Invoice # or Customer Name..."
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-10 pr-4 py-2 text-xs text-slate-800 font-medium placeholder-slate-400 focus:outline-none focus:border-yellow-500 focus:bg-white transition-all"
+              placeholder="Cari ID Tagihan atau Nama Pelanggan..."
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-10 pr-4 py-2 text-xs text-slate-800 font-medium placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:bg-white transition-all"
             />
           </div>
 
@@ -143,35 +143,35 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:border-yellow-500"
+              className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:border-indigo-600"
             >
-              <option value="">All Statuses</option>
-              <option value="PENDING">PENDING</option>
-              <option value="PAID">PAID (Settled)</option>
-              <option value="FAILED">FAILED</option>
-              <option value="EXPIRED">EXPIRED</option>
-              <option value="CANCELLED">CANCELLED</option>
+              <option value="">Semua Status</option>
+              <option value="PENDING">PENDING (Menunggu)</option>
+              <option value="PAID">PAID (Lunas)</option>
+              <option value="FAILED">FAILED (Gagal)</option>
+              <option value="EXPIRED">EXPIRED (Kedaluwarsa)</option>
+              <option value="CANCELLED">CANCELLED (Batal)</option>
             </select>
 
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-700 focus:outline-none focus:border-yellow-500"
+              className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-700 focus:outline-none focus:border-indigo-600"
             />
 
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-700 focus:outline-none focus:border-yellow-500"
+              className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-700 focus:outline-none focus:border-indigo-600"
             />
 
             <button
               type="submit"
-              className="px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold rounded-lg text-xs transition-colors"
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs transition-colors"
             >
-              Filter
+              Cari Data
             </button>
 
             {(search || statusFilter || startDate || endDate) && (
@@ -195,25 +195,25 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
             <thead className="bg-slate-50 sticky top-0">
               <tr>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100">
-                  Invoice
+                  ID Tagihan
                 </th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100">
-                  Customer
+                  Pelanggan
                 </th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100">
-                  Amount
+                  Nominal
                 </th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100">
-                  Method
+                  Metode
                 </th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100">
                   Status
                 </th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100">
-                  Date
+                  Tanggal
                 </th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100 text-right">
-                  Actions
+                  Aksi
                 </th>
               </tr>
             </thead>
@@ -221,7 +221,7 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
               {transactions.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-slate-400 text-xs italic">
-                    {isLoading ? 'Fetching transaction records...' : 'No transactions matching filter criteria.'}
+                    {isLoading ? 'Mengambil data transaksi...' : 'Tidak ada transaksi yang cocok.'}
                   </td>
                 </tr>
               ) : (
@@ -248,16 +248,16 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
                       <div className="flex items-center justify-end gap-1.5">
                         <button
                           onClick={() => onNavigateToDetail(tx.id)}
-                          className="px-2.5 py-1 bg-yellow-500 hover:bg-yellow-400 text-slate-900 rounded-md text-[11px] font-bold transition-colors flex items-center gap-1 shadow-2xs"
+                          className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-[11px] font-bold transition-colors flex items-center gap-1 shadow-2xs"
                         >
                           <Eye className="w-3 h-3" />
-                          <span>QR Screen</span>
+                          <span>Lihat QR</span>
                         </button>
                         <button
                           onClick={() => openTxDetail(tx)}
                           className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md text-[11px] font-semibold transition-colors border border-slate-200"
                         >
-                          Logs
+                          Log Webhook
                         </button>
                       </div>
                     </td>
@@ -307,7 +307,7 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
           <div className="space-y-6 text-sm text-slate-700">
             <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
               <div>
-                <div className="text-xs text-slate-400 font-bold uppercase">Customer</div>
+                <div className="text-xs text-slate-400 font-bold uppercase">Pelanggan</div>
                 <div className="font-bold text-slate-900">{selectedTx.customer_name}</div>
                 <div className="text-xs text-slate-500">{selectedTx.customer_phone || '-'}</div>
               </div>
@@ -341,7 +341,7 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
             {/* Audit Logs */}
             <div>
               <h4 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-2">
-                Riwayat Event & Payment Log
+                Log Sistem & Pengiriman Webhook
               </h4>
               {logs.length === 0 ? (
                 <div className="text-xs text-slate-400 py-3 italic">Belum ada riwayat log callback.</div>

@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext.js';
-import { QrCode, Lock, Mail, ShieldAlert, ArrowRight, AlertTriangle } from 'lucide-react';
+import { Lock, Mail, ShieldAlert, ArrowRight, Eye, EyeOff, AlertCircle, ShieldCheck } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
-  const [email, setEmail] = useState('admin@admsqris.local');
-  const [password, setPassword] = useState('Admin123!');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -18,124 +19,111 @@ export const LoginPage: React.FC = () => {
     setIsSubmitting(false);
 
     if (!res.success) {
-      setError(res.message || 'Login gagal.');
+      setError(res.message || 'Kredensial tidak valid. Silakan coba lagi.');
     }
   };
 
-  const handleQuickFill = (role: 'admin' | 'operator') => {
-    if (role === 'admin') {
-      setEmail('admin@admsqris.local');
-      setPassword('Admin123!');
-    } else {
-      setEmail('operator@admsqris.local');
-      setPassword('Operator123!');
-    }
-    setError('');
-  };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col justify-center items-center p-4 sm:p-6 text-slate-100 relative overflow-hidden">
-      <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-xl p-8 shadow-xl relative z-10">
-        <div className="flex flex-col items-center text-center mb-8">
-          <div className="mb-4">
-            <img src="/logo.png" alt="ADMS Logo" className="h-20 w-auto object-contain bg-white rounded-lg p-2 shadow-lg" />
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight text-white">
-            <span className="text-yellow-400">QRIS</span>
-          </h1>
-          <p className="text-[11px] font-mono font-bold text-slate-400 mt-0.5 tracking-wider uppercase">
-            INTERNAL OFFICE MANAGEMENT SYSTEM
-          </p>
-        </div>
-
-        {/* Development Seed Warning Badge */}
-        <div className="mb-6 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg flex items-start gap-2.5 text-xs text-yellow-300 font-mono">
-          <AlertTriangle className="w-4 h-4 text-yellow-400 shrink-0 mt-0.5" />
-          <div className="leading-tight">
-            <span className="font-bold">SANDBOX MODE:</span> Select default seed credentials below to enter system.
-          </div>
-        </div>
-
-        {error && (
-          <div className="mb-6 p-3 bg-rose-950/80 border border-rose-800 text-rose-200 text-xs rounded-lg flex items-center gap-2">
-            <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-[10px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">
-              Access Email
-            </label>
-            <div className="relative">
-              <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="name@admsqris.local"
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-10 pr-4 py-2.5 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-yellow-500 transition-all"
-              />
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 relative overflow-hidden font-sans">
+      
+      {/* Decorative Premium Background Elements */}
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-100/50 rounded-full blur-3xl mix-blend-multiply"></div>
+      <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] bg-amber-100/40 rounded-full blur-3xl mix-blend-multiply"></div>
+      
+      <div className="w-full max-w-[420px] relative z-10">
+        
+        {/* Main Card */}
+        <div className="bg-white/80 backdrop-blur-xl border border-white/50 rounded-[2rem] p-8 sm:p-10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)]">
+          
+          {/* Unified Brand Logo */}
+          <div className="flex justify-center mb-10">
+            <div className="flex items-center gap-2 relative">
+              <img src="/logo.png" alt="ADMS" className="h-16 w-auto object-contain mix-blend-multiply" />
+              <div className="flex flex-col pt-1.5">
+                <h1 className="text-[2.3rem] leading-none font-black text-transparent bg-clip-text bg-gradient-to-r from-[#1A2C59] via-[#1A2C59] to-amber-500 tracking-tight drop-shadow-sm">
+                  QRIS
+                </h1>
+                <div className="h-[3px] w-full bg-gradient-to-r from-[#1A2C59] to-amber-500 rounded-full mt-1.5 opacity-90"></div>
+              </div>
             </div>
           </div>
 
-          <div>
-            <label className="block text-[10px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">
-              Password
-            </label>
-            <div className="relative">
-              <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="••••••••"
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-10 pr-4 py-2.5 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-yellow-500 transition-all"
-              />
+          <div className="text-center mb-8">
+            <h2 className="text-xl font-bold text-slate-800 tracking-tight">Selamat Datang</h2>
+            <p className="text-sm font-medium text-slate-500 mt-1.5">Masuk ke Internal Office Management</p>
+          </div>
+
+          {error && (
+            <div className="mb-6 p-4 bg-red-50/80 border border-red-100 rounded-2xl flex items-start gap-3 text-red-700 animate-in fade-in slide-in-from-top-2">
+              <ShieldAlert className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+              <span className="text-sm font-medium leading-relaxed">{error}</span>
             </div>
-          </div>
+          )}
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full mt-2 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-bold py-2.5 px-4 rounded-lg shadow-xs flex items-center justify-center gap-2 text-xs transition-all active:scale-98 disabled:opacity-50"
-          >
-            {isSubmitting ? (
-              <span>Authenticating...</span>
-            ) : (
-              <>
-                <span>Sign In to Terminal</span>
-                <ArrowRight className="w-4 h-4" />
-              </>
-            )}
-          </button>
-        </form>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-1.5">
+              <label className="text-[13px] font-semibold text-slate-700 ml-1">Username / Email</label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                </div>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  placeholder="Masukkan username/email"
+                  className="block w-full pl-11 pr-4 py-3.5 bg-slate-100/50 border border-slate-200/80 rounded-2xl text-sm font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 focus:bg-white transition-all duration-200"
+                />
+              </div>
+            </div>
 
-        {/* Quick Fill Buttons for Testing */}
-        <div className="mt-6 pt-5 border-t border-slate-800 text-center">
-          <p className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider mb-2.5">
-            Quick Fill Test Roles:
-          </p>
-          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1.5">
+              <label className="text-[13px] font-semibold text-slate-700 ml-1">Password</label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                </div>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  placeholder="Masukkan password"
+                  className="block w-full pl-11 pr-12 py-3.5 bg-slate-100/50 border border-slate-200/80 rounded-2xl text-sm font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 focus:bg-white transition-all duration-200"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
+            </div>
+
             <button
-              type="button"
-              onClick={() => handleQuickFill('admin')}
-              className="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-mono font-bold text-yellow-400 transition-colors flex items-center justify-center gap-1.5"
+              type="submit"
+              disabled={isSubmitting}
+              className="group relative w-full flex justify-center py-4 px-4 border border-transparent rounded-2xl text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-900 transition-all duration-200 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed overflow-hidden mt-2"
             >
-              <span>🔑 ADMIN</span>
+              <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-900 to-slate-900 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <span className="relative flex items-center gap-2">
+                {isSubmitting ? 'Memproses...' : 'Masuk Sekarang'}
+                {!isSubmitting && <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />}
+              </span>
             </button>
-            <button
-              type="button"
-              onClick={() => handleQuickFill('operator')}
-              className="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-mono font-bold text-sky-400 transition-colors flex items-center justify-center gap-1.5"
-            >
-              <span>👤 OPERATOR</span>
-            </button>
-          </div>
+          </form>
+
         </div>
+
+
+        <div className="mt-8 text-center flex items-center justify-center gap-1.5 text-xs font-medium text-slate-400">
+          <ShieldCheck className="w-4 h-4" />
+          <span>Sistem Internal Terenkripsi & Aman</span>
+        </div>
+
       </div>
     </div>
   );

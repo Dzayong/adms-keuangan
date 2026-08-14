@@ -45,6 +45,7 @@ async function initSchemaAndSeed(db: Database) {
       email TEXT NOT NULL UNIQUE,
       password_hash TEXT NOT NULL,
       role TEXT NOT NULL DEFAULT 'OPERATOR',
+      profile_photo TEXT DEFAULT '',
       is_active INTEGER NOT NULL DEFAULT 1,
       created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
@@ -65,6 +66,16 @@ async function initSchemaAndSeed(db: Database) {
       created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
       FOREIGN KEY (created_by) REFERENCES users(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS login_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      user_name TEXT NOT NULL,
+      ip_address TEXT,
+      user_agent TEXT,
+      login_time TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+      FOREIGN KEY (user_id) REFERENCES users(id)
     );
 
     CREATE TABLE IF NOT EXISTS payment_providers (
@@ -192,9 +203,16 @@ async function initSchemaAndSeed(db: Database) {
 
   if (merchantCount === 0) {
     db.run(
-      `INSERT INTO internal_merchants (name, nmid, qris_image_path, is_active) VALUES (?, ?, ?, ?)`,
-      ['ARMADA DIGITAL MARKETING', 'ID1025438297117', '', 1]
+      'INSERT INTO internal_merchants (name, nmid, qris_image_path) VALUES (?, ?, ?)',
+      ['Toko Default', 'ID102030405060708', '/qris-default.jpg']
     );
+  }
+
+  // Attempt to add profile_photo column if it doesn't exist
+  try {
+    db.run("ALTER TABLE users ADD COLUMN profile_photo TEXT DEFAULT ''");
+  } catch (error) {
+    // Ignore error if column already exists
   }
 
   // Seed API Keys if empty

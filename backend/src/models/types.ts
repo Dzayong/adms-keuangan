@@ -14,6 +14,7 @@ export interface User {
   email: string;
   password_hash: string;
   role: UserRole;
+  profile_photo?: string;
   is_active: number;
   created_at: string;
   updated_at: string;
@@ -24,6 +25,7 @@ export interface UserDTO {
   name: string;
   email: string;
   role: UserRole;
+  profile_photo?: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -96,4 +98,5 @@ export interface JwtPayload {
   email: string;
   role: UserRole;
   name: string;
+  profile_photo?: string;
 }

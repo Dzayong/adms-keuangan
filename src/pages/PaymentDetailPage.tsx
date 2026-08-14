@@ -44,9 +44,9 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
       setTx(transaction);
       setLogs(res.data.logs || []);
 
-      // Calculate expiry countdown
+      // Calculate expiry countdown by appending Z because DB stores it in UTC
       if (transaction.expired_at) {
-        const expiredTime = new Date(transaction.expired_at.replace(' ', 'T')).getTime();
+        const expiredTime = new Date(transaction.expired_at.replace(' ', 'T') + 'Z').getTime();
         const nowTime = new Date().getTime();
         const diffSeconds = Math.max(0, Math.floor((expiredTime - nowTime) / 1000));
         setTimeRemaining(diffSeconds);
@@ -213,7 +213,7 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
     : tx.qr_content;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-16 animate-fade-in">
+    <div className="space-y-6 pb-16 animate-fade-in">
       <div className="flex items-center justify-between gap-4">
         <button
           onClick={onBack}
@@ -240,7 +240,7 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
             {tx.provider_code === 'internal_qris' ? 'QRIS KANTOR / PEMBAYARAN' : 'DYNAMIC QRIS PAYMENT CODE'}
           </div>
 
-          <div className="p-2 bg-white border-4 border-yellow-500 rounded-lg shadow-xs my-2 flex justify-center w-[260px] max-w-full">
+          <div className="p-2 bg-white border-4 border-indigo-600 rounded-lg shadow-xs my-2 flex justify-center w-[260px] max-w-full">
             {(tx.provider_reference?.startsWith('INTERNAL-') || tx.payment_method === 'STATIC_QRIS') ? (
               <img
                 src={resolvedQrUrl}
@@ -277,12 +277,12 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
           <div className="w-full mt-4 pt-3 border-t border-slate-200">
             {tx.status === 'PENDING' && (
               <div className="space-y-1.5">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-yellow-100 text-yellow-800 border border-yellow-200 rounded-full text-xs font-bold font-mono animate-pulse">
-                  <Clock className="w-3.5 h-3.5 text-yellow-600" />
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-100 text-indigo-900 border border-indigo-200 rounded-full text-xs font-bold font-mono animate-pulse">
+                  <Clock className="w-3.5 h-3.5 text-indigo-700" />
                   <span>AWAITING PAYMENT... ({formatCountdown(timeRemaining)})</span>
                 </div>
                 {tx.provider_code === 'internal_qris' ? (
-                  <div className="text-[11px] text-slate-600 mt-2 space-y-1 text-left bg-yellow-50 p-2 rounded border border-yellow-200">
+                  <div className="text-[11px] text-slate-600 mt-2 space-y-1 text-left bg-indigo-50 p-2 rounded border border-indigo-200">
                     <p className="font-bold">⚠️ INI PEMBAYARAN NYATA</p>
                     <ul className="list-disc list-inside ml-1">
                       <li>Scan QRIS menggunakan aplikasi mobile banking atau e-wallet.</li>
@@ -372,7 +372,7 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
           {tx.description && (
             <div>
               <span className="text-[10px] font-bold text-slate-400 uppercase">DESCRIPTION</span>
-              <p className="text-xs text-slate-700 mt-1 p-2.5 bg-yellow-50 border border-yellow-200 rounded-lg font-medium">
+              <p className="text-xs text-slate-700 mt-1 p-2.5 bg-indigo-50 border border-indigo-200 rounded-lg font-medium">
                 {tx.description}
               </p>
             </div>
@@ -395,7 +395,7 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
         <div className="bg-slate-900 border border-slate-800 text-white rounded-xl p-6 shadow-xl space-y-4">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded bg-yellow-500 text-slate-900 font-bold flex items-center justify-center shrink-0">
+              <div className="w-7 h-7 rounded bg-indigo-600 text-white font-bold flex items-center justify-center shrink-0">
                 <Play className="w-4 h-4 fill-slate-900" />
               </div>
               <div>
@@ -405,13 +405,13 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
                 </p>
               </div>
             </div>
-            <span className="px-2 py-0.5 bg-yellow-500/20 border border-yellow-500/40 text-yellow-400 font-mono font-bold text-[10px] uppercase rounded">
+            <span className="px-2 py-0.5 bg-indigo-600/20 border border-indigo-600/40 text-yellow-400 font-mono font-bold text-[10px] uppercase rounded">
               SANDBOX ACTIVE
             </span>
           </div>
 
           {simMessage && (
-            <div className="p-3 bg-slate-800 border border-yellow-500/50 rounded-lg text-xs text-yellow-300 font-mono font-semibold flex items-center gap-2">
+            <div className="p-3 bg-slate-800 border border-indigo-600/50 rounded-lg text-xs text-yellow-300 font-mono font-semibold flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-yellow-400 shrink-0" />
               <span>{simMessage}</span>
             </div>
@@ -448,7 +448,7 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
             <button
               disabled={isSimulating || tx.status !== 'PENDING'}
               onClick={handleSimulateWebhook}
-              className="px-3 py-2 bg-yellow-500 hover:bg-yellow-400 text-slate-900 disabled:opacity-30 font-bold text-xs rounded-lg transition-all flex items-center justify-center gap-1.5"
+              className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-30 font-bold text-xs rounded-lg transition-all flex items-center justify-center gap-1.5"
             >
               <Send className="w-3.5 h-3.5" />
               <span>Trigger Webhook</span>

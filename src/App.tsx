@@ -44,7 +44,7 @@ function AppContent() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       <Navbar
         onOpenCreateModal={() => setActiveTab('create_payment')}
       />
@@ -59,7 +59,7 @@ function AppContent() {
           userRole={user.role}
         />
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 w-full">
           {/* Active View Renderer */}
           {activeTab === 'dashboard' && (
             <DashboardPage
