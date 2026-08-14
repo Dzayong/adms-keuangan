@@ -117,6 +117,13 @@ export async function createPaymentService(params: CreatePaymentParams) {
   // Execute Payment Provider Abstraction
   let provider;
   if (providerCode) {
+    const providerModel = await getSql<{ is_active: number }>('SELECT is_active FROM payment_providers WHERE code = ?', [providerCode]);
+    if (!providerModel) {
+      throw new Error(`Provider dengan kode ${providerCode} tidak ditemukan.`);
+    }
+    if (providerModel.is_active !== 1) {
+      throw new Error(`Provider dengan kode ${providerCode} sedang tidak aktif.`);
+    }
     const { getPaymentProviderByCode } = await import('../providers/index.js');
     provider = await getPaymentProviderByCode(providerCode);
   } else {
@@ -208,10 +215,12 @@ export async function getPaymentDetailService(id: number) {
       p.provider_reference,
       p.payment_method,
       p.paid_at as payment_paid_at,
-      p.status as payment_status
+      p.status as payment_status,
+      pr.code as provider_code
     FROM transactions t
     LEFT JOIN users u ON t.created_by = u.id
     LEFT JOIN payments p ON p.transaction_id = t.id
+    LEFT JOIN payment_providers pr ON p.provider_id = pr.id
     WHERE t.id = ? OR p.id = ?
   `, [id, id]);
 

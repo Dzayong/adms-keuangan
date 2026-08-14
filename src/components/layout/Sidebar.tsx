@@ -39,10 +39,8 @@ export const Sidebar: React.FC<Props> = ({ currentTab, onSelectTab, userRole }) 
     <aside className="w-64 shrink-0 flex flex-col bg-slate-900 border-r border-slate-800 text-slate-300 hidden md:flex min-h-[calc(100vh-4rem)] select-none">
       <div className="p-6 border-b border-slate-700/50">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded bg-yellow-500 flex items-center justify-center font-black text-slate-900 shadow-sm shrink-0">
-            <QrCode className="w-5 h-5" />
-          </div>
-          <span className="text-white font-black tracking-tight text-lg">ADMS QRIS</span>
+          <img src="/logo.png" alt="ADMS Logo" className="h-10 w-auto object-contain bg-white rounded p-1" />
+          <span className="text-white font-black tracking-tight text-2xl ml-1">QRIS</span>
         </div>
         <p className="text-slate-400 text-[10px] mt-1 font-semibold uppercase tracking-widest">
           INTERNAL MANAGEMENT

@@ -87,7 +87,8 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
 
   // Render QR Code onto canvas
   useEffect(() => {
-    if (tx?.qr_content && canvasRef.current) {
+    const isStaticQris = tx?.provider_reference?.startsWith('INTERNAL-') || tx?.payment_method === 'STATIC_QRIS';
+    if (!isStaticQris && tx?.qr_content && canvasRef.current) {
       QRCode.toCanvas(canvasRef.current, tx.qr_content, {
         width: 260,
         margin: 2,
@@ -97,7 +98,7 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
         },
       }).catch((err) => console.error('Error rendering QR:', err));
     }
-  }, [tx?.qr_content]);
+  }, [tx]);
 
   // Handle Mock Simulation
   const handleSimulate = async (targetStatus: 'PAID' | 'FAILED' | 'EXPIRED') => {
@@ -143,6 +144,29 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
     }
   };
 
+  // Handle Manual Verification
+  const handleManualVerify = async () => {
+    if (!window.confirm('Pastikan transaksi benar-benar terlihat pada sistem merchant/bank QRIS sebelum mengonfirmasi. Lanjutkan verifikasi pembayaran ini?')) {
+      return;
+    }
+
+    setIsSimulating(true);
+    setSimMessage('');
+
+    const res = await apiFetch(`/payments/${transactionId}/verify`, {
+      method: 'POST',
+    });
+
+    setIsSimulating(false);
+
+    if (res.success) {
+      setSimMessage('Pembayaran berhasil diverifikasi secara manual!');
+      fetchPaymentData();
+    } else {
+      setSimMessage(res.message || 'Gagal memverifikasi pembayaran.');
+    }
+  };
+
   const copyQrText = () => {
     if (tx?.qr_content) {
       navigator.clipboard.writeText(tx.qr_content);
@@ -177,6 +201,17 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
     );
   }
 
+  console.log('[INTERNAL QR DEBUG]', {
+    providerReference: tx.provider_reference,
+    paymentMethod: tx.payment_method,
+    qrContent: tx.qr_content,
+    qrContentType: typeof tx.qr_content
+  });
+
+  const resolvedQrUrl = tx.qr_content?.startsWith('/')
+    ? `http://localhost:3010${tx.qr_content}`
+    : tx.qr_content;
+
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-16 animate-fade-in">
       <div className="flex items-center justify-between gap-4">
@@ -202,11 +237,33 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
         {/* Left Side: QR Display & Countdown */}
         <div className="flex flex-col items-center text-center p-6 bg-slate-50 border border-slate-200 rounded-lg relative">
           <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">
-            DYNAMIC QRIS PAYMENT CODE
+            {tx.provider_code === 'internal_qris' ? 'QRIS KANTOR / PEMBAYARAN' : 'DYNAMIC QRIS PAYMENT CODE'}
           </div>
 
-          <div className="p-2 bg-white border-4 border-yellow-500 rounded-lg shadow-xs my-2">
-            <canvas ref={canvasRef} className="max-w-full rounded" />
+          <div className="p-2 bg-white border-4 border-yellow-500 rounded-lg shadow-xs my-2 flex justify-center w-[260px] max-w-full">
+            {(tx.provider_reference?.startsWith('INTERNAL-') || tx.payment_method === 'STATIC_QRIS') ? (
+              <img
+                src={resolvedQrUrl}
+                alt="QRIS Kantor"
+                className="w-full h-auto object-contain rounded"
+                style={{ display: 'block', visibility: 'visible', opacity: 1 }}
+                onLoad={(e) => {
+                  const img = e.currentTarget;
+                  console.log('[QR LOAD]', {
+                    src: img.src,
+                    naturalWidth: img.naturalWidth,
+                    naturalHeight: img.naturalHeight,
+                    width: img.width,
+                    height: img.height
+                  });
+                }}
+                onError={(e) => {
+                  console.error('[QR ERROR]', e.currentTarget.src);
+                }}
+              />
+            ) : (
+              <canvas ref={canvasRef} className="max-w-full rounded" />
+            )}
           </div>
 
           <div className="mt-2 space-y-1">
@@ -224,16 +281,38 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
                   <Clock className="w-3.5 h-3.5 text-yellow-600" />
                   <span>AWAITING PAYMENT... ({formatCountdown(timeRemaining)})</span>
                 </div>
-                <p className="text-[11px] text-slate-500">
-                  Scan QR with any compliant banking or e-wallet application.
-                </p>
+                {tx.provider_code === 'internal_qris' ? (
+                  <div className="text-[11px] text-slate-600 mt-2 space-y-1 text-left bg-yellow-50 p-2 rounded border border-yellow-200">
+                    <p className="font-bold">⚠️ INI PEMBAYARAN NYATA</p>
+                    <ul className="list-disc list-inside ml-1">
+                      <li>Scan QRIS menggunakan aplikasi mobile banking atau e-wallet.</li>
+                      <li>Masukkan nominal pembayaran sesuai invoice.</li>
+                      <li>Pastikan nominal pembayaran sesuai dengan jumlah tagihan.</li>
+                      <li>Setelah pembayaran berhasil, akan diverifikasi oleh operator.</li>
+                    </ul>
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-slate-500">
+                    Scan QR with any compliant banking or e-wallet application.
+                  </p>
+                )}
               </div>
             )}
 
             {tx.status === 'PAID' && (
-              <div className="p-3 bg-green-100 border border-green-200 text-green-800 rounded-lg text-xs font-bold flex items-center justify-center gap-2 font-mono">
-                <CheckCircle2 className="w-4 h-4 text-green-700" />
-                <span>PAYMENT SETTLED SUCCESSFULLY</span>
+              <div className="space-y-2">
+                <div className="p-3 bg-green-100 border border-green-200 text-green-800 rounded-lg text-xs font-bold flex items-center justify-center gap-2 font-mono">
+                  <CheckCircle2 className="w-4 h-4 text-green-700" />
+                  <span>PAYMENT SETTLED SUCCESSFULLY</span>
+                </div>
+                {tx.provider_code === 'internal_qris' && logs.some(l => l.event_type === 'MANUAL_STATIC_QRIS') && (
+                  <div className="text-[10px] text-green-700 font-mono flex items-center justify-center gap-1">
+                    <ShieldAlert className="w-3 h-3" />
+                    Verified by: {
+                      JSON.parse(logs.find(l => l.event_type === 'MANUAL_STATIC_QRIS')?.payload || '{}').verifierName || 'Admin'
+                    }
+                  </div>
+                )}
               </div>
             )}
 
@@ -312,7 +391,7 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
       </div>
 
       {/* Interactive Mock Payment Simulator Panel - ADMIN ONLY */}
-      {user?.role === 'ADMIN' && (
+      {user?.role === 'ADMIN' && tx.provider_code !== 'internal_qris' && !(tx.provider_reference?.startsWith('INTERNAL-') || tx.payment_method === 'STATIC_QRIS') && (
         <div className="bg-slate-900 border border-slate-800 text-white rounded-xl p-6 shadow-xl space-y-4">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <div className="flex items-center gap-2.5">
@@ -373,6 +452,43 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
             >
               <Send className="w-3.5 h-3.5" />
               <span>Trigger Webhook</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Manual Verification Panel for Internal Static QRIS - ADMIN & OPERATOR */}
+      {(user?.role === 'ADMIN' || user?.role === 'OPERATOR') && tx.provider_code === 'internal_qris' && tx.status === 'PENDING' && (
+        <div className="bg-slate-900 border border-slate-800 text-white rounded-xl p-6 shadow-xl space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded bg-blue-500 text-white font-bold flex items-center justify-center shrink-0">
+                <ShieldAlert className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">Manual Verification</h3>
+                <p className="text-[11px] text-slate-400">
+                  Verifikasi pembayaran QRIS statis kantor secara manual berdasarkan mutasi rekening.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {simMessage && (
+            <div className="p-3 bg-slate-800 border border-blue-500/50 rounded-lg text-xs text-blue-300 font-mono font-semibold flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-blue-400 shrink-0" />
+              <span>{simMessage}</span>
+            </div>
+          )}
+
+          <div className="pt-1 flex">
+            <button
+              disabled={isSimulating || tx.status !== 'PENDING'}
+              onClick={handleManualVerify}
+              className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold text-sm rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              <span>Verifikasi Pembayaran (Telah Dibayar)</span>
             </button>
           </div>
         </div>

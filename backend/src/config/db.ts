@@ -176,6 +176,11 @@ async function initSchemaAndSeed(db: Database) {
     db.run(
       `INSERT INTO payment_providers (id, name, code, environment, is_active) VALUES (2, 'DANA QRIS (Placeholder)', 'dana', 'sandbox', 0)`
     );
+  }
+  // Migration: Add internal_qris provider if missing
+  const internalProviderCheck = db.exec("SELECT COUNT(*) as count FROM payment_providers WHERE code = 'internal_qris'");
+  const internalProviderCount = internalProviderCheck[0]?.values[0]?.[0] || 0;
+  if (internalProviderCount === 0) {
     db.run(
       `INSERT INTO payment_providers (id, name, code, environment, is_active) VALUES (3, 'Internal Office QRIS', 'internal_qris', 'sandbox', 1)`
     );

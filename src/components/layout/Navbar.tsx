@@ -20,12 +20,10 @@ export const Navbar: React.FC<Props> = ({ onOpenCreateModal }) => {
     <header className="sticky top-0 z-30 h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-8 shadow-xs">
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded bg-yellow-500 flex items-center justify-center font-black text-slate-900 shadow-sm">
-            <QrCode className="w-5 h-5" />
-          </div>
+          <img src="/logo.png" alt="ADMS Logo" className="h-10 w-auto object-contain bg-white rounded px-1.5 py-0.5" />
           <div>
-            <h1 className="font-extrabold text-base sm:text-lg tracking-tight text-slate-800 flex items-center gap-2">
-              ADMS <span className="text-yellow-600 font-black">QRIS</span>
+            <h1 className="font-extrabold text-base sm:text-xl tracking-tight text-slate-800 flex items-center gap-2 ml-1">
+              <span className="text-yellow-600 font-black">QRIS</span>
             </h1>
           </div>
         </div>

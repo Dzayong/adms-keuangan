@@ -37,11 +37,11 @@ export const LoginPage: React.FC = () => {
     <div className="min-h-screen bg-slate-950 flex flex-col justify-center items-center p-4 sm:p-6 text-slate-100 relative overflow-hidden">
       <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-xl p-8 shadow-xl relative z-10">
         <div className="flex flex-col items-center text-center mb-8">
-          <div className="w-12 h-12 rounded-lg bg-yellow-500 flex items-center justify-center text-slate-950 font-black shadow-xs mb-3">
-            <QrCode className="w-7 h-7" />
+          <div className="mb-4">
+            <img src="/logo.png" alt="ADMS Logo" className="h-20 w-auto object-contain bg-white rounded-lg p-2 shadow-lg" />
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-white">
-            ADMS <span className="text-yellow-400">QRIS</span>
+          <h1 className="text-3xl font-bold tracking-tight text-white">
+            <span className="text-yellow-400">QRIS</span>
           </h1>
           <p className="text-[11px] font-mono font-bold text-slate-400 mt-0.5 tracking-wider uppercase">
             INTERNAL OFFICE MANAGEMENT SYSTEM

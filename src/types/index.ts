@@ -35,6 +35,7 @@ export interface Transaction {
   qr_content?: string;
   provider_reference?: string;
   payment_method?: string;
+  provider_code?: string;
 }
 
 export interface PaymentLog {

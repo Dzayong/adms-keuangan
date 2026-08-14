@@ -1,1 +1,42 @@
 @import "tailwindcss";
+
+@theme {
+    /* NAVY BLUE THEME (Replacing Slate) */
+    --color-slate-50: color-mix(in srgb, #0F3040 4%, white);
+    --color-slate-100: color-mix(in srgb, #0F3040 10%, white);
+    --color-slate-200: color-mix(in srgb, #0F3040 20%, white);
+    --color-slate-300: color-mix(in srgb, #0F3040 30%, white);
+    --color-slate-400: color-mix(in srgb, #0F3040 45%, white);
+    --color-slate-500: color-mix(in srgb, #0F3040 60%, white);
+    --color-slate-600: color-mix(in srgb, #0F3040 75%, white);
+    --color-slate-700: color-mix(in srgb, #0F3040 85%, white);
+    --color-slate-800: color-mix(in srgb, #0F3040 92%, white);
+    --color-slate-900: #0F3040;
+    --color-slate-950: color-mix(in srgb, #0F3040 85%, black);
+
+    /* GOLD / EMAS THEME (Replacing Yellow) */
+    --color-yellow-50: color-mix(in srgb, #FFBF00 10%, white);
+    --color-yellow-100: color-mix(in srgb, #FFBF00 20%, white);
+    --color-yellow-200: color-mix(in srgb, #FFBF00 40%, white);
+    --color-yellow-300: color-mix(in srgb, #FFBF00 60%, white);
+    --color-yellow-400: color-mix(in srgb, #FFBF00 80%, white);
+    --color-yellow-500: #FFBF00;
+    --color-yellow-600: color-mix(in srgb, #FFBF00 85%, black);
+    --color-yellow-700: color-mix(in srgb, #FFBF00 70%, black);
+    --color-yellow-800: color-mix(in srgb, #FFBF00 55%, black);
+    --color-yellow-900: color-mix(in srgb, #FFBF00 40%, black);
+    --color-yellow-950: color-mix(in srgb, #FFBF00 25%, black);
+
+    /* Mapping Amber to Gold as well since both are used */
+    --color-amber-50: var(--color-yellow-50);
+    --color-amber-100: var(--color-yellow-100);
+    --color-amber-200: var(--color-yellow-200);
+    --color-amber-300: var(--color-yellow-300);
+    --color-amber-400: var(--color-yellow-400);
+    --color-amber-500: var(--color-yellow-500);
+    --color-amber-600: var(--color-yellow-600);
+    --color-amber-700: var(--color-yellow-700);
+    --color-amber-800: var(--color-yellow-800);
+    --color-amber-900: var(--color-yellow-900);
+    --color-amber-950: var(--color-yellow-950);
+}

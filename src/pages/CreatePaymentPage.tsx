@@ -12,6 +12,7 @@ export const CreatePaymentPage: React.FC<Props> = ({ onPaymentCreated, onCancel 
   const [customerPhone, setCustomerPhone] = useState('');
   const [amount, setAmount] = useState<string>('');
   const [description, setDescription] = useState('');
+  const [providerCode, setProviderCode] = useState('mock');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -40,6 +41,7 @@ export const CreatePaymentPage: React.FC<Props> = ({ onPaymentCreated, onCancel 
         customerPhone: customerPhone.trim(),
         amount: numericAmount,
         description: description.trim(),
+        providerCode,
       }),
     });
 
@@ -123,6 +125,22 @@ export const CreatePaymentPage: React.FC<Props> = ({ onPaymentCreated, onCancel 
                 placeholder="e.g. 081234567890"
                 className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-10 pr-4 py-2.5 text-xs text-slate-900 font-mono focus:outline-none focus:border-yellow-500 focus:bg-white transition-all"
               />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">
+              Payment Provider <span className="text-rose-500">*</span>
+            </label>
+            <div className="relative">
+              <select
+                value={providerCode}
+                onChange={(e) => setProviderCode(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-xs text-slate-900 font-medium focus:outline-none focus:border-yellow-500 focus:bg-white transition-all appearance-none"
+              >
+                <option value="mock">Mock QRIS (Sandbox)</option>
+                <option value="internal_qris">Internal Office QRIS (Static)</option>
+              </select>
             </div>
           </div>
 
