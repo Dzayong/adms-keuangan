@@ -140,7 +140,7 @@ export const UsersPage: React.FC = () => {
   };
 
   if (isLoading) {
-    return <div className="p-8 text-center text-slate-500">Memuat data pengguna...</div>;
+    return <div className="p-8 text-center text-slate-500 dark:text-slate-400">Memuat data pengguna...</div>;
   }
 
   const filteredUsers = users.filter(u => 
@@ -152,11 +152,11 @@ export const UsersPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
+          <h2 className="text-2xl font-black text-slate-800 dark:text-slate-200 tracking-tight flex items-center gap-2">
             <Users className="w-6 h-6 text-indigo-600" />
             Manajemen Pengguna
           </h2>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
             Kelola akses dan role pengguna pada sistem ADMS QRIS.
           </p>
         </div>
@@ -168,7 +168,7 @@ export const UsersPage: React.FC = () => {
               placeholder="Cari nama atau email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-600"
+              className="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-sm focus:outline-none focus:border-indigo-600"
             />
           </div>
           <button 
@@ -182,32 +182,32 @@ export const UsersPage: React.FC = () => {
       </div>
 
       {error && (
-        <div className="bg-rose-50 text-rose-600 p-4 rounded-xl text-sm font-semibold border border-rose-200">
+        <div className="bg-rose-50 dark:bg-rose-950/30 text-rose-600 p-4 rounded-xl text-sm font-semibold border border-rose-200 dark:border-rose-900/50">
           {error}
         </div>
       )}
 
-      <div className="flex border-b border-slate-200">
+      <div className="flex border-b border-slate-200 dark:border-slate-800">
         <button 
           onClick={() => setActiveTab('users')}
-          className={`px-4 py-2 font-bold text-sm ${activeTab === 'users' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-500'}`}
+          className={`px-4 py-2 font-bold text-sm ${activeTab === 'users' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-500 dark:text-slate-400'}`}
         >
           Daftar Pengguna
         </button>
         <button 
           onClick={() => setActiveTab('logs')}
-          className={`px-4 py-2 font-bold text-sm ${activeTab === 'logs' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-500'}`}
+          className={`px-4 py-2 font-bold text-sm ${activeTab === 'logs' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-500 dark:text-slate-400'}`}
         >
           Riwayat Login
         </button>
       </div>
 
       {activeTab === 'users' && (
-      <div className="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden">
+      <div className="bg-white dark:bg-slate-950 rounded-2xl shadow-xs border border-slate-200 dark:border-slate-800 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <tr className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 <th className="px-6 py-4">Pengguna</th>
                 <th className="px-6 py-4 text-center">Role</th>
                 <th className="px-6 py-4 text-center">Status</th>
@@ -216,25 +216,25 @@ export const UsersPage: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredUsers.map((u) => (
-                <tr key={u.id} className="hover:bg-slate-50/50 transition-colors">
+                <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-800 dark:bg-slate-900/50 transition-colors">
                   <td className="px-6 py-4 flex items-center gap-3">
                     {u.profile_photo ? (
-                      <img src={u.profile_photo} alt={u.name} className="w-10 h-10 rounded-full object-cover border border-slate-200" />
+                      <img src={u.profile_photo} alt={u.name} className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-800" />
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-400 font-bold text-xs shadow-xs border border-slate-600">
                         {u.name.charAt(0).toUpperCase()}
                       </div>
                     )}
                     <div>
-                      <div className="font-bold text-slate-800">{u.name}</div>
-                      <div className="text-xs text-slate-500">{u.email}</div>
+                      <div className="font-bold text-slate-800 dark:text-slate-200">{u.name}</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400">{u.email}</div>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-center">
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${
                       u.role === 'ADMIN' 
                         ? 'bg-amber-100 text-amber-700 border border-amber-200' 
-                        : 'bg-slate-100 text-slate-600 border border-slate-200'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800'
                     }`}>
                       {u.role === 'ADMIN' ? <Shield className="w-3 h-3" /> : <ShieldAlert className="w-3 h-3" />}
                       {u.role}
@@ -260,14 +260,14 @@ export const UsersPage: React.FC = () => {
                           setSelectedUser(u);
                           setIsResetModalOpen(true);
                         }}
-                        className="p-1.5 text-slate-400 hover:text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors tooltip-wrapper"
+                        className="p-1.5 text-slate-400 hover:text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg transition-colors tooltip-wrapper"
                         title="Reset Password"
                       >
                         <KeyRound className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleRoleChange(u.id, u.role)}
-                        className="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors border border-slate-200"
+                        className="px-3 py-1.5 text-xs font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded-lg transition-colors border border-slate-200 dark:border-slate-800"
                       >
                         {u.role === 'ADMIN' ? 'Jadikan Operator' : 'Jadikan Admin'}
                       </button>
@@ -275,8 +275,8 @@ export const UsersPage: React.FC = () => {
                         onClick={() => handleStatusChange(u.id, u.is_active)}
                         className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${
                           u.is_active 
-                            ? 'text-rose-600 bg-rose-50 hover:bg-rose-100'
-                            : 'text-emerald-600 bg-emerald-50 hover:bg-emerald-100'
+                            ? 'text-rose-600 bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100'
+                            : 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 hover:bg-emerald-100'
                         }`}
                         disabled={u.id === currentUser?.id}
                       >
@@ -288,7 +288,7 @@ export const UsersPage: React.FC = () => {
               ))}
               {filteredUsers.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-6 py-8 text-center text-slate-500 text-sm">
+                  <td colSpan={4} className="px-6 py-8 text-center text-slate-500 dark:text-slate-400 text-sm">
                     Tidak ada data pengguna yang cocok dengan pencarian Anda.
                   </td>
                 </tr>
@@ -300,11 +300,11 @@ export const UsersPage: React.FC = () => {
       )}
 
       {activeTab === 'logs' && (
-      <div className="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden">
+      <div className="bg-white dark:bg-slate-950 rounded-2xl shadow-xs border border-slate-200 dark:border-slate-800 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <tr className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 <th className="px-6 py-4">Waktu</th>
                 <th className="px-6 py-4">Pengguna</th>
                 <th className="px-6 py-4">IP Address</th>
@@ -313,16 +313,16 @@ export const UsersPage: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {logs.map(log => (
-                <tr key={log.id} className="hover:bg-slate-50/50">
-                  <td className="px-6 py-4 text-sm font-bold text-slate-700">{log.login_time}</td>
-                  <td className="px-6 py-4 text-sm text-slate-800">{log.user_name}</td>
-                  <td className="px-6 py-4 text-sm text-slate-500 font-mono">{log.ip_address || '-'}</td>
+                <tr key={log.id} className="hover:bg-slate-50 dark:hover:bg-slate-800 dark:bg-slate-900/50">
+                  <td className="px-6 py-4 text-sm font-bold text-slate-700 dark:text-slate-300">{log.login_time}</td>
+                  <td className="px-6 py-4 text-sm text-slate-800 dark:text-slate-200">{log.user_name}</td>
+                  <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400 font-mono">{log.ip_address || '-'}</td>
                   <td className="px-6 py-4 text-xs text-slate-400 truncate max-w-[200px]">{log.user_agent || '-'}</td>
                 </tr>
               ))}
               {logs.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-6 py-8 text-center text-slate-500 text-sm">Belum ada riwayat login.</td>
+                  <td colSpan={4} className="px-6 py-8 text-center text-slate-500 dark:text-slate-400 text-sm">Belum ada riwayat login.</td>
                 </tr>
               )}
             </tbody>
@@ -334,18 +334,18 @@ export const UsersPage: React.FC = () => {
       {/* Add User Modal */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="font-bold text-slate-800 flex items-center gap-2">
+          <div className="bg-white dark:bg-slate-950 rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                 <UserPlus className="w-5 h-5 text-indigo-600" /> Tambah Pengguna
               </h3>
-              <button onClick={() => setIsAddModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => setIsAddModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:text-slate-400">
                 <XCircle className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={handleAddUser} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">Foto Profil (Opsional)</label>
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Foto Profil (Opsional)</label>
                 <input 
                   type="file" 
                   accept="image/*"
@@ -357,30 +357,30 @@ export const UsersPage: React.FC = () => {
                       reader.readAsDataURL(file);
                     }
                   }} 
-                  className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" 
+                  className="w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-indigo-50 dark:bg-indigo-950/30 file:text-indigo-700 hover:file:bg-indigo-100" 
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">Nama Lengkap</label>
-                <input required type="text" value={newUser.name} onChange={e => setNewUser({...newUser, name: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-600" placeholder="Contoh: Budi Santoso" />
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Nama Lengkap</label>
+                <input required type="text" value={newUser.name} onChange={e => setNewUser({...newUser, name: e.target.value})} className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-sm focus:outline-none focus:border-indigo-600" placeholder="Contoh: Budi Santoso" />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">Email</label>
-                <input required type="email" value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-600" placeholder="budi@example.com" />
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Email</label>
+                <input required type="email" value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-sm focus:outline-none focus:border-indigo-600" placeholder="budi@example.com" />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">Password</label>
-                <input required type="password" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-600" placeholder="Minimal 6 karakter" minLength={6} />
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Password</label>
+                <input required type="password" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-sm focus:outline-none focus:border-indigo-600" placeholder="Minimal 6 karakter" minLength={6} />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">Hak Akses (Role)</label>
-                <select value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-600">
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Hak Akses (Role)</label>
+                <select value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value})} className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-sm focus:outline-none focus:border-indigo-600">
                   <option value="OPERATOR">Operator (Kasir)</option>
                   <option value="ADMIN">Administrator</option>
                 </select>
               </div>
               <div className="pt-4 flex items-center gap-3">
-                <button type="button" onClick={() => setIsAddModalOpen(false)} className="flex-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-lg transition-colors">Batal</button>
+                <button type="button" onClick={() => setIsAddModalOpen(false)} className="flex-1 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold text-sm rounded-lg transition-colors">Batal</button>
                 <button type="submit" disabled={isSubmitting} className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-lg transition-colors disabled:opacity-50">{isSubmitting ? 'Menyimpan...' : 'Simpan'}</button>
               </div>
             </form>
@@ -391,25 +391,25 @@ export const UsersPage: React.FC = () => {
       {/* Reset Password Modal */}
       {isResetModalOpen && selectedUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="font-bold text-slate-800 flex items-center gap-2">
+          <div className="bg-white dark:bg-slate-950 rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                 <KeyRound className="w-5 h-5 text-rose-500" /> Reset Password
               </h3>
-              <button onClick={() => setIsResetModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => setIsResetModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:text-slate-400">
                 <XCircle className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={handleResetPasswordSubmit} className="p-6 space-y-4">
-              <div className="bg-slate-50 p-3 rounded-lg text-xs text-slate-600 mb-4">
-                Mereset password untuk pengguna: <strong className="text-slate-800 block mt-1">{selectedUser.name} ({selectedUser.email})</strong>
+              <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-lg text-xs text-slate-600 dark:text-slate-400 mb-4">
+                Mereset password untuk pengguna: <strong className="text-slate-800 dark:text-slate-200 block mt-1">{selectedUser.name} ({selectedUser.email})</strong>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">Password Baru</label>
-                <input required type="text" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-600" placeholder="Minimal 6 karakter" minLength={6} />
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Password Baru</label>
+                <input required type="text" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-sm focus:outline-none focus:border-indigo-600" placeholder="Minimal 6 karakter" minLength={6} />
               </div>
               <div className="pt-4 flex items-center gap-3">
-                <button type="button" onClick={() => setIsResetModalOpen(false)} className="flex-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-lg transition-colors">Batal</button>
+                <button type="button" onClick={() => setIsResetModalOpen(false)} className="flex-1 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold text-sm rounded-lg transition-colors">Batal</button>
                 <button type="submit" disabled={isSubmitting} className="flex-1 px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white font-bold text-sm rounded-lg transition-colors disabled:opacity-50">{isSubmitting ? 'Merubah...' : 'Reset'}</button>
               </div>
             </form>

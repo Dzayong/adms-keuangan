@@ -108,11 +108,11 @@ export const ApiKeysPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
             <Key className="w-7 h-7 text-indigo-600" />
             Aplikasi Klien (Client Apps)
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
             Daftarkan dan kelola akses aplikasi dari luar (seperti Aplikasi Hosting/Web Utama) yang terhubung ke ADMS QRIS.
           </p>
         </div>
@@ -125,9 +125,9 @@ export const ApiKeysPage: React.FC = () => {
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
+      <div className="bg-white dark:bg-slate-950 rounded-xl shadow-xs border border-slate-200 dark:border-slate-800 overflow-hidden">
         {/* Toolbar & Filters */}
-        <div className="p-4 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row gap-4 justify-between items-center">
+        <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex flex-col sm:flex-row gap-4 justify-between items-center">
           <div className="relative w-full sm:w-72">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
@@ -135,7 +135,7 @@ export const ApiKeysPage: React.FC = () => {
               placeholder="Cari nama aplikasi..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-600 transition-colors"
+              className="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-sm focus:outline-none focus:border-indigo-600 transition-colors"
             />
           </div>
           
@@ -144,7 +144,7 @@ export const ApiKeysPage: React.FC = () => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="w-full sm:w-auto bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 focus:outline-none focus:border-indigo-600"
+              className="w-full sm:w-auto bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:border-indigo-600"
             >
               <option value="ALL">Semua Status</option>
               <option value="ACTIVE">Aktif Saja</option>
@@ -155,7 +155,7 @@ export const ApiKeysPage: React.FC = () => {
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="bg-slate-100 text-slate-600 font-bold border-b border-slate-200 uppercase tracking-wider text-[11px]">
+            <thead className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold border-b border-slate-200 dark:border-slate-800 uppercase tracking-wider text-[11px]">
               <tr>
                 <th className="px-6 py-4">Nama Aplikasi</th>
                 <th className="px-6 py-4">Kunci API (Disensor)</th>
@@ -168,7 +168,7 @@ export const ApiKeysPage: React.FC = () => {
             <tbody className="divide-y divide-slate-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
+                  <td colSpan={6} className="px-6 py-8 text-center text-slate-500 dark:text-slate-400">
                     Memuat data aplikasi klien...
                   </td>
                 </tr>
@@ -176,28 +176,28 @@ export const ApiKeysPage: React.FC = () => {
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center flex flex-col items-center justify-center">
                     <Key className="w-10 h-10 text-slate-300 mb-3" />
-                    <p className="text-slate-500 font-medium">Tidak ada aplikasi yang ditemukan.</p>
+                    <p className="text-slate-500 dark:text-slate-400 font-medium">Tidak ada aplikasi yang ditemukan.</p>
                   </td>
                 </tr>
               ) : (
                 filteredKeys.map((key) => (
-                  <tr key={key.id} className={`transition-colors ${key.status === 'REVOKED' ? 'bg-slate-50/50 grayscale-[20%]' : 'hover:bg-slate-50/80'}`}>
-                    <td className="px-6 py-4 font-bold text-slate-900">{key.name}</td>
-                    <td className="px-6 py-4 font-mono text-slate-500 text-[13px]">{key.key_hint || '-'}</td>
+                  <tr key={key.id} className={`transition-colors ${key.status === 'REVOKED' ? 'bg-slate-50 dark:bg-slate-900/50 grayscale-[20%]' : 'hover:bg-slate-50 dark:hover:bg-slate-800 dark:bg-slate-900/80'}`}>
+                    <td className="px-6 py-4 font-bold text-slate-900 dark:text-slate-100">{key.name}</td>
+                    <td className="px-6 py-4 font-mono text-slate-500 dark:text-slate-400 text-[13px]">{key.key_hint || '-'}</td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-black uppercase tracking-wide border ${
                           key.status === 'ACTIVE'
-                          ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
-                          : 'bg-rose-50 text-rose-500 border-rose-200'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 border-emerald-200 dark:border-emerald-900/50'
+                          : 'bg-rose-50 dark:bg-rose-950/30 text-rose-500 border-rose-200 dark:border-rose-900/50'
                         }`}>
                         {key.status === 'ACTIVE' ? <CheckCircle className="w-3 h-3" /> : <Ban className="w-3 h-3" />}
                         {key.status === 'ACTIVE' ? 'AKTIF' : 'DICABUT'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-slate-500 text-[13px]">
+                    <td className="px-6 py-4 text-slate-500 dark:text-slate-400 text-[13px]">
                       {new Date(key.created_at).toLocaleString('id-ID')}
                     </td>
-                    <td className="px-6 py-4 text-slate-500 text-[13px]">
+                    <td className="px-6 py-4 text-slate-500 dark:text-slate-400 text-[13px]">
                       {key.last_used_at ? (
                         <div className="flex items-center gap-1.5 text-emerald-600 font-semibold">
                           <Clock className="w-3.5 h-3.5" />
@@ -211,7 +211,7 @@ export const ApiKeysPage: React.FC = () => {
                       {key.status === 'ACTIVE' ? (
                         <button
                           onClick={() => handleRevoke(key.id)}
-                          className="inline-flex items-center gap-1.5 text-rose-500 hover:text-rose-600 font-bold text-xs bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-lg transition-colors"
+                          className="inline-flex items-center gap-1.5 text-rose-500 hover:text-rose-600 font-bold text-xs bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100 px-3 py-1.5 rounded-lg transition-colors"
                         >
                           <Ban className="w-3.5 h-3.5" />
                           Cabut Akses
@@ -219,7 +219,7 @@ export const ApiKeysPage: React.FC = () => {
                       ) : (
                         <button
                           onClick={() => handleDelete(key.id)}
-                          className="inline-flex items-center gap-1.5 text-slate-500 hover:text-rose-600 font-bold text-xs bg-slate-100 hover:bg-rose-50 px-3 py-1.5 rounded-lg transition-colors"
+                          className="inline-flex items-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-rose-600 font-bold text-xs bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:bg-rose-950/30 px-3 py-1.5 rounded-lg transition-colors"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                           Hapus Permanen
@@ -237,27 +237,27 @@ export const ApiKeysPage: React.FC = () => {
       {/* Create Modal */}
       {isCreateModalOpen && !createdKey && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 relative animate-in fade-in zoom-in duration-200">
+          <div className="bg-white dark:bg-slate-950 rounded-2xl max-w-md w-full p-6 relative animate-in fade-in zoom-in duration-200">
             <button
               onClick={() => setIsCreateModalOpen(false)}
-              className="absolute right-4 top-4 text-slate-400 hover:text-slate-600"
+              className="absolute right-4 top-4 text-slate-400 hover:text-slate-600 dark:text-slate-400"
             >
               <Trash2 className="w-5 h-5 hidden" />
               Tutup
             </button>
-            <h2 className="text-xl font-bold text-slate-800 mb-2">Daftarkan Aplikasi Baru</h2>
-            <p className="text-sm text-slate-500 mb-6">
+            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-2">Daftarkan Aplikasi Baru</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
               Berikan nama untuk aplikasi web yang akan diintegrasikan dengan ADMS QRIS.
             </p>
             <form onSubmit={handleCreate}>
               <div className="mb-6">
-                <label className="block text-xs font-bold text-slate-600 uppercase mb-2">Nama Aplikasi</label>
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase mb-2">Nama Aplikasi</label>
                 <input
                   type="text"
                   required
                   value={newAppName}
                   onChange={(e) => setNewAppName(e.target.value)}
-                  className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-600 font-semibold"
+                  className="w-full border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-600 font-semibold"
                   placeholder="Misal: Web Hosting Utama"
                 />
               </div>
@@ -265,7 +265,7 @@ export const ApiKeysPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="px-4 py-2.5 text-slate-600 font-bold bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                  className="px-4 py-2.5 text-slate-600 dark:text-slate-400 font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded-lg transition-colors"
                 >
                   Batal
                 </button>
@@ -284,17 +284,17 @@ export const ApiKeysPage: React.FC = () => {
       {/* Success Modal */}
       {createdKey && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden border border-emerald-100 p-6">
-            <h2 className="text-xl font-bold text-slate-800 mb-2">Kunci API Berhasil Dibuat!</h2>
-            <p className="text-sm text-slate-500 mb-6">
-              Silakan salin Kunci API rahasia berikut. <strong className="text-rose-500">Kunci ini hanya ditampilkan sekali.</strong> Simpan di tempat yang aman (misalnya di <code className="bg-slate-100 px-1 rounded">.env</code> pada web hosting Anda).
+          <div className="bg-white dark:bg-slate-950 rounded-xl shadow-xl w-full max-w-lg overflow-hidden border border-emerald-100 p-6">
+            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-2">Kunci API Berhasil Dibuat!</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+              Silakan salin Kunci API rahasia berikut. <strong className="text-rose-500">Kunci ini hanya ditampilkan sekali.</strong> Simpan di tempat yang aman (misalnya di <code className="bg-slate-100 dark:bg-slate-800 px-1 rounded">.env</code> pada web hosting Anda).
             </p>
             
-            <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl flex items-center justify-between gap-4 mb-6">
-              <code className="text-sm font-mono text-slate-800 break-all select-all font-bold">{createdKey}</code>
+            <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl flex items-center justify-between gap-4 mb-6">
+              <code className="text-sm font-mono text-slate-800 dark:text-slate-200 break-all select-all font-bold">{createdKey}</code>
               <button
                 onClick={copyToClipboard}
-                className="p-2.5 bg-white border border-slate-200 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors flex-shrink-0 shadow-sm"
+                className="p-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-400 transition-colors flex-shrink-0 shadow-sm"
                 title="Salin Kunci"
               >
                 {copied ? <CheckCircle className="w-5 h-5 text-emerald-500" /> : <Copy className="w-5 h-5" />}

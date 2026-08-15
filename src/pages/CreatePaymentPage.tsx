@@ -74,14 +74,14 @@ export const CreatePaymentPage: React.FC<Props> = ({ onPaymentCreated, onCancel 
 
   return (
     <div className="space-y-6 pb-12 animate-fade-in">
-      <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs">
-        <div className="flex items-center gap-3 pb-4 mb-6 border-b border-slate-100">
+      <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-xs">
+        <div className="flex items-center gap-3 pb-4 mb-6 border-b border-slate-100 dark:border-slate-800">
           <div className="w-10 h-10 rounded-lg bg-indigo-600 text-white font-black flex items-center justify-center shrink-0 shadow-xs">
             <QrCode className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-slate-800">Buat Pembayaran Manual (POS)</h2>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200">Buat Pembayaran Manual (POS)</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               Gunakan halaman ini untuk membuat kode QRIS bagi pelanggan yang datang langsung (offline).
             </p>
           </div>
@@ -95,7 +95,7 @@ export const CreatePaymentPage: React.FC<Props> = ({ onPaymentCreated, onCancel 
         </div>
 
         {error && (
-          <div className="mb-6 p-3.5 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-xs font-semibold flex items-center gap-2">
+          <div className="mb-6 p-3.5 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 rounded-lg text-rose-700 text-xs font-semibold flex items-center gap-2">
             <ShieldAlert className="w-4 h-4 text-rose-500 shrink-0" />
             <span>{error}</span>
           </div>
@@ -103,7 +103,7 @@ export const CreatePaymentPage: React.FC<Props> = ({ onPaymentCreated, onCancel 
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">
+            <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
               Nama Pelanggan / Divisi <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
@@ -114,13 +114,13 @@ export const CreatePaymentPage: React.FC<Props> = ({ onPaymentCreated, onCancel 
                 onChange={(e) => setCustomerName(e.target.value)}
                 required
                 placeholder="Contoh: Budi Santoso atau Divisi Keuangan"
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-10 pr-4 py-2.5 text-xs text-slate-900 font-medium focus:outline-none focus:border-indigo-600 focus:bg-white transition-all"
+                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-xs text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:border-indigo-600 focus:bg-white dark:bg-slate-950 transition-all"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">
+            <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
               Nomor Telepon (Opsional)
             </label>
             <div className="relative">
@@ -130,20 +130,20 @@ export const CreatePaymentPage: React.FC<Props> = ({ onPaymentCreated, onCancel 
                 value={customerPhone}
                 onChange={(e) => setCustomerPhone(e.target.value)}
                 placeholder="Contoh: 081234567890"
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-10 pr-4 py-2.5 text-xs text-slate-900 font-mono focus:outline-none focus:border-indigo-600 focus:bg-white transition-all"
+                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-xs text-slate-900 dark:text-slate-100 font-mono focus:outline-none focus:border-indigo-600 focus:bg-white dark:bg-slate-950 transition-all"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">
+            <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
               Penyedia QRIS (Provider) <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
               <select
                 value={providerCode}
                 onChange={(e) => setProviderCode(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-xs text-slate-900 font-medium focus:outline-none focus:border-indigo-600 focus:bg-white transition-all appearance-none"
+                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2.5 text-xs text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:border-indigo-600 focus:bg-white dark:bg-slate-950 transition-all appearance-none"
               >
                 <option value="mock">Mock QRIS (Sandbox)</option>
                 <option value="internal_qris">Internal Office QRIS (Static)</option>
@@ -152,11 +152,11 @@ export const CreatePaymentPage: React.FC<Props> = ({ onPaymentCreated, onCancel 
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">
+            <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
               Nominal Pembayaran (Rp) <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-mono font-bold text-slate-800">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-mono font-bold text-slate-800 dark:text-slate-200">
                 Rp
               </span>
               <input
@@ -165,7 +165,7 @@ export const CreatePaymentPage: React.FC<Props> = ({ onPaymentCreated, onCancel 
                 onChange={handleAmountChange}
                 required
                 placeholder="0"
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-10 pr-4 py-3 text-base font-bold font-mono text-slate-900 focus:outline-none focus:border-indigo-600 focus:bg-white transition-all"
+                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-3 text-base font-bold font-mono text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-600 focus:bg-white dark:bg-slate-950 transition-all"
               />
             </div>
             {amount && (
@@ -176,7 +176,7 @@ export const CreatePaymentPage: React.FC<Props> = ({ onPaymentCreated, onCancel 
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">
+            <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
               Deskripsi / Catatan Transaksi (Opsional)
             </label>
             <div className="relative">
@@ -186,16 +186,16 @@ export const CreatePaymentPage: React.FC<Props> = ({ onPaymentCreated, onCancel 
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}
                 placeholder="Keterangan tambahan untuk referensi internal..."
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-10 pr-4 py-2.5 text-xs text-slate-900 font-medium focus:outline-none focus:border-indigo-600 focus:bg-white transition-all"
+                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-xs text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:border-indigo-600 focus:bg-white dark:bg-slate-950 transition-all"
               />
             </div>
           </div>
 
-          <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
+          <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-100 dark:border-slate-800">
             <button
               type="button"
               onClick={onCancel}
-              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs transition-colors border border-slate-200"
+              className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold rounded-lg text-xs transition-colors border border-slate-200 dark:border-slate-800"
             >
               Batal
             </button>

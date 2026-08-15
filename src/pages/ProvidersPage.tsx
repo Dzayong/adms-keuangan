@@ -50,25 +50,25 @@ export const ProvidersPage: React.FC = () => {
   };
 
   if (isLoading) {
-    return <div className="p-8 text-center text-slate-500">Memuat data provider...</div>;
+    return <div className="p-8 text-center text-slate-500 dark:text-slate-400">Memuat data provider...</div>;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
+          <h2 className="text-2xl font-black text-slate-800 dark:text-slate-200 tracking-tight flex items-center gap-2">
             <ServerCrash className="w-6 h-6 text-indigo-600" />
             Penyedia Layanan QRIS
           </h2>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
             Aktifkan atau matikan koneksi ke penyedia pembayaran (Payment Gateway). Hanya provider yang aktif yang dapat menerima transaksi.
           </p>
         </div>
       </div>
 
       {error && (
-        <div className="bg-rose-50 text-rose-600 p-4 rounded-xl text-sm font-semibold border border-rose-200">
+        <div className="bg-rose-50 dark:bg-rose-950/30 text-rose-600 p-4 rounded-xl text-sm font-semibold border border-rose-200 dark:border-rose-900/50">
           {error}
         </div>
       )}
@@ -82,31 +82,31 @@ export const ProvidersPage: React.FC = () => {
           else description = "Integrasi penyedia layanan QRIS eksternal.";
 
           return (
-          <div key={p.id} className="bg-white rounded-2xl p-6 shadow-xs border border-slate-200 flex flex-col justify-between">
+          <div key={p.id} className="bg-white dark:bg-slate-950 rounded-2xl p-6 shadow-xs border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
             <div>
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <h3 className="text-lg font-bold text-slate-800">{p.name}</h3>
+                  <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">{p.name}</h3>
                   <p className="text-xs font-mono text-slate-400 mt-0.5">ID: {p.code}</p>
                 </div>
                 <span className={`px-2 py-1 text-[10px] font-black uppercase tracking-wider rounded border ${
                   p.environment === 'SANDBOX' 
                     ? 'bg-amber-50 text-amber-600 border-amber-200' 
-                    : 'bg-indigo-50 text-indigo-600 border-indigo-200'
+                    : 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 border-indigo-200 dark:border-indigo-900/50'
                 }`}>
                   {p.environment === 'SANDBOX' ? 'Uji Coba' : 'Produksi'}
                 </span>
               </div>
-              <p className="text-sm text-slate-500 mb-5 leading-relaxed">{description}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">{description}</p>
               
-              <div className="flex items-center gap-2 mb-6 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                <span className="text-sm text-slate-600 font-medium">Status Integrasi:</span>
+              <div className="flex items-center gap-2 mb-6 bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                <span className="text-sm text-slate-600 dark:text-slate-400 font-medium">Status Integrasi:</span>
                 {p.is_active ? (
-                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-100/50 border border-emerald-200 px-2.5 py-1 rounded-md">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-100/50 border border-emerald-200 dark:border-emerald-900/50 px-2.5 py-1 rounded-md">
                     <Power className="w-3.5 h-3.5" /> AKTIF
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-500 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-md">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 px-2.5 py-1 rounded-md">
                     <PowerOff className="w-3.5 h-3.5" /> NONAKTIF
                   </span>
                 )}
@@ -116,8 +116,8 @@ export const ProvidersPage: React.FC = () => {
               onClick={() => handleToggleStatus(p.id, p.is_active)}
               className={`w-full py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 flex items-center justify-center gap-2 ${
                 p.is_active 
-                  ? 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50' 
-                  : 'bg-emerald-50 border border-emerald-200 text-emerald-600 hover:bg-emerald-100'
+                  ? 'bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 dark:bg-slate-900' 
+                  : 'bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 text-emerald-600 hover:bg-emerald-100'
               }`}
             >
               {p.is_active ? 'Matikan Integrasi' : 'Aktifkan Integrasi'}
@@ -125,7 +125,7 @@ export const ProvidersPage: React.FC = () => {
           </div>
         )})}
         {providers.length === 0 && (
-          <div className="col-span-full p-8 text-center text-slate-500 border-2 border-dashed border-slate-200 rounded-2xl">
+          <div className="col-span-full p-8 text-center text-slate-500 dark:text-slate-400 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
             Belum ada provider yang terdaftar.
           </div>
         )}

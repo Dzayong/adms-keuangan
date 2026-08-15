@@ -196,7 +196,7 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
     return (
       <div className="py-24 text-center space-y-3">
         <RefreshCw className="w-8 h-8 text-amber-500 animate-spin mx-auto" />
-        <p className="text-sm font-semibold text-slate-500">Memuat tampilan QR Pembayaran...</p>
+        <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">Memuat tampilan QR Pembayaran...</p>
       </div>
     );
   }
@@ -217,7 +217,7 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
       <div className="flex items-center justify-between gap-4">
         <button
           onClick={onBack}
-          className="inline-flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs rounded-lg transition-colors shadow-xs"
+          className="inline-flex items-center gap-1.5 px-3 py-2 bg-white dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-lg transition-colors shadow-xs"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Back to List</span>
@@ -233,14 +233,14 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
       </div>
 
       {/* Main QR Card */}
-      <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+      <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-xs grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
         {/* Left Side: QR Display & Countdown */}
-        <div className="flex flex-col items-center text-center p-6 bg-slate-50 border border-slate-200 rounded-lg relative">
+        <div className="flex flex-col items-center text-center p-6 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg relative">
           <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">
             {tx.provider_code === 'internal_qris' ? 'QRIS KANTOR / PEMBAYARAN' : 'DYNAMIC QRIS PAYMENT CODE'}
           </div>
 
-          <div className="p-2 bg-white border-4 border-indigo-600 rounded-lg shadow-xs my-2 flex justify-center w-[260px] max-w-full">
+          <div className="p-2 bg-white dark:bg-slate-950 border-4 border-indigo-600 rounded-lg shadow-xs my-2 flex justify-center w-[260px] max-w-full">
             {(tx.provider_reference?.startsWith('INTERNAL-') || tx.payment_method === 'STATIC_QRIS') ? (
               <img
                 src={resolvedQrUrl}
@@ -267,22 +267,22 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
           </div>
 
           <div className="mt-2 space-y-1">
-            <div className="text-xs font-bold text-slate-700">Supported by All e-Money & Mobile Banking Apps</div>
+            <div className="text-xs font-bold text-slate-700 dark:text-slate-300">Supported by All e-Money & Mobile Banking Apps</div>
             <div className="text-[10px] text-slate-400 font-mono">
               DANA • OVO • GoPay • ShopeePay • BCA • Mandiri • BRI
             </div>
           </div>
 
           {/* Status Message / Countdown Banner */}
-          <div className="w-full mt-4 pt-3 border-t border-slate-200">
+          <div className="w-full mt-4 pt-3 border-t border-slate-200 dark:border-slate-800">
             {tx.status === 'PENDING' && (
               <div className="space-y-1.5">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-100 text-indigo-900 border border-indigo-200 rounded-full text-xs font-bold font-mono animate-pulse">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-100 text-indigo-900 border border-indigo-200 dark:border-indigo-900/50 rounded-full text-xs font-bold font-mono animate-pulse">
                   <Clock className="w-3.5 h-3.5 text-indigo-700" />
                   <span>AWAITING PAYMENT... ({formatCountdown(timeRemaining)})</span>
                 </div>
                 {tx.provider_code === 'internal_qris' ? (
-                  <div className="text-[11px] text-slate-600 mt-2 space-y-1 text-left bg-indigo-50 p-2 rounded border border-indigo-200">
+                  <div className="text-[11px] text-slate-600 dark:text-slate-400 mt-2 space-y-1 text-left bg-indigo-50 dark:bg-indigo-950/30 p-2 rounded border border-indigo-200 dark:border-indigo-900/50">
                     <p className="font-bold">⚠️ INI PEMBAYARAN NYATA</p>
                     <ul className="list-disc list-inside ml-1">
                       <li>Scan QRIS menggunakan aplikasi mobile banking atau e-wallet.</li>
@@ -292,7 +292,7 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
                     </ul>
                   </div>
                 ) : (
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
                     Scan QR with any compliant banking or e-wallet application.
                   </p>
                 )}
@@ -317,8 +317,8 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
             )}
 
             {tx.status === 'EXPIRED' && (
-              <div className="p-3 bg-slate-100 border border-slate-300 text-slate-700 rounded-lg text-xs font-bold flex items-center justify-center gap-2 font-mono">
-                <AlertCircle className="w-4 h-4 text-slate-500" />
+              <div className="p-3 bg-slate-100 dark:bg-slate-800 border border-slate-300 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-bold flex items-center justify-center gap-2 font-mono">
+                <AlertCircle className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                 <span>INVOICE EXPIRED</span>
               </div>
             )}
@@ -341,38 +341,38 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
 
           <div>
             <span className="text-[10px] font-bold text-slate-400 uppercase">INVOICE AMOUNT</span>
-            <div className="text-2xl font-black text-slate-800 font-mono mt-0.5">
+            <div className="text-2xl font-black text-slate-800 dark:text-slate-200 font-mono mt-0.5">
               {formatRupiah(tx.amount)}
             </div>
           </div>
 
-          <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-2.5 text-xs font-mono">
-            <div className="flex justify-between border-b border-slate-200 pb-2">
-              <span className="text-slate-500">Invoice ID:</span>
-              <span className="font-bold text-slate-900">{tx.invoice_number}</span>
+          <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 space-y-2.5 text-xs font-mono">
+            <div className="flex justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+              <span className="text-slate-500 dark:text-slate-400">Invoice ID:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{tx.invoice_number}</span>
             </div>
-            <div className="flex justify-between border-b border-slate-200 pb-2">
-              <span className="text-slate-500">Customer:</span>
-              <span className="font-bold text-slate-800">{tx.customer_name}</span>
+            <div className="flex justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+              <span className="text-slate-500 dark:text-slate-400">Customer:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">{tx.customer_name}</span>
             </div>
-            <div className="flex justify-between border-b border-slate-200 pb-2">
-              <span className="text-slate-500">Phone:</span>
-              <span className="font-semibold text-slate-700">{tx.customer_phone || '-'}</span>
+            <div className="flex justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+              <span className="text-slate-500 dark:text-slate-400">Phone:</span>
+              <span className="font-semibold text-slate-700 dark:text-slate-300">{tx.customer_phone || '-'}</span>
             </div>
-            <div className="flex justify-between border-b border-slate-200 pb-2">
-              <span className="text-slate-500">Ref Code:</span>
-              <span className="font-bold text-slate-800">{tx.provider_reference || '-'}</span>
+            <div className="flex justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+              <span className="text-slate-500 dark:text-slate-400">Ref Code:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">{tx.provider_reference || '-'}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500">Created At:</span>
-              <span className="font-semibold text-slate-700">{tx.created_at}</span>
+              <span className="text-slate-500 dark:text-slate-400">Created At:</span>
+              <span className="font-semibold text-slate-700 dark:text-slate-300">{tx.created_at}</span>
             </div>
           </div>
 
           {tx.description && (
             <div>
               <span className="text-[10px] font-bold text-slate-400 uppercase">DESCRIPTION</span>
-              <p className="text-xs text-slate-700 mt-1 p-2.5 bg-indigo-50 border border-indigo-200 rounded-lg font-medium">
+              <p className="text-xs text-slate-700 dark:text-slate-300 mt-1 p-2.5 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/50 rounded-lg font-medium">
                 {tx.description}
               </p>
             </div>
@@ -381,7 +381,7 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
           <div className="pt-2 flex items-center gap-2">
             <button
               onClick={copyQrText}
-              className="flex-1 py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1.5 border border-slate-200"
+              className="flex-1 py-2 px-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1.5 border border-slate-200 dark:border-slate-800"
             >
               {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
               <span>{copied ? 'Payload Copied!' : 'Copy QR Raw Payload'}</span>

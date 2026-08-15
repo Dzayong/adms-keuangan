@@ -78,10 +78,10 @@ export const DashboardPage: React.FC<Props> = ({
   return (
     <div className="space-y-6 animate-fade-in pb-12">
       {/* Top Section Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-950 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
         <div>
-          <h2 className="text-xl font-bold text-slate-800">Ringkasan Pembayaran</h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Ringkasan Pembayaran</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Pantau uang masuk dan status pembayaran QRIS hari ini.
           </p>
         </div>
@@ -89,7 +89,7 @@ export const DashboardPage: React.FC<Props> = ({
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value as any)}
-            className="px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-700 bg-slate-50 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
+            className="px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
           >
             <option value="ALL">Semua Waktu</option>
             <option value="MONTH">Per Bulan</option>
@@ -101,7 +101,7 @@ export const DashboardPage: React.FC<Props> = ({
               type="month"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              className="px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-700 bg-slate-50 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
+              className="px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
             />
           )}
 
@@ -112,14 +112,14 @@ export const DashboardPage: React.FC<Props> = ({
               max="2100"
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
-              className="px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-700 bg-slate-50 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 w-24"
+              className="px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 w-24"
               placeholder="Tahun"
             />
           )}
           
           <button
             onClick={fetchDashboardData}
-            className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors border border-slate-200"
+            className="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-lg transition-colors border border-slate-200 dark:border-slate-800"
             title="Refresh Data"
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-indigo-700' : ''}`} />
@@ -137,53 +137,53 @@ export const DashboardPage: React.FC<Props> = ({
       {/* Grid of 4 Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Total Volume */}
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
+        <div className="bg-white dark:bg-slate-950 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
           <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
             Semua Transaksi (Dibuat)
           </p>
-          <h2 className="text-2xl font-black text-slate-800 font-mono">
+          <h2 className="text-2xl font-black text-slate-800 dark:text-slate-200 font-mono">
             {formatRupiah(stats?.total_amount || 0)}
           </h2>
-          <div className="mt-2 text-[10px] text-emerald-600 font-bold">
+          <div className="mt-2 text-[10px] text-emerald-600 dark:text-emerald-500 font-bold">
             {stats?.total_count || 0} Total Transaksi Tercatat
           </div>
         </div>
 
         {/* Card 2: Successful */}
-        <div className="bg-emerald-50 p-5 rounded-xl border border-emerald-200 shadow-xs">
-          <p className="text-[11px] font-bold text-emerald-700 uppercase tracking-wider mb-1">
+        <div className="bg-emerald-50 dark:bg-emerald-950/30 p-5 rounded-xl border border-emerald-200 dark:border-emerald-900/50 shadow-xs">
+          <p className="text-[11px] font-bold text-emerald-700 dark:text-emerald-500 uppercase tracking-wider mb-1">
             Berhasil (Uang Masuk)
           </p>
-          <h2 className="text-2xl font-black text-emerald-900 font-mono">
+          <h2 className="text-2xl font-black text-emerald-900 dark:text-emerald-400 font-mono">
             {formatRupiah(stats?.paid_amount || 0)}
           </h2>
-          <div className="mt-2 text-[10px] text-emerald-700 font-bold">
+          <div className="mt-2 text-[10px] text-emerald-700 dark:text-emerald-500 font-bold">
             {stats?.paid_count || 0} Transaksi Lunas
           </div>
         </div>
 
         {/* Card 3: Pending with Yellow Left Border */}
-        <div className="bg-indigo-50 p-5 rounded-xl border border-indigo-200 shadow-xs">
-          <p className="text-[11px] font-bold text-yellow-700 uppercase tracking-wider mb-1">
+        <div className="bg-indigo-50 dark:bg-indigo-950/30 p-5 rounded-xl border border-indigo-200 dark:border-indigo-900/50 shadow-xs">
+          <p className="text-[11px] font-bold text-yellow-700 dark:text-yellow-500 uppercase tracking-wider mb-1">
             Menunggu Pembayaran
           </p>
-          <h2 className="text-2xl font-black text-yellow-900 font-mono">
+          <h2 className="text-2xl font-black text-yellow-900 dark:text-yellow-400 font-mono">
             {formatRupiah(stats?.pending_amount || 0)}
           </h2>
-          <div className="mt-2 text-[10px] text-yellow-700 font-bold underline cursor-pointer" onClick={onNavigateToTransactions}>
+          <div className="mt-2 text-[10px] text-yellow-700 dark:text-yellow-500 font-bold underline cursor-pointer" onClick={onNavigateToTransactions}>
             {stats?.pending_count || 0} Belum Dibayar
           </div>
         </div>
 
         {/* Card 4: Failed / Expired */}
-        <div className="bg-rose-50 p-5 rounded-xl border border-rose-200 shadow-xs">
-          <p className="text-[11px] font-bold text-rose-700 uppercase tracking-wider mb-1">
+        <div className="bg-rose-50 dark:bg-rose-950/30 p-5 rounded-xl border border-rose-200 dark:border-rose-900/50 shadow-xs">
+          <p className="text-[11px] font-bold text-rose-700 dark:text-rose-500 uppercase tracking-wider mb-1">
             Gagal / Kedaluwarsa
           </p>
-          <h2 className="text-2xl font-black text-rose-900 font-mono">
+          <h2 className="text-2xl font-black text-rose-900 dark:text-rose-400 font-mono">
             {formatRupiah(stats?.failed_amount || 0)}
           </h2>
-          <div className="mt-2 text-[10px] text-rose-700 font-medium">
+          <div className="mt-2 text-[10px] text-rose-700 dark:text-rose-500 font-medium">
             {stats?.failed_count || 0} Transaksi Batal/Kedaluwarsa
           </div>
         </div>
@@ -194,10 +194,10 @@ export const DashboardPage: React.FC<Props> = ({
         {/* Left Column (2 Cols wide) */}
         <div className="lg:col-span-2 space-y-6">
           {/* Recent Transactions Data Grid Table */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-xs flex flex-col">
-            <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+          <div className="bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col">
+            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-slate-800 text-sm">Transaksi Terbaru</h3>
+                <h3 className="font-bold text-slate-800 dark:text-slate-200 text-sm">Transaksi Terbaru</h3>
                 <p className="text-[11px] text-slate-400">Daftar pembayaran yang baru saja masuk.</p>
               </div>
               <button
@@ -211,21 +211,21 @@ export const DashboardPage: React.FC<Props> = ({
 
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
-                <thead className="bg-slate-50 sticky top-0">
+                <thead className="bg-slate-50 dark:bg-slate-900 sticky top-0">
                   <tr>
-                    <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100">
+                    <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
                       ID Tagihan
                     </th>
-                    <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100">
+                    <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
                       Pelanggan
                     </th>
-                    <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100">
+                    <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
                       Nominal
                     </th>
-                    <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100">
+                    <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
                       Status
                     </th>
-                    <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100 text-right">
+                    <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 text-right">
                       Aksi
                     </th>
                   </tr>
@@ -239,15 +239,15 @@ export const DashboardPage: React.FC<Props> = ({
                     </tr>
                   ) : (
                     recentTx.map((tx) => (
-                      <tr key={tx.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-4 py-3 font-mono text-xs text-slate-600 font-bold">
+                      <tr key={tx.id} className="hover:bg-slate-50 dark:hover:bg-slate-800 dark:bg-slate-900 transition-colors">
+                        <td className="px-4 py-3 font-mono text-xs text-slate-600 dark:text-slate-400 font-bold">
                           {tx.invoice_number}
                         </td>
-                        <td className="px-4 py-3 text-xs text-slate-800">
+                        <td className="px-4 py-3 text-xs text-slate-800 dark:text-slate-200">
                           <div className="font-semibold">{tx.customer_name}</div>
                           <div className="text-[10px] text-slate-400">{tx.customer_phone || '-'}</div>
                         </td>
-                        <td className="px-4 py-3 text-xs font-bold text-slate-900 font-mono">
+                        <td className="px-4 py-3 text-xs font-bold text-slate-900 dark:text-slate-100 font-mono">
                           {formatRupiah(tx.amount)}
                         </td>
                         <td className="px-4 py-3">
@@ -256,7 +256,7 @@ export const DashboardPage: React.FC<Props> = ({
                         <td className="px-4 py-3 text-right">
                           <button
                             onClick={() => onNavigateToDetail(tx.id)}
-                            className="text-[10px] font-bold text-slate-500 hover:text-slate-900 underline"
+                            className="text-[10px] font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-slate-100 underline"
                           >
                             Detail
                           </button>
@@ -270,11 +270,11 @@ export const DashboardPage: React.FC<Props> = ({
           </div>
 
           {/* Daily Chart */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-5">
+          <div className="bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs p-5">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-indigo-600" />
-                <h3 className="font-bold text-slate-800 text-xs uppercase tracking-wider">
+                <h3 className="font-bold text-slate-800 dark:text-slate-200 text-xs uppercase tracking-wider">
                   Pendapatan 7 Hari Terakhir
                 </h3>
               </div>
@@ -283,7 +283,7 @@ export const DashboardPage: React.FC<Props> = ({
 
             {chartData.length === 0 ? (
               <div className="py-8 text-center text-slate-400 text-xs flex flex-col items-center justify-center">
-                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-3">
+                <div className="w-16 h-16 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mb-3">
                   <TrendingUp className="w-6 h-6 text-slate-200" />
                 </div>
                 Belum ada data grafik pendapatan.
@@ -322,7 +322,7 @@ export const DashboardPage: React.FC<Props> = ({
                         />
                         
                         {/* Date Label */}
-                        <span className="absolute -bottom-5 text-[9px] font-mono font-bold text-slate-500">
+                        <span className="absolute -bottom-5 text-[9px] font-mono font-bold text-slate-500 dark:text-slate-400">
                           {pt.date.split('-').slice(1).join('/')}
                         </span>
                       </div>
@@ -337,8 +337,8 @@ export const DashboardPage: React.FC<Props> = ({
         {/* Right Column (1 Col wide) - Dark Mock QR Generator & Activity Log */}
         <div className="space-y-6">
           {/* Quick Actions Panel */}
-          <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-            <h4 className="text-slate-800 text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
+          <div className="bg-white dark:bg-slate-950 rounded-xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <h4 className="text-slate-800 dark:text-slate-200 text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
               <PlusCircle className="w-4 h-4 text-indigo-600" />
               <span>Aksi Cepat</span>
             </h4>
@@ -357,7 +357,7 @@ export const DashboardPage: React.FC<Props> = ({
 
               <button
                 onClick={onNavigateToTransactions}
-                className="w-full py-3 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold text-xs rounded-lg transition-colors flex items-center justify-between px-4 shadow-sm"
+                className="w-full py-3 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-800 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-lg transition-colors flex items-center justify-between px-4 shadow-sm"
               >
                 <div className="flex items-center gap-2">
                   <Activity className="w-4 h-4 text-slate-400" />

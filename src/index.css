@@ -40,3 +40,5 @@
     --color-amber-900: var(--color-yellow-900);
     --color-amber-950: var(--color-yellow-950);
 }
+
+@variant dark (&:where(.dark, .dark *));

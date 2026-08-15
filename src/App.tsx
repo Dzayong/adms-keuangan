@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext.js';
+import { ThemeProvider } from './context/ThemeContext.js';
 import { LoginPage } from './pages/LoginPage.js';
 import { DashboardPage } from './pages/DashboardPage.js';
 import { TransactionsPage } from './pages/TransactionsPage.js';
@@ -17,8 +19,7 @@ import { RefreshCw } from 'lucide-react';
 
 function AppContent() {
   const { user, isLoading } = useAuth();
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [selectedTxId, setSelectedTxId] = useState<number | null>(null);
+  const navigate = useNavigate();
 
   if (isLoading) {
     return (
@@ -30,85 +31,86 @@ function AppContent() {
   }
 
   if (!user) {
-    return <LoginPage />;
+    return (
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    );
   }
 
   const navigateToDetail = (txId: number) => {
-    setSelectedTxId(txId);
-    setActiveTab('payment_detail');
+    navigate(`/transactions/${txId}`);
   };
 
   const handlePaymentCreated = (txId: number) => {
-    setSelectedTxId(txId);
-    setActiveTab('payment_detail');
+    navigate(`/transactions/${txId}`);
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-50 flex flex-col font-sans transition-colors duration-200">
       <Navbar
-        onOpenCreateModal={() => setActiveTab('create_payment')}
+        onOpenCreateModal={() => navigate('/create_payment')}
       />
 
       <div className="flex flex-1">
-        <Sidebar
-          currentTab={activeTab}
-          onSelectTab={(tab) => {
-            setActiveTab(tab);
-            if (tab !== 'payment_detail') setSelectedTxId(null);
-          }}
-          userRole={user.role}
-        />
+        <Sidebar userRole={user.role} />
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 w-full">
-          {/* Active View Renderer */}
-          {activeTab === 'dashboard' && (
-            <DashboardPage
-              onNavigateToCreate={() => setActiveTab('create_payment')}
-              onNavigateToDetail={navigateToDetail}
-              onNavigateToTransactions={() => setActiveTab('transactions')}
-            />
-          )}
+          <Routes>
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={
+              <DashboardPage
+                onNavigateToCreate={() => navigate('/create_payment')}
+                onNavigateToDetail={navigateToDetail}
+                onNavigateToTransactions={() => navigate('/transactions')}
+              />
+            } />
+            <Route path="/transactions" element={<TransactionsPage onNavigateToDetail={navigateToDetail} />} />
+            <Route path="/transactions/:id" element={<PaymentDetailPageWrapper onBack={() => navigate('/transactions')} />} />
+            <Route path="/create_payment" element={<CreatePaymentPage onPaymentCreated={handlePaymentCreated} onCancel={() => navigate('/dashboard')} />} />
+            <Route path="/reports" element={<ReportsPage />} />
 
-          {activeTab === 'transactions' && (
-            <TransactionsPage onNavigateToDetail={navigateToDetail} />
-          )}
+            {user.role === 'ADMIN' ? (
+              <>
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/users" element={<UsersPage />} />
+                <Route path="/providers" element={<ProvidersPage />} />
+                <Route path="/api_keys" element={<ApiKeysPage />} />
+              </>
+            ) : (
+              <>
+                <Route path="/settings" element={<AccessDenied />} />
+                <Route path="/users" element={<AccessDenied />} />
+                <Route path="/providers" element={<AccessDenied />} />
+                <Route path="/api_keys" element={<AccessDenied />} />
+              </>
+            )}
 
-          {activeTab === 'create_payment' && (
-            <CreatePaymentPage
-              onPaymentCreated={handlePaymentCreated}
-              onCancel={() => setActiveTab('dashboard')}
-            />
-          )}
-
-          {activeTab === 'payment_detail' && selectedTxId && (
-            <PaymentDetailPage
-              transactionId={selectedTxId}
-              onBack={() => setActiveTab('transactions')}
-            />
-          )}
-
-          {activeTab === 'reports' && <ReportsPage />}
-
-          {(activeTab === 'settings' || activeTab === 'users' || activeTab === 'providers' || activeTab === 'api_keys') && user.role !== 'ADMIN' ? (
-            <AccessDenied />
-          ) : (
-            <>
-              {activeTab === 'settings' && <SettingsPage />}
-              {activeTab === 'users' && <UsersPage />}
-              {activeTab === 'providers' && <ProvidersPage />}
-              {activeTab === 'api_keys' && <ApiKeysPage />}
-            </>
-          )}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
         </main>
       </div>
     </div>
   );
 }
 
+// Wrapper to pass route params as props to PaymentDetailPage since it expects transactionId prop
+import { useParams } from 'react-router-dom';
+function PaymentDetailPageWrapper({ onBack }: { onBack: () => void }) {
+  const { id } = useParams();
+  const txId = parseInt(id || '0', 10);
+  return <PaymentDetailPage transactionId={txId} onBack={onBack} />;
+}
+
 export default function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <ThemeProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }

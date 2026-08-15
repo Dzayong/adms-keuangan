@@ -109,16 +109,16 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
 
   return (
     <div className="space-y-6 pb-12 animate-fade-in">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-950 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
         <div>
-          <h2 className="text-xl font-bold text-slate-800">Daftar Transaksi</h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Daftar Transaksi</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Riwayat tagihan dan pembayaran QRIS dari semua aplikasi.
           </p>
         </div>
         <button
           onClick={() => fetchTransactions(pagination.page)}
-          className="inline-flex items-center gap-2 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-colors border border-slate-200"
+          className="inline-flex items-center gap-2 px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-bold transition-colors border border-slate-200 dark:border-slate-800"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-indigo-700' : ''}`} />
           <span>Segarkan Data</span>
@@ -126,7 +126,7 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-4">
+      <div className="bg-white dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
         <form onSubmit={handleSearchSubmit} className="flex flex-col md:flex-row gap-3">
           <div className="flex-1 relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -135,7 +135,7 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Cari ID Tagihan atau Nama Pelanggan..."
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-10 pr-4 py-2 text-xs text-slate-800 font-medium placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:bg-white transition-all"
+              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-2 text-xs text-slate-800 dark:text-slate-200 font-medium placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:bg-white dark:bg-slate-950 transition-all"
             />
           </div>
 
@@ -143,7 +143,7 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:border-indigo-600"
+              className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-none focus:border-indigo-600"
             >
               <option value="">Semua Status</option>
               <option value="PENDING">PENDING (Menunggu)</option>
@@ -157,14 +157,14 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-700 focus:outline-none focus:border-indigo-600"
+              className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs font-mono text-slate-700 dark:text-slate-300 focus:outline-none focus:border-indigo-600"
             />
 
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-700 focus:outline-none focus:border-indigo-600"
+              className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs font-mono text-slate-700 dark:text-slate-300 focus:outline-none focus:border-indigo-600"
             />
 
             <button
@@ -178,7 +178,7 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
               <button
                 type="button"
                 onClick={handleResetFilters}
-                className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg text-xs font-bold transition-colors flex items-center gap-1 border border-rose-200"
+                className="px-3 py-2 bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100 text-rose-700 rounded-lg text-xs font-bold transition-colors flex items-center gap-1 border border-rose-200 dark:border-rose-900/50"
               >
                 <X className="w-3.5 h-3.5" />
                 <span>Reset</span>
@@ -189,30 +189,30 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
       </div>
 
       {/* Transactions Data Table */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+      <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
-            <thead className="bg-slate-50 sticky top-0">
+            <thead className="bg-slate-50 dark:bg-slate-900 sticky top-0">
               <tr>
-                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100">
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
                   ID Tagihan
                 </th>
-                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100">
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
                   Pelanggan
                 </th>
-                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100">
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
                   Nominal
                 </th>
-                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100">
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
                   Metode
                 </th>
-                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100">
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
                   Status
                 </th>
-                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100">
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
                   Tanggal
                 </th>
-                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100 text-right">
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 text-right">
                   Aksi
                 </th>
               </tr>
@@ -226,24 +226,24 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
                 </tr>
               ) : (
                 transactions.map((tx) => (
-                  <tr key={tx.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-4 py-3 font-mono text-xs text-slate-600 font-bold">{tx.invoice_number}</td>
-                    <td className="px-4 py-3 text-xs text-slate-800">
+                  <tr key={tx.id} className="hover:bg-slate-50 dark:hover:bg-slate-800 dark:bg-slate-900 transition-colors">
+                    <td className="px-4 py-3 font-mono text-xs text-slate-600 dark:text-slate-400 font-bold">{tx.invoice_number}</td>
+                    <td className="px-4 py-3 text-xs text-slate-800 dark:text-slate-200">
                       <div className="font-semibold">{tx.customer_name}</div>
                       <div className="text-[10px] text-slate-400">{tx.customer_phone || '-'}</div>
                     </td>
-                    <td className="px-4 py-3 text-xs font-bold text-slate-900 font-mono">
+                    <td className="px-4 py-3 text-xs font-bold text-slate-900 dark:text-slate-100 font-mono">
                       {formatRupiah(tx.amount)}
                     </td>
                     <td className="px-4 py-3">
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 font-mono border border-slate-200">
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-mono border border-slate-200 dark:border-slate-800">
                         {tx.payment_method || 'QRIS'}
                       </span>
                     </td>
                     <td className="px-4 py-3">
                       <StatusBadge status={tx.status} />
                     </td>
-                    <td className="px-4 py-3 text-[11px] text-slate-500 font-mono">{tx.created_at}</td>
+                    <td className="px-4 py-3 text-[11px] text-slate-500 dark:text-slate-400 font-mono">{tx.created_at}</td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         <button
@@ -255,7 +255,7 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
                         </button>
                         <button
                           onClick={() => openTxDetail(tx)}
-                          className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md text-[11px] font-semibold transition-colors border border-slate-200"
+                          className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-md text-[11px] font-semibold transition-colors border border-slate-200 dark:border-slate-800"
                         >
                           Log Webhook
                         </button>
@@ -269,26 +269,26 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
         </div>
 
         {/* Pagination Controls */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/50 text-xs text-slate-500">
+        <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 text-xs text-slate-500 dark:text-slate-400">
           <div>
-            Menampilkan <span className="font-bold text-slate-700">{transactions.length}</span> dari{' '}
-            <span className="font-bold text-slate-700">{pagination.totalItems}</span> transaksi
+            Menampilkan <span className="font-bold text-slate-700 dark:text-slate-300">{transactions.length}</span> dari{' '}
+            <span className="font-bold text-slate-700 dark:text-slate-300">{pagination.totalItems}</span> transaksi
           </div>
           <div className="flex items-center gap-2">
             <button
               disabled={pagination.page <= 1}
               onClick={() => fetchTransactions(pagination.page - 1)}
-              className="p-1.5 bg-white border border-slate-200 rounded-lg disabled:opacity-40 hover:bg-slate-100 transition-colors"
+              className="p-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="font-bold text-slate-700">
+            <span className="font-bold text-slate-700 dark:text-slate-300">
               {pagination.page} / {pagination.totalPages}
             </span>
             <button
               disabled={pagination.page >= pagination.totalPages}
               onClick={() => fetchTransactions(pagination.page + 1)}
-              className="p-1.5 bg-white border border-slate-200 rounded-lg disabled:opacity-40 hover:bg-slate-100 transition-colors"
+              className="p-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 transition-colors"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -304,12 +304,12 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
         maxWidth="lg"
       >
         {selectedTx && (
-          <div className="space-y-6 text-sm text-slate-700">
-            <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+          <div className="space-y-6 text-sm text-slate-700 dark:text-slate-300">
+            <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
               <div>
                 <div className="text-xs text-slate-400 font-bold uppercase">Pelanggan</div>
-                <div className="font-bold text-slate-900">{selectedTx.customer_name}</div>
-                <div className="text-xs text-slate-500">{selectedTx.customer_phone || '-'}</div>
+                <div className="font-bold text-slate-900 dark:text-slate-100">{selectedTx.customer_name}</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400">{selectedTx.customer_phone || '-'}</div>
               </div>
               <div>
                 <div className="text-xs text-slate-400 font-bold uppercase">Nominal</div>
@@ -325,14 +325,14 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
               </div>
               <div>
                 <div className="text-xs text-slate-400 font-bold uppercase">Dibuat Oleh</div>
-                <div className="font-semibold text-slate-800">{selectedTx.creator_name || 'System'}</div>
+                <div className="font-semibold text-slate-800 dark:text-slate-200">{selectedTx.creator_name || 'System'}</div>
               </div>
             </div>
 
             {selectedTx.description && (
               <div>
-                <div className="text-xs font-bold text-slate-500 uppercase mb-1">Deskripsi</div>
-                <p className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs text-slate-600">
+                <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Deskripsi</div>
+                <p className="p-3 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400">
                   {selectedTx.description}
                 </p>
               </div>
@@ -340,7 +340,7 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
 
             {/* Audit Logs */}
             <div>
-              <h4 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-2">
+              <h4 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 uppercase tracking-wider mb-2">
                 Log Sistem & Pengiriman Webhook
               </h4>
               {logs.length === 0 ? (
@@ -360,11 +360,11 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
               )}
             </div>
 
-            <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
+            <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
               {selectedTx.status === 'PENDING' && (
                 <button
                   onClick={() => handleCancelTx(selectedTx.id)}
-                  className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl text-xs transition-colors flex items-center gap-1.5"
+                  className="px-4 py-2 bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100 text-rose-700 font-bold rounded-xl text-xs transition-colors flex items-center gap-1.5"
                 >
                   <Ban className="w-4 h-4" />
                   <span>Batalkan Transaksi</span>

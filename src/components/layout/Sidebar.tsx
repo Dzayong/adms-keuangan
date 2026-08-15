@@ -11,11 +11,10 @@ import {
   ServerCrash,
   Key
 } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.js';
 
 interface Props {
-  currentTab: string;
-  onSelectTab: (tab: string) => void;
   userRole?: string;
 }
 
@@ -26,8 +25,10 @@ interface NavItem {
   requireAdmin?: boolean;
 }
 
-export const Sidebar: React.FC<Props> = ({ currentTab, onSelectTab, userRole }) => {
+export const Sidebar: React.FC<Props> = ({ userRole }) => {
   const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const allNavItems: NavItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -43,15 +44,11 @@ export const Sidebar: React.FC<Props> = ({ currentTab, onSelectTab, userRole }) 
   const navItems = allNavItems.filter(item => !item.requireAdmin || userRole === 'ADMIN');
 
   return (
-    <aside className="w-64 shrink-0 flex flex-col bg-slate-950 border-r border-slate-800 text-slate-300 hidden md:flex min-h-[calc(100vh-4rem)] select-none">
-      <div className="p-6 border-b border-slate-700/50">
-        <div className="flex items-center gap-2.5">
-          <img src="/logo.png" alt="ADMS Logo" className="h-10 w-auto object-contain bg-white rounded p-1" />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1A2C59] via-[#1A2C59] to-amber-500 font-black tracking-tight text-2xl ml-1 drop-shadow-[0_0_2px_rgba(255,255,255,0.8)]">QRIS</span>
-        </div>
-        <p className="text-slate-400 text-[10px] mt-1 font-semibold uppercase tracking-widest">
-          INTERNAL MANAGEMENT
-        </p>
+    <aside className="w-64 shrink-0 flex flex-col bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hidden md:flex h-[calc(100vh-4rem)] sticky top-16 select-none overflow-y-auto transition-colors duration-200">
+      <div className="p-6 border-b border-slate-200 dark:border-slate-700/50 flex items-center justify-center">
+        <h2 className="text-slate-800 dark:text-slate-200 text-sm font-bold uppercase tracking-widest text-center">
+          Internal Management
+        </h2>
       </div>
 
       <nav className="flex-1 py-4">
@@ -61,23 +58,26 @@ export const Sidebar: React.FC<Props> = ({ currentTab, onSelectTab, userRole }) 
         <div className="space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = currentTab === item.id;
+            // Handle both exact match and sub-paths (e.g. /transactions/123)
+            const isActive = location.pathname === `/${item.id}` || 
+                             (item.id === 'transactions' && location.pathname.startsWith('/transactions'));
+            
             return (
               <button
                 key={item.id}
-                onClick={() => onSelectTab(item.id)}
+                onClick={() => navigate(`/${item.id}`)}
                 className={`w-full flex items-center gap-3 px-6 py-3 text-sm font-semibold transition-colors text-left ${
                   isActive
-                    ? 'text-white bg-slate-800/60 border-r-4 border-indigo-600 font-bold'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/30'
+                    ? 'text-indigo-700 dark:text-white bg-indigo-50 dark:bg-slate-800/60 border-r-4 border-indigo-600 font-bold'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/30'
                 }`}
               >
                 <div
                   className={`w-2 h-2 rounded-full transition-colors ${
-                    isActive ? 'bg-indigo-600 shadow-xs shadow-yellow-500' : 'bg-slate-600'
+                    isActive ? 'bg-indigo-600 shadow-xs shadow-indigo-300 dark:shadow-yellow-500' : 'bg-slate-300 dark:bg-slate-600'
                   }`}
                 />
-                <Icon className={`w-4 h-4 ${isActive ? 'text-yellow-400' : 'text-slate-500'}`} />
+                <Icon className={`w-4 h-4 ${isActive ? 'text-indigo-600 dark:text-yellow-400' : 'text-slate-400 dark:text-slate-500'}`} />
                 <span>{item.label}</span>
               </button>
             );
@@ -87,18 +87,18 @@ export const Sidebar: React.FC<Props> = ({ currentTab, onSelectTab, userRole }) 
 
       </nav>
 
-      <div className="p-4 bg-slate-950 border-t border-slate-700/50">
+      <div className="p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-700/50">
         <div className="flex items-center gap-3">
           {user?.profile_photo ? (
-            <img src={user.profile_photo} alt={user.name} className="w-8 h-8 rounded-full object-cover border border-slate-600 shadow-xs" />
+            <img src={user.profile_photo} alt={user.name} className="w-8 h-8 rounded-full object-cover border border-slate-300 dark:border-slate-600 shadow-xs" />
           ) : (
-            <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-xs font-bold text-yellow-400">
+            <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 flex items-center justify-center text-xs font-bold text-indigo-700 dark:text-yellow-400">
               {user?.name?.substring(0, 2).toUpperCase() || 'AD'}
             </div>
           )}
           <div className="flex flex-col text-left overflow-hidden">
-            <span className="text-xs text-white font-bold truncate">{user?.name || 'Administrator'}</span>
-            <span className="text-[10px] text-slate-400 font-mono truncate">{user?.email || 'admin@admsqris.local'}</span>
+            <span className="text-xs text-slate-800 dark:text-white font-bold truncate">{user?.name || 'Administrator'}</span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono truncate">{user?.email || 'admin@admsqris.local'}</span>
           </div>
         </div>
       </div>
