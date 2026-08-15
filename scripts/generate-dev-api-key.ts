@@ -19,15 +19,15 @@ async function generateDevApiKey() {
     const keyHint = `adms_sk_test_••••••••••••${randomSecret.slice(-4)}`;
 
     // Use a specific Dev key record to avoid overwriting the Default Internal Application
-    const check = db.exec("SELECT id FROM api_keys WHERE name = 'Development API Key'");
-    const existingId = check[0]?.values[0]?.[0];
+    const [check]: any = await db.query("SELECT id FROM api_keys WHERE name = 'Development API Key'");
+    const existingId = check[0]?.id;
 
     if (existingId) {
-      db.run("UPDATE api_keys SET key_hash = ?, key_hint = ? WHERE id = ?", [keyHash, keyHint, existingId]);
+      await db.query("UPDATE api_keys SET key_hash = ?, key_hint = ? WHERE id = ?", [keyHash, keyHint, existingId]);
     } else {
-      db.run(
-        `INSERT INTO api_keys (name, key_hash, key_hint) VALUES (?, ?, ?)`,
-        ['Development API Key', keyHash, keyHint]
+      await db.query(
+        `INSERT INTO api_keys (name, key_hash, key_hint, permissions) VALUES (?, ?, ?, ?)`,
+        ['Development API Key', keyHash, keyHint, '[]']
       );
     }
 

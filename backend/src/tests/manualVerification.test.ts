@@ -46,7 +46,7 @@ describe('Manual Verification (Real Static QRIS)', () => {
     // Create PENDING internal_qris transaction
     const resTx1 = await runSql(`
       INSERT INTO transactions (invoice_number, customer_name, amount, status, expired_at, created_by, created_at)
-      VALUES ('INV-TEST-VERIFY-001', 'Test User', 50000, 'PENDING', datetime('now', '+15 minutes', 'localtime'), 1, ?)
+      VALUES ('INV-TEST-VERIFY-001', 'Test User', 50000, 'PENDING', DATE_ADD(NOW(), INTERVAL 15 MINUTE), 1, ?)
     `, [nowStr]);
     txId = resTx1.lastInsertRowid;
     await runSql(`
@@ -57,7 +57,7 @@ describe('Manual Verification (Real Static QRIS)', () => {
     // Create PENDING mock transaction
     const resTx2 = await runSql(`
       INSERT INTO transactions (invoice_number, customer_name, amount, status, expired_at, created_by, created_at)
-      VALUES ('INV-TEST-VERIFY-002', 'Test User 2', 50000, 'PENDING', datetime('now', '+15 minutes', 'localtime'), 1, ?)
+      VALUES ('INV-TEST-VERIFY-002', 'Test User 2', 50000, 'PENDING', DATE_ADD(NOW(), INTERVAL 15 MINUTE), 1, ?)
     `, [nowStr]);
     mockTxId = resTx2.lastInsertRowid;
     await runSql(`
@@ -68,7 +68,7 @@ describe('Manual Verification (Real Static QRIS)', () => {
     // Create EXPIRED internal_qris transaction
     const resTx3 = await runSql(`
       INSERT INTO transactions (invoice_number, customer_name, amount, status, expired_at, created_by, created_at)
-      VALUES ('INV-TEST-VERIFY-003', 'Test User 3', 50000, 'EXPIRED', datetime('now', '-15 minutes', 'localtime'), 1, ?)
+      VALUES ('INV-TEST-VERIFY-003', 'Test User 3', 50000, 'EXPIRED', DATE_SUB(NOW(), INTERVAL 15 MINUTE), 1, ?)
     `, [nowStr]);
     expiredTxId = resTx3.lastInsertRowid;
     await runSql(`

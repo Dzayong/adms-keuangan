@@ -46,9 +46,9 @@ export async function apiAuth(req: ApiAuthenticatedRequest, res: Response, next:
       permissions: parsedPermissions
     };
 
-    // Update last_used_at asynchronously
+    // Update last_used_at in background
     import('../config/db.js').then(({ runSql }) => {
-      runSql("UPDATE api_keys SET last_used_at = datetime('now', 'localtime') WHERE id = ?", [matchedApp.id]).catch(err => {
+      runSql("UPDATE api_keys SET last_used_at = NOW() WHERE id = ?", [matchedApp.id]).catch(err => {
         console.error('Failed to update last_used_at:', err);
       });
     });

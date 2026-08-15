@@ -227,7 +227,7 @@ describe('Phase 3.4 - Internal Application Payment Gateway + Existing Office QRI
       assert.strictEqual(putRes.status, 404); // Route doesn't exist
 
       // Fast-forward expiration in DB
-      await runSql(`UPDATE transactions SET expired_at = datetime('now', '-1 day') WHERE id = ?`, [txId]);
+      await runSql(`UPDATE transactions SET expired_at = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE id = ?`, [txId]);
 
       // Check status -> should auto-expire
       const getRes = await request(app)

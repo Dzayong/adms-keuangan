@@ -1,233 +1,193 @@
-import initSqlJs, { Database } from 'sql.js';
-import fs from 'fs';
-import path from 'path';
-import crypto from 'crypto';
+import mysql from 'mysql2/promise';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
+import dotenv from 'dotenv';
+import path from 'path';
 
-let dbInstance: Database | null = null;
-const dbDir = path.join(process.cwd(), 'database');
-const dbPath = path.join(dbDir, 'adms_qris.sqlite');
+// Pastikan dotenv membaca .env di root
+dotenv.config({ path: path.join(process.cwd(), '../.env') });
 
-export async function getDb(): Promise<Database> {
-  if (dbInstance) return dbInstance;
+let pool: mysql.Pool | null = null;
 
-  const SQL = await initSqlJs();
+export async function getDb(): Promise<mysql.Pool> {
+  if (pool) return pool;
 
-  if (!fs.existsSync(dbDir)) {
-    fs.mkdirSync(dbDir, { recursive: true });
-  }
+  pool = mysql.createPool({
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASS || '',
+    database: process.env.DB_NAME || 'adms_qris',
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+    multipleStatements: true
+  });
 
-  if (fs.existsSync(dbPath)) {
-    const fileBuffer = fs.readFileSync(dbPath);
-    dbInstance = new SQL.Database(fileBuffer);
-  } else {
-    dbInstance = new SQL.Database();
-  }
-
-  await initSchemaAndSeed(dbInstance);
-  saveDb();
-  return dbInstance;
+  await initSchemaAndSeed();
+  return pool;
 }
 
 export function saveDb() {
-  if (!dbInstance) return;
-  const data = dbInstance.export();
-  const buffer = Buffer.from(data);
-  fs.writeFileSync(dbPath, buffer);
+  // MySQL handles saving automatically, this is a no-op
 }
 
-async function initSchemaAndSeed(db: Database) {
+async function initSchemaAndSeed() {
+  if (!pool) return;
+  
   // Create tables
-  db.run(`
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      email TEXT NOT NULL UNIQUE,
-      password_hash TEXT NOT NULL,
-      role TEXT NOT NULL DEFAULT 'OPERATOR',
-      profile_photo TEXT DEFAULT '',
-      is_active INTEGER NOT NULL DEFAULT 1,
-      created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
-      updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+      id INT PRIMARY KEY AUTO_INCREMENT,
+      name VARCHAR(255) NOT NULL,
+      email VARCHAR(255) NOT NULL UNIQUE,
+      password_hash VARCHAR(255) NOT NULL,
+      role VARCHAR(50) NOT NULL DEFAULT 'OPERATOR',
+      profile_photo TEXT,
+      is_active TINYINT(1) NOT NULL DEFAULT 1,
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     );
 
     CREATE TABLE IF NOT EXISTS transactions (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      invoice_number TEXT NOT NULL UNIQUE,
-      customer_name TEXT NOT NULL,
-      customer_phone TEXT DEFAULT '',
-      amount REAL NOT NULL,
+      id INT PRIMARY KEY AUTO_INCREMENT,
+      invoice_number VARCHAR(255) NOT NULL UNIQUE,
+      customer_name VARCHAR(255) NOT NULL,
+      customer_phone VARCHAR(50) DEFAULT '',
+      amount DECIMAL(15, 2) NOT NULL,
       description TEXT,
-      status TEXT NOT NULL DEFAULT 'PENDING',
-      expired_at TEXT NOT NULL,
-      paid_at TEXT,
-      idempotency_key TEXT UNIQUE,
-      created_by INTEGER NOT NULL,
-      created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
-      updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+      status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+      expired_at DATETIME NOT NULL,
+      paid_at DATETIME,
+      idempotency_key VARCHAR(255) UNIQUE,
+      created_by INT NOT NULL,
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (created_by) REFERENCES users(id)
     );
 
     CREATE TABLE IF NOT EXISTS login_logs (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,
-      user_name TEXT NOT NULL,
-      ip_address TEXT,
+      id INT PRIMARY KEY AUTO_INCREMENT,
+      user_id INT NOT NULL,
+      user_name VARCHAR(255) NOT NULL,
+      ip_address VARCHAR(255),
       user_agent TEXT,
-      login_time TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+      login_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id)
     );
 
     CREATE TABLE IF NOT EXISTS payment_providers (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      code TEXT NOT NULL UNIQUE,
-      environment TEXT NOT NULL DEFAULT 'sandbox',
-      is_active INTEGER NOT NULL DEFAULT 1,
-      created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
-      updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+      id INT PRIMARY KEY AUTO_INCREMENT,
+      name VARCHAR(255) NOT NULL,
+      code VARCHAR(255) NOT NULL UNIQUE,
+      environment VARCHAR(50) NOT NULL DEFAULT 'sandbox',
+      is_active TINYINT(1) NOT NULL DEFAULT 1,
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     );
 
     CREATE TABLE IF NOT EXISTS internal_merchants (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      nmid TEXT UNIQUE NOT NULL,
+      id INT PRIMARY KEY AUTO_INCREMENT,
+      name VARCHAR(255) NOT NULL,
+      nmid VARCHAR(255) UNIQUE NOT NULL,
       qris_image_path TEXT NOT NULL,
-      is_active INTEGER NOT NULL DEFAULT 1,
-      created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
-      updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+      is_active TINYINT(1) NOT NULL DEFAULT 1,
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     );
 
     CREATE TABLE IF NOT EXISTS payments (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      transaction_id INTEGER NOT NULL,
-      provider_id INTEGER NOT NULL,
-      provider_reference TEXT NOT NULL,
+      id INT PRIMARY KEY AUTO_INCREMENT,
+      transaction_id INT NOT NULL,
+      provider_id INT NOT NULL,
+      provider_reference VARCHAR(255) NOT NULL,
       qr_content TEXT NOT NULL,
-      payment_method TEXT NOT NULL DEFAULT 'QRIS',
-      status TEXT NOT NULL DEFAULT 'PENDING',
-      paid_at TEXT,
-      created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
-      updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+      payment_method VARCHAR(50) NOT NULL DEFAULT 'QRIS',
+      status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+      paid_at DATETIME,
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (transaction_id) REFERENCES transactions(id),
       FOREIGN KEY (provider_id) REFERENCES payment_providers(id)
     );
 
     CREATE TABLE IF NOT EXISTS payment_logs (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      payment_id INTEGER NOT NULL,
-      event_type TEXT NOT NULL,
-      reference TEXT NOT NULL,
+      id INT PRIMARY KEY AUTO_INCREMENT,
+      payment_id INT NOT NULL,
+      event_type VARCHAR(255) NOT NULL,
+      reference VARCHAR(255) NOT NULL,
       payload TEXT NOT NULL,
-      created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (payment_id) REFERENCES payments(id)
     );
 
     CREATE TABLE IF NOT EXISTS settings (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      key TEXT NOT NULL UNIQUE,
+      id INT PRIMARY KEY AUTO_INCREMENT,
+      \`key\` VARCHAR(255) NOT NULL UNIQUE,
       value TEXT NOT NULL,
-      updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     );
 
     CREATE TABLE IF NOT EXISTS api_keys (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      key_hash TEXT NOT NULL,
-      permissions TEXT NOT NULL DEFAULT '["payments:create", "payments:read"]',
-      is_active INTEGER NOT NULL DEFAULT 1,
-      created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+      id INT PRIMARY KEY AUTO_INCREMENT,
+      name VARCHAR(255) NOT NULL,
+      key_hash VARCHAR(255) NOT NULL,
+      permissions TEXT NOT NULL,
+      is_active TINYINT(1) NOT NULL DEFAULT 1,
+      last_used_at DATETIME,
+      key_hint VARCHAR(255),
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
   `);
 
-  // Migration: Add idempotency_key if missing
-  try {
-    db.exec('SELECT idempotency_key FROM transactions LIMIT 1');
-  } catch (e) {
-    console.log('Migration: Adding idempotency_key to transactions table');
-    db.exec('ALTER TABLE transactions ADD COLUMN idempotency_key TEXT');
-    db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_idempotency_key ON transactions(idempotency_key)');
-  }
-
-  // Migration: Add last_used_at and key_hint to api_keys if missing
-  try {
-    db.exec('SELECT last_used_at FROM api_keys LIMIT 1');
-  } catch (e) {
-    console.log('Migration: Adding last_used_at and key_hint to api_keys table');
-    db.exec('ALTER TABLE api_keys ADD COLUMN last_used_at TEXT');
-    db.exec('ALTER TABLE api_keys ADD COLUMN key_hint TEXT');
-  }
-
   // Seed Users if empty
-  const userCheck = db.exec("SELECT COUNT(*) as count FROM users");
-  const count = userCheck[0]?.values[0]?.[0] || 0;
+  const [userRows]: any = await pool.query("SELECT COUNT(*) as count FROM users");
+  const count = userRows[0].count;
 
   if (count === 0) {
     const adminPassHash = bcrypt.hashSync('Admin123!', 10);
     const opPassHash = bcrypt.hashSync('Operator123!', 10);
 
-    db.run(
+    await pool.query(
       `INSERT INTO users (name, email, password_hash, role, is_active) VALUES (?, ?, ?, 'ADMIN', 1)`,
       ['System Administrator', 'admin@admsqris.local', adminPassHash]
     );
-    db.run(
+    await pool.query(
       `INSERT INTO users (name, email, password_hash, role, is_active) VALUES (?, ?, ?, 'OPERATOR', 1)`,
       ['Operations Staff', 'operator@admsqris.local', opPassHash]
     );
   }
 
   // Seed Providers if empty
-  const providerCheck = db.exec("SELECT COUNT(*) as count FROM payment_providers");
-  const providerCount = providerCheck[0]?.values[0]?.[0] || 0;
-
-  if (providerCount === 0) {
-    db.run(
-      `INSERT INTO payment_providers (id, name, code, environment, is_active) VALUES (1, 'Mock QRIS', 'mock', 'sandbox', 1)`
-    );
-    db.run(
-      `INSERT INTO payment_providers (id, name, code, environment, is_active) VALUES (2, 'DANA QRIS (Placeholder)', 'dana', 'sandbox', 0)`
-    );
-  }
-  // Migration: Add internal_qris provider if missing
-  const internalProviderCheck = db.exec("SELECT COUNT(*) as count FROM payment_providers WHERE code = 'internal_qris'");
-  const internalProviderCount = internalProviderCheck[0]?.values[0]?.[0] || 0;
-  if (internalProviderCount === 0) {
-    db.run(
-      `INSERT INTO payment_providers (id, name, code, environment, is_active) VALUES (3, 'Internal Office QRIS', 'internal_qris', 'sandbox', 1)`
+  const [providerRows]: any = await pool.query("SELECT COUNT(*) as count FROM payment_providers");
+  if (providerRows[0].count === 0) {
+    await pool.query(
+      `INSERT INTO payment_providers (id, name, code, environment, is_active) VALUES 
+      (1, 'Mock QRIS', 'mock', 'sandbox', 1),
+      (2, 'DANA QRIS (Placeholder)', 'dana', 'sandbox', 0),
+      (3, 'Internal Office QRIS', 'internal_qris', 'sandbox', 1)`
     );
   }
 
   // Seed Internal Merchants if empty
-  const merchantCheck = db.exec("SELECT COUNT(*) as count FROM internal_merchants");
-  const merchantCount = merchantCheck[0]?.values[0]?.[0] || 0;
-
-  if (merchantCount === 0) {
-    db.run(
+  const [merchantRows]: any = await pool.query("SELECT COUNT(*) as count FROM internal_merchants");
+  if (merchantRows[0].count === 0) {
+    await pool.query(
       'INSERT INTO internal_merchants (name, nmid, qris_image_path) VALUES (?, ?, ?)',
       ['Toko Default', 'ID102030405060708', '/qris-default.jpg']
     );
   }
 
-  // Attempt to add profile_photo column if it doesn't exist
-  try {
-    db.run("ALTER TABLE users ADD COLUMN profile_photo TEXT DEFAULT ''");
-  } catch (error) {
-    // Ignore error if column already exists
-  }
-
   // Seed API Keys if empty
-  const apiKeyCheck = db.exec("SELECT COUNT(*) as count FROM api_keys");
-  const apiKeyCount = apiKeyCheck[0]?.values[0]?.[0] || 0;
-
-  if (apiKeyCount === 0) {
+  const [apiKeyRows]: any = await pool.query("SELECT COUNT(*) as count FROM api_keys");
+  if (apiKeyRows[0].count === 0) {
     const randomSecret = crypto.randomBytes(32).toString('hex');
     const plaintextKey = `adms_sk_test_${randomSecret}`;
     const keyHash = bcrypt.hashSync(plaintextKey, 10);
     const keyHint = `adms_sk_test_••••••••••••${randomSecret.slice(-4)}`;
 
-    db.run(
-      `INSERT INTO api_keys (name, key_hash, key_hint) VALUES (?, ?, ?)`,
-      ['Default Internal Application', keyHash, keyHint]
+    await pool.query(
+      `INSERT INTO api_keys (name, key_hash, permissions, key_hint) VALUES (?, ?, ?, ?)`,
+      ['Default Internal Application', keyHash, '["payments:create", "payments:read"]', keyHint]
     );
 
     console.log('\n=============================================================');
@@ -238,10 +198,8 @@ async function initSchemaAndSeed(db: Database) {
   }
 
   // Seed Settings if empty
-  const settingCheck = db.exec("SELECT COUNT(*) as count FROM settings");
-  const settingCount = settingCheck[0]?.values[0]?.[0] || 0;
-
-  if (settingCount === 0) {
+  const [settingRows]: any = await pool.query("SELECT COUNT(*) as count FROM settings");
+  if (settingRows[0].count === 0) {
     const defaultSettings = [
       ['company_name', 'PT ADMS Solusi Digital'],
       ['company_email', 'contact@admsqris.local'],
@@ -255,37 +213,35 @@ async function initSchemaAndSeed(db: Database) {
     ];
 
     for (const [k, v] of defaultSettings) {
-      db.run(`INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)`, [k, v]);
+      await pool.query(`INSERT IGNORE INTO settings (\`key\`, value) VALUES (?, ?)`, [k, v]);
     }
   }
 
   // Seed sample transactions if none exist
-  const txCheck = db.exec("SELECT COUNT(*) as count FROM transactions");
-  const txCount = txCheck[0]?.values[0]?.[0] || 0;
-
-  if (txCount === 0) {
+  const [txRows]: any = await pool.query("SELECT COUNT(*) as count FROM transactions");
+  if (txRows[0].count === 0) {
     const now = new Date();
     const formattedNow = now.toISOString().replace('T', ' ').substring(0, 19);
     const expiredAt = new Date(now.getTime() + 15 * 60000).toISOString().replace('T', ' ').substring(0, 19);
 
-    db.run(`
+    await pool.query(`
       INSERT INTO transactions (invoice_number, customer_name, customer_phone, amount, description, status, expired_at, created_by, created_at)
       VALUES (?, ?, ?, ?, ?, 'PAID', ?, 1, ?)
     `, ['INV-20260810-000001', 'Kantin Utama ADMS', '081234567890', 150000, 'Pembayaran Catering Meeting', expiredAt, formattedNow]);
 
-    db.run(`
+    await pool.query(`
       INSERT INTO transactions (invoice_number, customer_name, customer_phone, amount, description, status, expired_at, created_by, created_at)
       VALUES (?, ?, ?, ?, ?, 'PENDING', ?, 2, ?)
     `, ['INV-20260810-000002', 'Budi Santoso - Divisi IT', '081987654321', 75000, 'Pembelian Supplies Kantor', expiredAt, formattedNow]);
 
     // Create corresponding payment for transaction 1
-    db.run(`
+    await pool.query(`
       INSERT INTO payments (transaction_id, provider_id, provider_reference, qr_content, payment_method, status, paid_at)
       VALUES (1, 1, 'MOCK-REF-000001', '00020101021226670016COM.DANA.WWW0118936009110000000001021551234567890123452045812530336054061500005802ID5918ADMS QRIS INTERNAL6012JAKARTA SEL6304A1B2', 'QRIS', 'PAID', ?)
     `, [formattedNow]);
 
     // Create corresponding payment for transaction 2
-    db.run(`
+    await pool.query(`
       INSERT INTO payments (transaction_id, provider_id, provider_reference, qr_content, payment_method, status)
       VALUES (2, 1, 'MOCK-REF-000002', '00020101021226670016COM.DANA.WWW011893600911000000000102155123456789012345204581253033605403750005802ID5918ADMS QRIS INTERNAL6012JAKARTA SEL6304C3D4', 'QRIS', 'PENDING')
     `, []);
@@ -293,48 +249,40 @@ async function initSchemaAndSeed(db: Database) {
 }
 
 export async function querySql<T>(sql: string, params: any[] = []): Promise<T[]> {
-  const db = await getDb();
-  const stmt = db.prepare(sql);
-  stmt.bind(params);
-  
-  const results: T[] = [];
-  while (stmt.step()) {
-    results.push(stmt.getAsObject() as unknown as T);
-  }
-  stmt.free();
-  return results;
+  const p = await getDb();
+  // MySQL query parameters can be passed safely with []
+  const [rows] = await p.query(sql, params);
+  return rows as T[];
 }
 
 export async function getSql<T>(sql: string, params: any[] = []): Promise<T | null> {
   const rows = await querySql<T>(sql, params);
-  return rows[0] || null;
+  return rows.length > 0 ? rows[0] : null;
 }
 
 export async function runSql(sql: string, params: any[] = []): Promise<{ lastInsertRowid: number; changes: number }> {
-  const db = await getDb();
-  db.run(sql, params);
+  const p = await getDb();
+  const [result]: any = await p.execute(sql, params);
   
-  const idResult = db.exec("SELECT last_insert_rowid() as id");
-  const lastInsertRowid = (idResult[0]?.values[0]?.[0] as number) || 0;
+  const lastInsertRowid = result.insertId || 0;
+  const changes = result.affectedRows || 0;
   
-  const changesResult = db.exec("SELECT changes() as cnt");
-  const changes = (changesResult[0]?.values[0]?.[0] as number) || 0;
-  
-  saveDb();
   return { lastInsertRowid, changes };
 }
 
 export async function runTransaction(queries: { sql: string; params?: any[] }[]): Promise<void> {
-  const db = await getDb();
+  const p = await getDb();
+  const connection = await p.getConnection();
   try {
-    db.exec('BEGIN TRANSACTION');
+    await connection.beginTransaction();
     for (const query of queries) {
-      db.run(query.sql, query.params || []);
+      await connection.execute(query.sql, query.params || []);
     }
-    db.exec('COMMIT');
-    saveDb();
+    await connection.commit();
   } catch (error) {
-    db.exec('ROLLBACK');
+    await connection.rollback();
     throw error;
+  } finally {
+    connection.release();
   }
 }
