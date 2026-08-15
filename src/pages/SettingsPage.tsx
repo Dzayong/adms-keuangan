@@ -133,7 +133,10 @@ export const SettingsPage: React.FC = () => {
       setInternalMerchantImageBase64(''); // Clear base64 buffer after save
       fetchSettings();
     } else {
-      setError(res.message || resInternal.message || 'Gagal menyimpan pengaturan.');
+      const errorMsg = (!res.success ? res.message : null) 
+                    || (!resInternal.success ? resInternal.message : null) 
+                    || 'Gagal menyimpan pengaturan.';
+      setError(errorMsg);
     }
   };
 

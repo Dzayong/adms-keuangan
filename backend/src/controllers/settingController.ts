@@ -47,8 +47,8 @@ export async function updateSettings(req: AuthenticatedRequest, res: Response) {
     for (const [key, value] of Object.entries(settings)) {
       if (typeof value === 'string' && value !== '********') {
         await runSql(
-          `INSERT INTO settings (key, value, updated_at) VALUES (?, ?, ?)
-           ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+          `INSERT INTO settings (\`key\`, value, updated_at) VALUES (?, ?, ?)
+           ON DUPLICATE KEY UPDATE value = VALUES(value), updated_at = VALUES(updated_at)`,
           [key, value, nowStr]
         );
       }

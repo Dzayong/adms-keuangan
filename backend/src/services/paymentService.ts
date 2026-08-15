@@ -55,7 +55,7 @@ export async function createPaymentService(params: CreatePaymentParams) {
   const { amount, customerName, customerPhone = '', description = '', idempotencyKey, userId = 1, providerCode } = params;
 
   // Fetch expiry setting (default 15 mins)
-  const expirySetting = await getSql<{ value: string }>('SELECT value FROM settings WHERE key = ?', ['mock_expiry_minutes']);
+  const expirySetting = await getSql<{ value: string }>('SELECT value FROM settings WHERE \`key\` = ?', ['mock_expiry_minutes']);
   const expiryMinutes = parseInt(expirySetting?.value || '15', 10);
 
   const now = new Date();
