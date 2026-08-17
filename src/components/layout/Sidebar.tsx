@@ -10,13 +10,16 @@ import {
   Users,
   ServerCrash,
   Key,
-  Code2
+  Code2,
+  X
 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.js';
 
 interface Props {
   userRole?: string;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
 interface NavItem {
@@ -26,7 +29,7 @@ interface NavItem {
   requireAdmin?: boolean;
 }
 
-export const Sidebar: React.FC<Props> = ({ userRole }) => {
+export const Sidebar: React.FC<Props> = ({ userRole, isOpen, onClose }) => {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -57,15 +60,36 @@ export const Sidebar: React.FC<Props> = ({ userRole }) => {
     : allNavItems.filter(item => !item.requireAdmin || userRole === 'ADMIN');
 
   return (
-    <aside className="w-64 shrink-0 flex flex-col bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hidden md:flex h-[calc(100vh-4rem)] sticky top-16 select-none overflow-y-auto transition-colors duration-200">
-      <div className="p-6 border-b border-slate-200 dark:border-slate-700/50 flex items-center justify-center">
-        <h2 className="text-slate-800 dark:text-slate-200 text-sm font-bold uppercase tracking-widest text-center">
-          Internal Management
-        </h2>
-      </div>
+    <>
+      {/* Mobile Backdrop */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm md:hidden"
+          onClick={onClose}
+        />
+      )}
+
+      {/* Sidebar Content */}
+      <aside className={`
+        fixed md:sticky top-0 md:top-16 left-0 z-50 h-[100dvh] md:h-[calc(100vh-4rem)]
+        w-64 shrink-0 flex flex-col bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300
+        transition-transform duration-300 ease-in-out md:translate-x-0 overflow-y-auto select-none
+        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
+        <div className="p-6 border-b border-slate-200 dark:border-slate-700/50 flex items-center justify-between md:justify-center">
+          <h2 className="text-slate-800 dark:text-slate-200 text-sm font-bold uppercase tracking-widest text-center">
+            Internal Management
+          </h2>
+          <button 
+            onClick={onClose}
+            className="md:hidden p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors rounded hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
       <nav className="flex-1 py-4">
-        <div className="px-6 mb-2 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+        <div className="px-6 mb-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
           MENU SYSTEM
         </div>
         <div className="space-y-1">
@@ -81,8 +105,8 @@ export const Sidebar: React.FC<Props> = ({ userRole }) => {
                 onClick={() => navigate(`/${item.id}`)}
                 className={`w-full flex items-center gap-3 px-6 py-3 text-sm font-semibold transition-colors text-left ${
                   isActive
-                    ? 'text-indigo-700 dark:text-white bg-indigo-50 dark:bg-slate-800/60 border-r-4 border-indigo-600 font-bold'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/30'
+                    ? 'text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 border-r-4 border-indigo-600 dark:border-indigo-500 font-bold'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-slate-50 dark:hover:bg-slate-800/30'
                 }`}
               >
                 <div
@@ -100,7 +124,7 @@ export const Sidebar: React.FC<Props> = ({ userRole }) => {
 
       </nav>
 
-      <div className="p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-700/50">
+      <div className="p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 mt-auto">
         <div className="flex items-center gap-3">
           {user?.profile_photo ? (
             <img src={user.profile_photo} alt={user.name} className="w-8 h-8 rounded-full object-cover border border-slate-300 dark:border-slate-600 shadow-xs" />
@@ -116,6 +140,7 @@ export const Sidebar: React.FC<Props> = ({ userRole }) => {
         </div>
       </div>
     </aside>
+    </>
   );
 };
 

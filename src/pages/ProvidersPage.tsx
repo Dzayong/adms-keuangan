@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { ServerCrash, Power, PowerOff } from 'lucide-react';
 import { apiFetch } from '../services/api.js';
+import { Card } from '../components/ui/Card.js';
+import { Button } from '../components/ui/Button.js';
+import { Badge } from '../components/ui/Badge.js';
 
 interface Provider {
   id: number;
@@ -82,46 +85,40 @@ export const ProvidersPage: React.FC = () => {
           else description = "Integrasi penyedia layanan QRIS eksternal.";
 
           return (
-          <div key={p.id} className="bg-white dark:bg-slate-950 rounded-2xl p-6 shadow-xs border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
-            <div>
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">{p.name}</h3>
-                  <p className="text-xs font-mono text-slate-400 mt-0.5">ID: {p.code}</p>
+          <div key={p.id} className="h-full">
+            <Card className="p-6 shadow-xs flex flex-col justify-between h-full">
+              <div>
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">{p.name}</h3>
+                    <p className="text-xs font-mono text-slate-400 mt-0.5">ID: {p.code}</p>
+                  </div>
+                  <Badge variant={p.environment === 'SANDBOX' ? 'warning' : 'primary'}>
+                    {p.environment === 'SANDBOX' ? 'Uji Coba' : 'Produksi'}
+                  </Badge>
                 </div>
-                <span className={`px-2 py-1 text-[10px] font-black uppercase tracking-wider rounded border ${
-                  p.environment === 'SANDBOX' 
-                    ? 'bg-amber-50 text-amber-600 border-amber-200' 
-                    : 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 border-indigo-200 dark:border-indigo-900/50'
-                }`}>
-                  {p.environment === 'SANDBOX' ? 'Uji Coba' : 'Produksi'}
-                </span>
-              </div>
               <p className="text-sm text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">{description}</p>
-              
-              <div className="flex items-center gap-2 mb-6 bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
-                <span className="text-sm text-slate-600 dark:text-slate-400 font-medium">Status Integrasi:</span>
-                {p.is_active ? (
-                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-100/50 border border-emerald-200 dark:border-emerald-900/50 px-2.5 py-1 rounded-md">
-                    <Power className="w-3.5 h-3.5" /> AKTIF
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 px-2.5 py-1 rounded-md">
-                    <PowerOff className="w-3.5 h-3.5" /> NONAKTIF
-                  </span>
-                )}
-              </div>
+                            <div className="flex items-center gap-2 mb-6 bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                  <span className="text-sm text-slate-600 dark:text-slate-400 font-medium">Status Integrasi:</span>
+                  {p.is_active ? (
+                    <Badge variant="success" className="gap-1.5">
+                      <Power className="w-3.5 h-3.5" /> AKTIF
+                    </Badge>
+                  ) : (
+                    <Badge variant="danger" className="gap-1.5">
+                      <PowerOff className="w-3.5 h-3.5" /> NONAKTIF
+                    </Badge>
+                  )}
+                </div>
             </div>
-            <button
-              onClick={() => handleToggleStatus(p.id, p.is_active)}
-              className={`w-full py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 flex items-center justify-center gap-2 ${
-                p.is_active 
-                  ? 'bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 dark:bg-slate-900' 
-                  : 'bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 text-emerald-600 hover:bg-emerald-100'
-              }`}
-            >
-              {p.is_active ? 'Matikan Integrasi' : 'Aktifkan Integrasi'}
-            </button>
+              <Button
+                onClick={() => handleToggleStatus(p.id, p.is_active)}
+                variant={p.is_active ? 'outline' : 'success'}
+                className="w-full"
+              >
+                {p.is_active ? 'Matikan Integrasi' : 'Aktifkan Integrasi'}
+              </Button>
+            </Card>
           </div>
         )})}
         {providers.length === 0 && (

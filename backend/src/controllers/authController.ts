@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
-import { getSql, runSql } from '../config/db.js';
+import { getSql, runSql, querySql } from '../config/db.js';
 import { User } from '../models/types.js';
 import { signToken } from '../utils/jwt.js';
 import { sendSuccess, sendError } from '../utils/response.js';
@@ -121,7 +121,7 @@ export async function getLoginLogs(req: AuthenticatedRequest, res: Response) {
     if (req.user?.role !== 'ADMIN') {
       return sendError(res, 'Akses ditolak.', 403);
     }
-    const logs = await getSql(
+    const logs = await querySql(
       'SELECT id, user_id, user_name, ip_address, user_agent, login_time FROM login_logs ORDER BY login_time DESC LIMIT 100'
     );
     return sendSuccess(res, logs);

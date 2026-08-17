@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation, useParams } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext.js';
 import { ThemeProvider } from './context/ThemeContext.js';
 import { LoginPage } from './pages/LoginPage.js';
@@ -22,6 +22,12 @@ import { RefreshCw } from 'lucide-react';
 function AppContent() {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
 
   if (isLoading) {
     return (
@@ -61,15 +67,20 @@ function AppContent() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-50 flex flex-col font-sans transition-colors duration-200">
+    <div className="h-screen overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-50 flex flex-col font-sans transition-colors duration-200">
       <Navbar
         onOpenCreateModal={() => navigate('/create_payment')}
+        onToggleSidebar={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
       />
 
-      <div className="flex flex-1">
-        <Sidebar userRole={user.role} />
+      <div className="flex flex-1 overflow-hidden relative">
+        <Sidebar 
+          userRole={user.role} 
+          isOpen={isMobileMenuOpen} 
+          onClose={() => setIsMobileMenuOpen(false)} 
+        />
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 w-full">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 w-full overflow-y-auto overflow-x-hidden">
           <Routes>
             {(user.role === 'MERCHANT' || user.role === 'IT') ? (
               <>
@@ -122,7 +133,6 @@ function AppContent() {
 }
 
 // Wrapper to pass route params as props to PaymentDetailPage since it expects transactionId prop
-import { useParams } from 'react-router-dom';
 function PaymentDetailPageWrapper({ onBack }: { onBack: () => void }) {
   const { id } = useParams();
   const txId = parseInt(id || '0', 10);

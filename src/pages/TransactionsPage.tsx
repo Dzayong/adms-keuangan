@@ -17,6 +17,8 @@ import {
   ImageIcon,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.js';
+import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card.js';
+import { Button } from '../components/ui/Button.js';
 
 interface Props {
   onNavigateToDetail: (id: number) => void;
@@ -129,7 +131,7 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
 
   return (
     <div className="space-y-6 pb-12 animate-fade-in">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-950 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
+      <Card className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 shadow-xs">
         <div>
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">
             {user?.role === 'MERCHANT' ? 'Transaksi Saya' : 'Daftar Transaksi'}
@@ -140,17 +142,18 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
               : 'Riwayat tagihan dan pembayaran QRIS dari semua aplikasi.'}
           </p>
         </div>
-        <button
+        <Button
           onClick={() => fetchTransactions(pagination.page)}
-          className="inline-flex items-center gap-2 px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-bold transition-colors border border-slate-200 dark:border-slate-800"
+          variant="outline"
+          isLoading={isLoading}
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-indigo-700' : ''}`} />
+          <RefreshCw className="w-4 h-4 mr-2" />
           <span>Segarkan Data</span>
-        </button>
-      </div>
+        </Button>
+      </Card>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+      <Card className="p-4 shadow-xs">
         <form onSubmit={handleSearchSubmit} className="flex flex-col md:flex-row gap-3">
           <div className="flex-1 relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -159,7 +162,7 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Cari ID Tagihan atau Nama Pelanggan..."
-              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-2 text-xs text-slate-800 dark:text-slate-200 font-medium placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:bg-white dark:bg-slate-950 transition-all"
+              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-2 text-xs text-slate-800 dark:text-slate-200 font-medium placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:bg-white dark:focus:bg-slate-950 transition-all"
             />
           </div>
 
@@ -191,31 +194,29 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
               className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs font-mono text-slate-700 dark:text-slate-300 focus:outline-none focus:border-indigo-600"
             />
 
-            <button
-              type="submit"
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs transition-colors"
-            >
+            <Button type="submit">
               Cari Data
-            </button>
+            </Button>
 
             {(search || statusFilter || startDate || endDate) && (
-              <button
+              <Button
                 type="button"
                 onClick={handleResetFilters}
-                className="px-3 py-2 bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100 text-rose-700 rounded-lg text-xs font-bold transition-colors flex items-center gap-1 border border-rose-200 dark:border-rose-900/50"
+                variant="danger"
+                className="gap-1"
               >
                 <X className="w-3.5 h-3.5" />
                 <span>Reset</span>
-              </button>
+              </Button>
             )}
           </div>
         </form>
-      </div>
+      </Card>
 
       {/* Transactions Data Table */}
-      <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+      <Card className="overflow-hidden w-full shadow-xs">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full text-left border-collapse whitespace-nowrap">
             <thead className="bg-slate-50 dark:bg-slate-900 sticky top-0">
               <tr>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
@@ -236,7 +237,7 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
                   Tanggal
                 </th>
-                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 text-right">
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 text-right min-w-[200px]">
                   Aksi
                 </th>
               </tr>
@@ -273,14 +274,15 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
                         {/* Quick verify button for PENDING internal_qris — MERCHANT tidak bisa */}
                         {tx.status === 'PENDING' && tx.provider_code === 'internal_qris' &&
                           (user?.role === 'ADMIN' || user?.role === 'OPERATOR') && (
-                          <button
+                          <Button
                             onClick={() => handleQuickVerify(tx)}
-                            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md text-[11px] font-bold transition-colors flex items-center gap-1 shadow-2xs"
+                            variant="success"
+                            size="sm"
                             title="Verifikasi pembayaran"
                           >
-                            <ShieldCheck className="w-3 h-3" />
+                            <ShieldCheck className="w-3 h-3 mr-1" />
                             <span>Verifikasi</span>
-                          </button>
+                          </Button>
                         )}
                         {/* Proof indicator */}
                         {tx.proof_image_path && tx.status === 'PENDING' && (
@@ -289,29 +291,31 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
                             Bukti
                           </span>
                         )}
-                        <button
+                        <Button
                           onClick={() => onNavigateToDetail(tx.id)}
-                          className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-[11px] font-bold transition-colors flex items-center gap-1 shadow-2xs"
+                          size="sm"
                         >
-                          <Eye className="w-3 h-3" />
+                          <Eye className="w-3 h-3 mr-1" />
                           <span>Detail</span>
-                        </button>
+                        </Button>
                         {/* Share payment link */}
                         {tx.status === 'PENDING' && tx.provider_code === 'internal_qris' && (
-                          <button
+                          <Button
                             onClick={() => copyPaymentLink(tx.invoice_number)}
-                            className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-600 dark:text-slate-400 rounded-md text-[11px] font-semibold transition-colors border border-slate-200 dark:border-slate-800"
+                            variant="outline"
+                            size="sm"
                             title="Salin link pembayaran untuk customer"
                           >
                             <Share2 className="w-3 h-3" />
-                          </button>
+                          </Button>
                         )}
-                        <button
+                        <Button
                           onClick={() => openTxDetail(tx)}
-                          className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-md text-[11px] font-semibold transition-colors border border-slate-200 dark:border-slate-800"
+                          variant="outline"
+                          size="sm"
                         >
                           Log
-                        </button>
+                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -322,32 +326,34 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
         </div>
 
         {/* Pagination Controls */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 text-xs text-slate-500 dark:text-slate-400">
-          <div>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 text-xs text-slate-500 dark:text-slate-400">
+          <div className="text-center sm:text-left">
             Menampilkan <span className="font-bold text-slate-700 dark:text-slate-300">{transactions.length}</span> dari{' '}
             <span className="font-bold text-slate-700 dark:text-slate-300">{pagination.totalItems}</span> transaksi
           </div>
           <div className="flex items-center gap-2">
-            <button
+            <Button
               disabled={pagination.page <= 1}
               onClick={() => fetchTransactions(pagination.page - 1)}
-              className="p-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 transition-colors"
+              variant="outline"
+              size="icon"
             >
               <ChevronLeft className="w-4 h-4" />
-            </button>
+            </Button>
             <span className="font-bold text-slate-700 dark:text-slate-300">
               {pagination.page} / {pagination.totalPages}
             </span>
-            <button
+            <Button
               disabled={pagination.page >= pagination.totalPages}
               onClick={() => fetchTransactions(pagination.page + 1)}
-              className="p-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 transition-colors"
+              variant="outline"
+              size="icon"
             >
               <ChevronRight className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Info Modal */}
       <Modal
@@ -434,32 +440,32 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
             <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800 flex-wrap">
               {selectedTx.status === 'PENDING' && selectedTx.provider_code === 'internal_qris' &&
                 (user?.role === 'ADMIN' || user?.role === 'OPERATOR') && (
-                <button
+                <Button
                   onClick={() => { handleQuickVerify(selectedTx); setIsDetailOpen(false); }}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition-colors flex items-center gap-1.5"
+                  variant="success"
                 >
-                  <ShieldCheck className="w-4 h-4" />
+                  <ShieldCheck className="w-4 h-4 mr-1.5" />
                   <span>Verifikasi Lunas</span>
-                </button>
+                </Button>
               )}
               {selectedTx.status === 'PENDING' && (
-                <button
+                <Button
                   onClick={() => handleCancelTx(selectedTx.id)}
-                  className="px-4 py-2 bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100 text-rose-700 font-bold rounded-xl text-xs transition-colors flex items-center gap-1.5"
+                  variant="danger"
                 >
-                  <Ban className="w-4 h-4" />
+                  <Ban className="w-4 h-4 mr-1.5" />
                   <span>Batalkan</span>
-                </button>
+                </Button>
               )}
-              <button
+              <Button
                 onClick={() => {
                   setIsDetailOpen(false);
                   onNavigateToDetail(selectedTx.id);
                 }}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs transition-colors"
+                className="bg-amber-500 hover:bg-amber-600 text-white"
               >
                 Tampilkan Tampilan QR Code
-              </button>
+              </Button>
             </div>
           </div>
         )}

@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext.js';
 import { useTheme } from '../../context/ThemeContext.js';
-import { LogOut, Shield, ShieldAlert, Clock, Moon, Sun } from 'lucide-react';
+import { LogOut, Shield, ShieldAlert, Clock, Moon, Sun, Menu } from 'lucide-react';
 
 interface Props {
   onOpenCreateModal?: () => void;
   onToggleSidebar?: () => void;
 }
 
-export const Navbar: React.FC<Props> = ({ onOpenCreateModal }) => {
+export const Navbar: React.FC<Props> = ({ onOpenCreateModal, onToggleSidebar }) => {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   
@@ -39,9 +39,17 @@ export const Navbar: React.FC<Props> = ({ onOpenCreateModal }) => {
 
   return (
     <header className="sticky top-0 z-30 h-16 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 sm:px-8 shadow-xs transition-colors duration-200">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
+        <button
+          onClick={onToggleSidebar}
+          className="md:hidden p-2 -ml-2 text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
+          aria-label="Toggle Menu"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+        
         <div className="flex items-center gap-2">
-          <img src="/logo.png?v=6" alt="ADMS Logo" className="h-10 w-auto object-contain" />
+          <img src="/logo.png?v=6" alt="ADMS Logo" className="h-8 sm:h-10 w-auto object-contain" />
         </div>
 
         <div className="hidden lg:flex items-center gap-2 ml-4 pl-4 border-l border-slate-200 dark:border-slate-800 transition-colors duration-200">
@@ -53,8 +61,8 @@ export const Navbar: React.FC<Props> = ({ onOpenCreateModal }) => {
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-mono font-bold text-slate-700 dark:text-slate-300 shadow-inner transition-colors duration-200">
+      <div className="flex items-center gap-2 sm:gap-3">
+        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-mono font-bold text-slate-700 dark:text-slate-300 shadow-inner transition-colors duration-200">
           <Clock className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
           <span>{currentTime}</span>
         </div>

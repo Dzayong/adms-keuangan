@@ -17,6 +17,8 @@ import {
   ArrowRight,
   ShieldCheck,
 } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card.js';
+import { Button } from '../components/ui/Button.js';
 
 interface Props {
   onNavigateToCreate: () => void;
@@ -111,7 +113,7 @@ export const DashboardPage: React.FC<Props> = ({
       )}
 
       {/* Top Section Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-950 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
+      <Card className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 shadow-xs">
         <div>
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Ringkasan Pembayaran</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -150,27 +152,28 @@ export const DashboardPage: React.FC<Props> = ({
             />
           )}
           
-          <button
+          <Button
             onClick={fetchDashboardData}
-            className="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-lg transition-colors border border-slate-200 dark:border-slate-800"
+            variant="outline"
+            size="icon"
             title="Refresh Data"
+            isLoading={isLoading}
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-indigo-700' : ''}`} />
-          </button>
-          <button
+            <RefreshCw className="w-4 h-4" />
+          </Button>
+          <Button
             onClick={onNavigateToCreate}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs shadow-xs transition-all active:scale-95"
           >
-            <PlusCircle className="w-4 h-4" />
+            <PlusCircle className="w-4 h-4 mr-2" />
             <span>Manual Payment</span>
-          </button>
+          </Button>
         </div>
-      </div>
+      </Card>
 
       {/* Grid of 4 Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Total Volume */}
-        <div className="bg-white dark:bg-slate-950 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
+        <Card className="p-5 shadow-xs">
           <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
             Semua Transaksi (Dibuat)
           </p>
@@ -180,7 +183,7 @@ export const DashboardPage: React.FC<Props> = ({
           <div className="mt-2 text-[10px] text-emerald-600 dark:text-emerald-500 font-bold">
             {stats?.total_count || 0} Total Transaksi Tercatat
           </div>
-        </div>
+        </Card>
 
         {/* Card 2: Successful */}
         <div className="bg-emerald-50 dark:bg-emerald-950/30 p-5 rounded-xl border border-emerald-200 dark:border-emerald-900/50 shadow-xs">
@@ -227,7 +230,7 @@ export const DashboardPage: React.FC<Props> = ({
         {/* Left Column (2 Cols wide) */}
         <div className="lg:col-span-2 space-y-6">
           {/* Recent Transactions Data Grid Table */}
-          <div className="bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col">
+          <Card className="flex flex-col shadow-xs overflow-hidden">
             <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <div>
                 <h3 className="font-bold text-slate-800 dark:text-slate-200 text-sm">Transaksi Terbaru</h3>
@@ -242,8 +245,8 @@ export const DashboardPage: React.FC<Props> = ({
               </button>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+            <div className="overflow-x-auto w-full">
+              <table className="w-full text-left border-collapse whitespace-nowrap">
                 <thead className="bg-slate-50 dark:bg-slate-900 sticky top-0">
                   <tr>
                     <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
@@ -258,7 +261,7 @@ export const DashboardPage: React.FC<Props> = ({
                     <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
                       Status
                     </th>
-                    <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 text-right">
+                    <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 text-right min-w-[120px]">
                       Aksi
                     </th>
                   </tr>
@@ -272,7 +275,7 @@ export const DashboardPage: React.FC<Props> = ({
                     </tr>
                   ) : (
                     recentTx.map((tx) => (
-                      <tr key={tx.id} className="hover:bg-slate-50 dark:hover:bg-slate-800 dark:bg-slate-900 transition-colors">
+                      <tr key={tx.id} className="hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 transition-colors">
                         <td className="px-4 py-3 font-mono text-xs text-slate-600 dark:text-slate-400 font-bold">
                           {tx.invoice_number}
                         </td>
@@ -300,10 +303,10 @@ export const DashboardPage: React.FC<Props> = ({
                 </tbody>
               </table>
             </div>
-          </div>
+          </Card>
 
           {/* Daily Chart */}
-          <div className="bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs p-5">
+          <Card className="shadow-xs p-5">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-indigo-600" />
@@ -364,42 +367,43 @@ export const DashboardPage: React.FC<Props> = ({
                 </div>
               </div>
             )}
-          </div>
+          </Card>
         </div>
 
         {/* Right Column (1 Col wide) - Dark Mock QR Generator & Activity Log */}
         <div className="space-y-6">
           {/* Quick Actions Panel */}
-          <div className="bg-white dark:bg-slate-950 rounded-xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+          <Card className="p-6 shadow-sm">
             <h4 className="text-slate-800 dark:text-slate-200 text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
               <PlusCircle className="w-4 h-4 text-indigo-600" />
               <span>Aksi Cepat</span>
             </h4>
 
             <div className="space-y-3">
-              <button
+              <Button
                 onClick={onNavigateToCreate}
-                className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg transition-colors flex items-center justify-between px-4 shadow-sm"
+                className="w-full justify-between"
               >
                 <div className="flex items-center gap-2">
                   <QrCode className="w-4 h-4" />
                   <span>Buat Tagihan (QRIS)</span>
                 </div>
                 <ArrowRight className="w-4 h-4 opacity-70" />
-              </button>
+              </Button>
 
-              <button
+              <Button
                 onClick={onNavigateToTransactions}
-                className="w-full py-3 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-800 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-lg transition-colors flex items-center justify-between px-4 shadow-sm"
+                variant="outline"
+                className="w-full justify-between"
               >
                 <div className="flex items-center gap-2">
                   <Activity className="w-4 h-4 text-slate-400" />
                   <span>Lihat Semua Transaksi</span>
                 </div>
                 <ArrowRight className="w-4 h-4 opacity-40" />
-              </button>
+              </Button>
             </div>
-          </div>
+          </Card>
 
         </div>
       </div>

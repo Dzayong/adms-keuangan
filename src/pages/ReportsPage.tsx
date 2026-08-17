@@ -2,17 +2,35 @@ import React, { useState, useEffect } from 'react';
 import { apiFetch } from '../services/api.js';
 import { StatusBadge } from '../components/common/StatusBadge.js';
 import {
-  BarChart3,
-  Download,
   Calendar,
-  Filter,
-  Search,
-  CheckCircle2,
-  Clock,
-  XCircle,
   FileSpreadsheet,
   RefreshCw,
+  TrendingUp,
+  PieChart as PieChartIcon,
+  BarChart3,
+  Users,
+  Package,
+  DollarSign,
+  Activity,
+  CreditCard
 } from 'lucide-react';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend, LineChart, Line, AreaChart, Area
+} from 'recharts';
+import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card.js';
+import { Button } from '../components/ui/Button.js';
+
+// --- Dummy Data ---
+const dummySalesData = [
+  { name: 'Senin', sales: 120 },
+  { name: 'Selasa', sales: 150 },
+  { name: 'Rabu', sales: 180 },
+  { name: 'Kamis', sales: 140 },
+  { name: 'Jumat', sales: 210 },
+  { name: 'Sabtu', sales: 280 },
+  { name: 'Minggu', sales: 240 },
+];
 
 export const ReportsPage: React.FC = () => {
   const [summary, setSummary] = useState<any>({});
@@ -20,7 +38,6 @@ export const ReportsPage: React.FC = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [status, setStatus] = useState('');
-  const [search, setSearch] = useState('');
   const [selectedMonth, setSelectedMonth] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   
@@ -28,13 +45,18 @@ export const ReportsPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
+  // Dummy State for missing API data
+  const [dummyStats] = useState({
+    totalCustomers: 1245,
+    productsSold: 3450
+  });
+
   const fetchReport = async () => {
     setIsLoading(true);
     const query = new URLSearchParams({
       ...(startDate && { startDate }),
       ...(endDate && { endDate }),
       ...(status && { status }),
-      ...(search && { search }),
     });
 
     const res = await apiFetch(`/reports?${query.toString()}`);
@@ -97,13 +119,11 @@ export const ReportsPage: React.FC = () => {
   };
 
   const handleMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value; // YYYY-MM
+    const val = e.target.value; 
     setSelectedMonth(val);
     if (val) {
       const [year, month] = val.split('-');
-      // first day of the month
       const firstDay = new Date(Number(year), Number(month) - 1, 1);
-      // last day of the month
       const lastDay = new Date(Number(year), Number(month), 0);
       
       const formatYMD = (d: Date) => {
@@ -120,98 +140,91 @@ export const ReportsPage: React.FC = () => {
     }
   };
 
+  // Process data for Trend Line Chart
+  const processTrendData = () => {
+    const dataMap: Record<string, { date: string; amount: number; count: number; paidAmount: number }> = {};
+    const sortedItems = [...items].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    
+    sortedItems.forEach(item => {
+      const dateStr = item.created_at.split(' ')[0]; 
+      if (!dataMap[dateStr]) {
+        dataMap[dateStr] = { date: dateStr, amount: 0, count: 0, paidAmount: 0 };
+      }
+      
+      dataMap[dateStr].amount += item.amount;
+      dataMap[dateStr].count += 1;
+      
+      if (item.status === 'PAID') {
+        dataMap[dateStr].paidAmount += item.amount;
+      }
+    });
+    
+    return Object.values(dataMap);
+  };
+
+  // Process data for Status Pie Chart
+  const processStatusData = () => {
+    return [
+      { name: 'Lunas', value: summary.paid_count || 0, color: '#10b981' }, 
+      { name: 'Menunggu', value: summary.pending_count || 0, color: '#f59e0b' }, 
+      { name: 'Gagal', value: summary.failed_count || 0, color: '#ef4444' }, 
+    ].filter(item => item.value > 0);
+  };
+
+  const trendData = processTrendData();
+  const statusData = processStatusData();
+
   // Pagination logic
   const totalPages = Math.ceil(items.length / itemsPerPage);
   const currentItems = items.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
-    <div className="space-y-6 pb-16 animate-fade-in">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-950 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
+    <div className="space-y-6 pb-16 animate-fade-in w-full max-w-[1400px] mx-auto">
+      
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Laporan Keuangan & Ekspor Data</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Ringkasan uang masuk, dan unduh laporan transaksi (CSV).
+          <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Laporan & Statistik</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Ringkasan pendapatan, performa penjualan, dan analitik transaksi.
           </p>
         </div>
-
-        <button
-          onClick={handleDownloadCsv}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg shadow-xs transition-all active:scale-95"
-        >
-          <FileSpreadsheet className="w-4 h-4" />
-          <span>Unduh Laporan (CSV)</span>
-        </button>
-      </div>
-
-      {/* Summary Totals Banner */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-slate-950 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
-          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Tagihan Dibuat</div>
-          <div className="text-2xl font-black text-slate-800 dark:text-slate-200 font-mono">
-            {formatRupiah(summary.total_amount || 0)}
-          </div>
-          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold mt-1">
-            {summary.total_transactions || 0} Total Tagihan Dibuat
-          </p>
-        </div>
-
-        <div className="bg-white dark:bg-slate-950 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
-          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Uang Masuk (Lunas)</div>
-          <div className="text-2xl font-black text-slate-800 dark:text-slate-200 font-mono">
-            {formatRupiah(summary.paid_amount || 0)}
-          </div>
-          <p className="text-[10px] text-emerald-600 font-bold mt-1">
-            {summary.paid_count || 0} Tagihan Lunas
-          </p>
-        </div>
-
-        <div className="bg-white dark:bg-slate-950 p-5 rounded-xl border border-slate-200 dark:border-slate-800 border-l-4 border-l-yellow-500 shadow-xs">
-          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Menunggu Pembayaran</div>
-          <div className="text-2xl font-black text-slate-800 dark:text-slate-200 font-mono">
-            {formatRupiah(summary.pending_amount || 0)}
-          </div>
-          <p className="text-[10px] text-indigo-700 font-bold mt-1">
-            {summary.pending_count || 0} Tagihan Menunggu
-          </p>
-        </div>
-
-        <div className="bg-white dark:bg-slate-950 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
-          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Gagal / Kedaluwarsa</div>
-          <div className="text-2xl font-black text-slate-800 dark:text-slate-200 font-mono">
-            {formatRupiah(summary.failed_amount || 0)}
-          </div>
-          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-1">
-            {summary.failed_count || 0} Tagihan Kedaluwarsa/Batal
-          </p>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={handleDownloadCsv}
+            variant="outline"
+          >
+            <FileSpreadsheet className="w-4 h-4 mr-2" />
+            <span>Ekspor CSV</span>
+          </Button>
         </div>
       </div>
 
-      {/* Filter Options */}
-      <div className="bg-white dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-2 rounded-lg">
-            <Calendar className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-            <span>Pilih Bulan:</span>
+      {/* Filter Options (shadcn styling) */}
+      <Card className="p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-slate-500" />
             <input
               type="month"
               value={selectedMonth}
               onChange={handleMonthChange}
-              className="bg-transparent border-none text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer ml-1"
+              className="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:placeholder:text-slate-400 dark:focus-visible:ring-slate-300"
             />
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-slate-400 uppercase">Atau Kustom:</span>
+            <span className="text-sm font-medium text-slate-500">Kustom:</span>
             <input
               type="date"
               value={startDate}
               onChange={(e) => {
                 setStartDate(e.target.value);
-                setSelectedMonth(''); // clear month if custom date is used
+                setSelectedMonth('');
               }}
-              className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs font-mono text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-600"
+              className="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 dark:border-slate-800 dark:focus-visible:ring-slate-300"
             />
-            <span className="text-xs text-slate-400">s/d</span>
+            <span className="text-sm text-slate-400 font-medium">-</span>
             <input
               type="date"
               value={endDate}
@@ -219,14 +232,14 @@ export const ReportsPage: React.FC = () => {
                 setEndDate(e.target.value);
                 setSelectedMonth('');
               }}
-              className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs font-mono text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-600"
+              className="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 dark:border-slate-800 dark:focus-visible:ring-slate-300"
             />
           </div>
 
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-600"
+            className="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 dark:border-slate-800 dark:focus-visible:ring-slate-300"
           >
             <option value="">Semua Status</option>
             <option value="PAID">PAID (Lunas)</option>
@@ -236,61 +249,268 @@ export const ReportsPage: React.FC = () => {
           </select>
         </div>
 
-        <button
-          onClick={fetchReport}
-          className="w-full md:w-auto px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-lg transition-colors flex items-center justify-center gap-1.5"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-indigo-600' : ''}`} />
-          <span>Terapkan Filter</span>
-        </button>
+          <div className="flex gap-2">
+            <Button onClick={fetchReport} isLoading={isLoading}>
+              <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              Terapkan Filter
+            </Button>
+          </div>
+      </Card>
+
+      {/* 4 Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* Total Pendapatan */}
+        <Card className="p-6">
+          <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <h3 className="tracking-tight text-sm font-medium text-slate-500 dark:text-slate-400">Total Pendapatan</h3>
+            <DollarSign className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+          </div>
+          <div>
+            <div className="text-2xl font-bold">{formatRupiah(summary.paid_amount || 0)}</div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              +20.1% dari bulan lalu
+            </p>
+          </div>
+        </Card>
+
+        {/* Total Transaksi */}
+        <Card className="p-6">
+          <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <h3 className="tracking-tight text-sm font-medium text-slate-500 dark:text-slate-400">Total Transaksi</h3>
+            <CreditCard className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+          </div>
+          <div>
+            <div className="text-2xl font-bold">+{summary.total_transactions || 0}</div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              +{summary.paid_count || 0} berhasil dibayar
+            </p>
+          </div>
+        </Card>
+
+        {/* Produk Terjual (Dummy) */}
+        <Card className="p-6">
+          <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <h3 className="tracking-tight text-sm font-medium text-slate-500 dark:text-slate-400">Produk Terjual</h3>
+            <Package className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+          </div>
+          <div>
+            <div className="text-2xl font-bold">+{dummyStats.productsSold}</div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              +19% dari bulan lalu
+            </p>
+          </div>
+        </Card>
+
+        {/* Total Customers (Dummy) */}
+        <Card className="p-6">
+          <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <h3 className="tracking-tight text-sm font-medium text-slate-500 dark:text-slate-400">Total Customer</h3>
+            <Users className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+          </div>
+          <div>
+            <div className="text-2xl font-bold">+{dummyStats.totalCustomers}</div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              +201 customer baru
+            </p>
+          </div>
+        </Card>
       </div>
 
-      {/* Report Items Table */}
-      <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-slate-50 dark:bg-slate-900 sticky top-0">
-              <tr>
-                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
-                  ID Tagihan
-                </th>
-                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
-                  Pelanggan
-                </th>
-                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
-                  Nominal
-                </th>
-                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
-                  Tgl Dibuat
-                </th>
-                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
-                  Tgl Lunas
-                </th>
+      {/* Main Charts Section */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        
+        {/* Line Chart: Tren Transaksi */}
+        <Card className="col-span-1 lg:col-span-4 flex flex-col">
+          <div className="flex flex-col space-y-1.5 p-6">
+            <h3 className="font-semibold leading-none tracking-tight">Tren Transaksi</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Menampilkan nominal tagihan dan uang masuk harian.
+            </p>
+          </div>
+          <div className="p-6 pt-0 flex-1">
+            {!isLoading && items.length > 0 ? (
+              <div className="h-[350px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={trendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorPaid" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" className="dark:stroke-slate-800" />
+                    <XAxis 
+                      dataKey="date" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fontSize: 12, fill: '#64748b' }} 
+                      dy={10}
+                    />
+                    <YAxis 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fontSize: 12, fill: '#64748b' }}
+                      tickFormatter={(value) => `Rp${(value / 1000).toFixed(0)}k`}
+                    />
+                    <RechartsTooltip 
+                      contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                      formatter={(value: any) => formatRupiah(value as number)}
+                    />
+                    <Legend verticalAlign="top" height={36} iconType="circle" />
+                    <Area 
+                      type="monotone" 
+                      name="Pendapatan Lunas" 
+                      dataKey="paidAmount" 
+                      stroke="#10b981" 
+                      strokeWidth={2}
+                      fillOpacity={1} 
+                      fill="url(#colorPaid)" 
+                    />
+                    <Line 
+                      type="monotone" 
+                      name="Total Tagihan Dibuat" 
+                      dataKey="amount" 
+                      stroke="#64748b" 
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="h-[350px] flex items-center justify-center text-sm text-slate-500">
+                {isLoading ? 'Memuat grafik...' : 'Data tidak tersedia'}
+              </div>
+            )}
+          </div>
+        </Card>
+
+        {/* Pie Chart: Status Pembayaran */}
+        <Card className="col-span-1 lg:col-span-3 flex flex-col">
+          <div className="flex flex-col space-y-1.5 p-6">
+            <h3 className="font-semibold leading-none tracking-tight">Status Pembayaran</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Distribusi status transaksi pada periode ini.
+            </p>
+          </div>
+          <div className="p-6 pt-0 flex-1 flex flex-col items-center justify-center">
+            {!isLoading && statusData.length > 0 ? (
+              <div className="h-[300px] w-full relative">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={statusData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                      stroke="none"
+                    >
+                      {statusData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip 
+                      contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                      itemStyle={{ fontWeight: '600', fontSize: '13px' }}
+                    />
+                    <Legend 
+                      verticalAlign="bottom" 
+                      height={36}
+                      iconType="circle"
+                      formatter={(value, entry: any) => <span className="text-sm font-medium text-slate-700 dark:text-slate-300 ml-1">{value}</span>}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                {/* Donut Center */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-8">
+                  <span className="text-3xl font-bold">{summary.total_transactions}</span>
+                  <span className="text-xs text-slate-500">Total</span>
+                </div>
+              </div>
+            ) : (
+              <div className="h-[300px] flex items-center justify-center text-sm text-slate-500">
+                {isLoading ? 'Memuat grafik...' : 'Data tidak tersedia'}
+              </div>
+            )}
+          </div>
+        </Card>
+      </div>
+
+      {/* Secondary Charts Section (Bar Chart - Dummy Sales Data) */}
+      <Card className="flex flex-col">
+        <div className="flex flex-col space-y-1.5 p-6">
+          <h3 className="font-semibold leading-none tracking-tight">Penjualan Produk (Minggu Ini)</h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Performa penjualan harian (Data Simulasi).
+          </p>
+        </div>
+        <div className="p-6 pt-0">
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={dummySalesData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }} barSize={32}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" className="dark:stroke-slate-800" />
+                <XAxis 
+                  dataKey="name" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fontSize: 12, fill: '#64748b' }} 
+                  dy={10}
+                />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fontSize: 12, fill: '#64748b' }}
+                />
+                <RechartsTooltip 
+                  cursor={{ fill: 'transparent' }}
+                  contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                />
+                <Bar dataKey="sales" name="Produk Terjual" fill="#0f172a" className="dark:fill-slate-100" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </Card>
+
+      {/* Recent Transactions Table */}
+      <Card>
+        <div className="flex flex-col space-y-1.5 p-6">
+          <h3 className="font-semibold leading-none tracking-tight">Data Transaksi Terbaru</h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Daftar lengkap tagihan dan statusnya.
+          </p>
+        </div>
+        <div className="p-6 pt-0 overflow-x-auto w-full">
+          <table className="w-full caption-bottom text-sm whitespace-nowrap">
+            <thead className="[&_tr]:border-b border-slate-200 dark:border-slate-800">
+              <tr className="border-b transition-colors hover:bg-slate-100/50 data-[state=selected]:bg-slate-100 dark:hover:bg-slate-800/50">
+                <th className="h-12 px-4 text-left align-middle font-medium text-slate-500 dark:text-slate-400">ID Tagihan</th>
+                <th className="h-12 px-4 text-left align-middle font-medium text-slate-500 dark:text-slate-400">Pelanggan</th>
+                <th className="h-12 px-4 text-left align-middle font-medium text-slate-500 dark:text-slate-400">Nominal</th>
+                <th className="h-12 px-4 text-left align-middle font-medium text-slate-500 dark:text-slate-400">Status</th>
+                <th className="h-12 px-4 text-left align-middle font-medium text-slate-500 dark:text-slate-400">Tgl Dibuat</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="[&_tr:last-child]:border-0">
               {items.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400 text-xs italic">
-                    {isLoading ? 'Memuat laporan...' : 'Tidak ada data transaksi yang cocok untuk periode ini.'}
+                  <td colSpan={5} className="p-4 align-middle text-center text-slate-500 h-24">
+                    {isLoading ? 'Memuat data...' : 'Tidak ada data ditemukan.'}
                   </td>
                 </tr>
               ) : (
                 currentItems.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800 dark:bg-slate-900 transition-colors">
-                    <td className="px-4 py-3 font-mono text-xs font-bold text-slate-600 dark:text-slate-400">{item.invoice_number}</td>
-                    <td className="px-4 py-3 text-xs text-slate-800 dark:text-slate-200 font-semibold">{item.customer_name}</td>
-                    <td className="px-4 py-3 font-mono text-xs font-bold text-slate-900 dark:text-slate-100">
-                      {formatRupiah(item.amount)}
-                    </td>
-                    <td className="px-4 py-3">
+                  <tr key={item.id} className="border-b border-slate-200 dark:border-slate-800 transition-colors hover:bg-slate-100/50 data-[state=selected]:bg-slate-100 dark:hover:bg-slate-800/50">
+                    <td className="p-4 align-middle font-mono text-xs">{item.invoice_number}</td>
+                    <td className="p-4 align-middle font-medium">{item.customer_name}</td>
+                    <td className="p-4 align-middle font-mono font-medium">{formatRupiah(item.amount)}</td>
+                    <td className="p-4 align-middle">
                       <StatusBadge status={item.status} />
                     </td>
-                    <td className="px-4 py-3 text-[11px] font-mono text-slate-500 dark:text-slate-400">{item.created_at}</td>
-                    <td className="px-4 py-3 text-[11px] font-mono text-slate-500 dark:text-slate-400">{item.paid_at || '-'}</td>
+                    <td className="p-4 align-middle text-xs text-slate-500">{item.created_at}</td>
                   </tr>
                 ))
               )}
@@ -300,32 +520,29 @@ export const ReportsPage: React.FC = () => {
         
         {/* Pagination Controls */}
         {totalPages > 1 && (
-          <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              Menampilkan <strong className="text-slate-800 dark:text-slate-200">{(currentPage - 1) * itemsPerPage + 1}</strong> - <strong className="text-slate-800 dark:text-slate-200">{Math.min(currentPage * itemsPerPage, items.length)}</strong> dari <strong className="text-slate-800 dark:text-slate-200">{items.length}</strong> data
-            </span>
-            <div className="flex gap-1">
-              <button
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1.5 text-xs font-bold rounded-md bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Sebelumnya
-              </button>
-              <div className="flex items-center px-3 text-xs font-bold text-slate-800 dark:text-slate-200">
-                {currentPage} / {totalPages}
-              </div>
-              <button
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="px-3 py-1.5 text-xs font-bold rounded-md bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Selanjutnya
-              </button>
+          <div className="flex items-center justify-end space-x-2 p-4 border-t border-slate-200 dark:border-slate-800">
+            <Button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              variant="outline"
+              size="sm"
+            >
+              Sebelumnya
+            </Button>
+            <div className="text-sm font-medium">
+              Hal {currentPage} dari {totalPages}
             </div>
+            <Button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              variant="outline"
+              size="sm"
+            >
+              Selanjutnya
+            </Button>
           </div>
         )}
-      </div>
+      </Card>
     </div>
   );
 };

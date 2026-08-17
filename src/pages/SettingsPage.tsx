@@ -12,6 +12,8 @@ import {
   RefreshCw,
   Info,
 } from 'lucide-react';
+import { Card } from '../components/ui/Card.js';
+import { Button } from '../components/ui/Button.js';
 
 export const SettingsPage: React.FC = () => {
   const { user } = useAuth();
@@ -175,7 +177,7 @@ export const SettingsPage: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-16 animate-fade-in">
-      <div className="bg-white dark:bg-slate-950 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <Card className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 shadow-xs">
         <div>
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Pengaturan Sistem & Gateway Pembayaran</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -189,7 +191,7 @@ export const SettingsPage: React.FC = () => {
             <span>Mode Operator (Hanya-Baca)</span>
           </div>
         )}
-      </div>
+      </Card>
 
       {message && (
         <div className="p-3.5 bg-green-50 border border-green-200 text-green-800 text-xs font-bold rounded-lg flex items-center gap-2">
@@ -207,7 +209,7 @@ export const SettingsPage: React.FC = () => {
 
       <form onSubmit={handleSaveSettings} className="space-y-6">
         {/* Company Info Section */}
-        <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-xs space-y-4">
+        <Card className="p-6 shadow-xs space-y-4">
           <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-800 text-slate-800 dark:text-slate-200 font-bold text-sm">
             <Building className="w-4 h-4 text-indigo-600" />
             <h3>Profil Perusahaan</h3>
@@ -265,10 +267,10 @@ export const SettingsPage: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* Payment Providers Configuration */}
-        <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-xs space-y-6">
+        <Card className="p-6 shadow-xs space-y-6">
           <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-800 text-slate-800 dark:text-slate-200 font-bold text-sm">
             <CreditCard className="w-4 h-4 text-indigo-600" />
             <h3>Konfigurasi Provider Pembayaran</h3>
@@ -312,7 +314,7 @@ export const SettingsPage: React.FC = () => {
                   type="text"
                   disabled
                   value="SANDBOX SIMULATOR"
-                  className="w-full bg-indigo-100/70 border border-yellow-300 text-yellow-900 rounded-lg px-3 py-2 text-sm font-mono font-bold text-center"
+                  className="w-full bg-indigo-100/70 dark:bg-indigo-900/30 border border-yellow-300 dark:border-yellow-600/50 text-yellow-900 dark:text-yellow-500 rounded-lg px-3 py-2 text-sm font-mono font-bold text-center"
                 />
               </div>
             </div>
@@ -453,7 +455,7 @@ export const SettingsPage: React.FC = () => {
                       )}
                     </div>
                   ) : (
-                    <div className="w-28 h-28 flex items-center justify-center border-2 border-dashed border-slate-300 rounded-lg bg-slate-50 dark:bg-slate-900 text-slate-400 text-xs text-center p-2">
+                    <div className="w-28 h-28 flex items-center justify-center border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900 text-slate-400 text-xs text-center p-2">
                       Belum ada QRIS
                     </div>
                   )}
@@ -468,8 +470,8 @@ export const SettingsPage: React.FC = () => {
                         file:mr-4 file:py-2 file:px-4
                         file:rounded-full file:border-0
                         file:text-xs file:font-bold
-                        file:bg-indigo-50 dark:bg-indigo-950/30 file:text-indigo-700
-                        hover:file:bg-indigo-100 transition-colors"
+                        file:bg-indigo-50 dark:file:bg-indigo-950/30 file:text-indigo-700 dark:file:text-indigo-400
+                        hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900/50 transition-colors"
                     />
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2">File akan langsung diubah bentuk formatnya sebelum disimpan ke server.</p>
                   </div>
@@ -477,18 +479,18 @@ export const SettingsPage: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
+        </Card>
 
         {isAdmin && (
           <div className="flex justify-end pt-4">
-            <button
+            <Button
               type="submit"
-              disabled={isSaving}
-              className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl text-sm shadow-md flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50"
+              isLoading={isSaving}
+              size="lg"
             >
-              <Save className="w-4 h-4" />
-              <span>{isSaving ? 'Menyimpan...' : 'Simpan Pengaturan'}</span>
-            </button>
+              <Save className="w-4 h-4 mr-2" />
+              <span>Simpan Pengaturan</span>
+            </Button>
           </div>
         )}
       </form>

@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Users, Shield, ShieldAlert, CheckCircle, XCircle, Search, UserPlus, KeyRound } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.js';
 import { apiFetch } from '../services/api.js';
+import { Card } from '../components/ui/Card.js';
+import { Button } from '../components/ui/Button.js';
+import { Modal } from '../components/common/Modal.js';
 
 interface User {
   id: number;
@@ -171,13 +174,13 @@ export const UsersPage: React.FC = () => {
               className="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-sm focus:outline-none focus:border-indigo-600"
             />
           </div>
-          <button 
+          <Button 
             onClick={() => setIsAddModalOpen(true)}
-            className="w-full sm:w-auto px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg flex items-center justify-center gap-2 transition-all shadow-xs"
+            className="w-full sm:w-auto"
           >
-            <UserPlus className="w-4 h-4" />
+            <UserPlus className="w-4 h-4 mr-2" />
             <span>Tambah Pengguna</span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -187,7 +190,7 @@ export const UsersPage: React.FC = () => {
         </div>
       )}
 
-      <div className="flex border-b border-slate-200 dark:border-slate-800">
+      <div className="flex overflow-x-auto border-b border-slate-200 dark:border-slate-800">
         <button 
           onClick={() => setActiveTab('users')}
           className={`px-4 py-2 font-bold text-sm ${activeTab === 'users' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-500 dark:text-slate-400'}`}
@@ -203,9 +206,9 @@ export const UsersPage: React.FC = () => {
       </div>
 
       {activeTab === 'users' && (
-      <div className="bg-white dark:bg-slate-950 rounded-2xl shadow-xs border border-slate-200 dark:border-slate-800 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+      <Card className="overflow-hidden w-full shadow-xs">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full text-left border-collapse whitespace-nowrap">
             <thead>
               <tr className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 <th className="px-6 py-4">Pengguna</th>
@@ -255,33 +258,32 @@ export const UsersPage: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button
+                      <Button
                         onClick={() => {
                           setSelectedUser(u);
                           setIsResetModalOpen(true);
                         }}
-                        className="p-1.5 text-slate-400 hover:text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg transition-colors tooltip-wrapper"
+                        variant="outline"
+                        size="icon"
                         title="Reset Password"
                       >
                         <KeyRound className="w-4 h-4" />
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         onClick={() => handleRoleChange(u.id, u.role)}
-                        className="px-3 py-1.5 text-xs font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded-lg transition-colors border border-slate-200 dark:border-slate-800"
+                        variant="outline"
+                        size="sm"
                       >
                         {u.role === 'ADMIN' ? 'Jadikan Operator' : 'Jadikan Admin'}
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         onClick={() => handleStatusChange(u.id, u.is_active)}
-                        className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${
-                          u.is_active 
-                            ? 'text-rose-600 bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100'
-                            : 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 hover:bg-emerald-100'
-                        }`}
+                        variant={u.is_active ? 'danger' : 'success'}
+                        size="sm"
                         disabled={u.id === currentUser?.id}
                       >
                         {u.is_active ? 'Nonaktifkan Akses' : 'Buka Akses'}
-                      </button>
+                      </Button>
                     </div>
                   </td>
                 </tr>
@@ -296,13 +298,13 @@ export const UsersPage: React.FC = () => {
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
       )}
 
       {activeTab === 'logs' && (
-      <div className="bg-white dark:bg-slate-950 rounded-2xl shadow-xs border border-slate-200 dark:border-slate-800 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+      <Card className="overflow-hidden w-full shadow-xs">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full text-left border-collapse whitespace-nowrap">
             <thead>
               <tr className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 <th className="px-6 py-4">Waktu</th>
@@ -328,94 +330,82 @@ export const UsersPage: React.FC = () => {
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
       )}
 
       {/* Add User Modal */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-slate-950 rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-              <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                <UserPlus className="w-5 h-5 text-indigo-600" /> Tambah Pengguna
-              </h3>
-              <button onClick={() => setIsAddModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:text-slate-400">
-                <XCircle className="w-5 h-5" />
-              </button>
-            </div>
-            <form onSubmit={handleAddUser} className="p-6 space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Foto Profil (Opsional)</label>
-                <input 
-                  type="file" 
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const reader = new FileReader();
-                      reader.onload = (e) => setNewUser({...newUser, profile_photo: e.target?.result as string});
-                      reader.readAsDataURL(file);
-                    }
-                  }} 
-                  className="w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-indigo-50 dark:bg-indigo-950/30 file:text-indigo-700 hover:file:bg-indigo-100" 
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Nama Lengkap</label>
-                <input required type="text" value={newUser.name} onChange={e => setNewUser({...newUser, name: e.target.value})} className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-sm focus:outline-none focus:border-indigo-600" placeholder="Contoh: Budi Santoso" />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Email</label>
-                <input required type="email" value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-sm focus:outline-none focus:border-indigo-600" placeholder="budi@example.com" />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Password</label>
-                <input required type="password" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-sm focus:outline-none focus:border-indigo-600" placeholder="Minimal 6 karakter" minLength={6} />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Hak Akses (Role)</label>
-                <select value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value})} className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-sm focus:outline-none focus:border-indigo-600">
-                  <option value="OPERATOR">Operator (Kasir)</option>
-                  <option value="ADMIN">Administrator</option>
-                </select>
-              </div>
-              <div className="pt-4 flex items-center gap-3">
-                <button type="button" onClick={() => setIsAddModalOpen(false)} className="flex-1 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold text-sm rounded-lg transition-colors">Batal</button>
-                <button type="submit" disabled={isSubmitting} className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-lg transition-colors disabled:opacity-50">{isSubmitting ? 'Menyimpan...' : 'Simpan'}</button>
-              </div>
-            </form>
+      <Modal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        title="Tambah Pengguna"
+        maxWidth="md"
+      >
+        <form onSubmit={handleAddUser} className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Foto Profil (Opsional)</label>
+            <input 
+              type="file" 
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onload = (e) => setNewUser({...newUser, profile_photo: e.target?.result as string});
+                  reader.readAsDataURL(file);
+                }
+              }} 
+              className="w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-indigo-50 dark:bg-indigo-950/30 file:text-indigo-700 hover:file:bg-indigo-100" 
+            />
           </div>
-        </div>
-      )}
+          <div>
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Nama Lengkap</label>
+            <input required type="text" value={newUser.name} onChange={e => setNewUser({...newUser, name: e.target.value})} className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-sm focus:outline-none focus:border-indigo-600" placeholder="Contoh: Budi Santoso" />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Email</label>
+            <input required type="email" value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-sm focus:outline-none focus:border-indigo-600" placeholder="budi@example.com" />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Password</label>
+            <input required type="password" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-sm focus:outline-none focus:border-indigo-600" placeholder="Minimal 6 karakter" minLength={6} />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Hak Akses (Role)</label>
+            <select value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value})} className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-sm focus:outline-none focus:border-indigo-600">
+              <option value="OPERATOR">Operator (Kasir)</option>
+              <option value="ADMIN">Administrator</option>
+            </select>
+          </div>
+          <div className="pt-4 flex items-center gap-3">
+            <Button type="button" variant="outline" onClick={() => setIsAddModalOpen(false)} className="flex-1">Batal</Button>
+            <Button type="submit" isLoading={isSubmitting} className="flex-1">Simpan</Button>
+          </div>
+        </form>
+      </Modal>
 
       {/* Reset Password Modal */}
-      {isResetModalOpen && selectedUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-slate-950 rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-              <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                <KeyRound className="w-5 h-5 text-rose-500" /> Reset Password
-              </h3>
-              <button onClick={() => setIsResetModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:text-slate-400">
-                <XCircle className="w-5 h-5" />
-              </button>
+      <Modal
+        isOpen={isResetModalOpen && selectedUser !== null}
+        onClose={() => setIsResetModalOpen(false)}
+        title="Reset Password"
+        maxWidth="sm"
+      >
+        <form onSubmit={handleResetPasswordSubmit} className="space-y-4">
+          {selectedUser && (
+            <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-lg text-xs text-slate-600 dark:text-slate-400 mb-4">
+              Mereset password untuk pengguna: <strong className="text-slate-800 dark:text-slate-200 block mt-1">{selectedUser.name} ({selectedUser.email})</strong>
             </div>
-            <form onSubmit={handleResetPasswordSubmit} className="p-6 space-y-4">
-              <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-lg text-xs text-slate-600 dark:text-slate-400 mb-4">
-                Mereset password untuk pengguna: <strong className="text-slate-800 dark:text-slate-200 block mt-1">{selectedUser.name} ({selectedUser.email})</strong>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Password Baru</label>
-                <input required type="text" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-sm focus:outline-none focus:border-indigo-600" placeholder="Minimal 6 karakter" minLength={6} />
-              </div>
-              <div className="pt-4 flex items-center gap-3">
-                <button type="button" onClick={() => setIsResetModalOpen(false)} className="flex-1 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold text-sm rounded-lg transition-colors">Batal</button>
-                <button type="submit" disabled={isSubmitting} className="flex-1 px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white font-bold text-sm rounded-lg transition-colors disabled:opacity-50">{isSubmitting ? 'Merubah...' : 'Reset'}</button>
-              </div>
-            </form>
+          )}
+          <div>
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Password Baru</label>
+            <input required type="text" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-sm focus:outline-none focus:border-indigo-600" placeholder="Minimal 6 karakter" minLength={6} />
           </div>
-        </div>
-      )}
+          <div className="pt-4 flex items-center gap-3">
+            <Button type="button" variant="outline" onClick={() => setIsResetModalOpen(false)} className="flex-1">Batal</Button>
+            <Button type="submit" variant="danger" isLoading={isSubmitting} className="flex-1">Reset</Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

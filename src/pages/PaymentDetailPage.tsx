@@ -249,7 +249,7 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
             {tx.provider_code === 'internal_qris' ? 'QRIS KANTOR / PEMBAYARAN' : 'DYNAMIC QRIS PAYMENT CODE'}
           </div>
 
-          <div className="p-2 bg-white dark:bg-slate-950 border-4 border-indigo-600 rounded-lg shadow-xs my-2 flex justify-center w-[260px] max-w-full">
+          <div className="p-2 bg-white border-4 border-indigo-600 rounded-lg shadow-xs my-2 flex justify-center w-[260px] max-w-full">
             {(tx.provider_reference?.startsWith('INTERNAL-') || tx.payment_method === 'STATIC_QRIS') ? (
               <img
                 src={resolvedQrUrl}
@@ -310,12 +310,12 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
 
             {tx.status === 'PAID' && (
               <div className="space-y-2">
-                <div className="p-3 bg-green-100 border border-green-200 text-green-800 rounded-lg text-xs font-bold flex items-center justify-center gap-2 font-mono">
-                  <CheckCircle2 className="w-4 h-4 text-green-700" />
+                <div className="p-3 bg-green-100 dark:bg-emerald-950/30 border border-green-200 dark:border-emerald-900/50 text-green-800 dark:text-emerald-500 rounded-lg text-xs font-bold flex items-center justify-center gap-2 font-mono">
+                  <CheckCircle2 className="w-4 h-4 text-green-700 dark:text-emerald-500" />
                   <span>PAYMENT SETTLED SUCCESSFULLY</span>
                 </div>
                 {tx.provider_code === 'internal_qris' && logs.some(l => l.event_type === 'MANUAL_STATIC_QRIS') && (
-                  <div className="text-[10px] text-green-700 font-mono flex items-center justify-center gap-1">
+                  <div className="text-[10px] text-green-700 dark:text-emerald-400 font-mono flex items-center justify-center gap-1">
                     <ShieldAlert className="w-3 h-3" />
                     Verified by: {
                       JSON.parse(logs.find(l => l.event_type === 'MANUAL_STATIC_QRIS')?.payload || '{}').verifierName || 'Admin'
@@ -333,8 +333,8 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
             )}
 
             {tx.status === 'FAILED' && (
-              <div className="p-3 bg-red-100 border border-red-200 text-red-800 rounded-lg text-xs font-bold flex items-center justify-center gap-2 font-mono">
-                <XCircle className="w-4 h-4 text-red-600" />
+              <div className="p-3 bg-red-100 dark:bg-rose-950/30 border border-red-200 dark:border-rose-900/50 text-red-800 dark:text-rose-500 rounded-lg text-xs font-bold flex items-center justify-center gap-2 font-mono">
+                <XCircle className="w-4 h-4 text-red-600 dark:text-rose-500" />
                 <span>PAYMENT FAILED</span>
               </div>
             )}

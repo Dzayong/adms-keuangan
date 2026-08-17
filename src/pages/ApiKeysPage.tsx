@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Key, Plus, Trash2, Copy, AlertTriangle, CheckCircle, Clock, Search, Filter, Ban } from 'lucide-react';
 import { apiFetch } from '../services/api';
+import { Card } from '../components/ui/Card.js';
+import { Button } from '../components/ui/Button.js';
+import { Badge } from '../components/ui/Badge.js';
+import { Modal } from '../components/common/Modal.js';
 
 interface ApiKey {
   id: number;
@@ -116,16 +120,16 @@ export const ApiKeysPage: React.FC = () => {
             Daftarkan dan kelola akses aplikasi dari luar (seperti Aplikasi Hosting/Web Utama) yang terhubung ke ADMS QRIS.
           </p>
         </div>
-        <button
+        <Button
           onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-bold transition-all active:scale-95 shadow-xs"
+          className="w-full sm:w-auto"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-5 h-5 mr-2" />
           Daftarkan Aplikasi Baru
-        </button>
+        </Button>
       </div>
 
-      <div className="bg-white dark:bg-slate-950 rounded-xl shadow-xs border border-slate-200 dark:border-slate-800 overflow-hidden">
+      <Card className="overflow-hidden w-full shadow-xs">
         {/* Toolbar & Filters */}
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex flex-col sm:flex-row gap-4 justify-between items-center">
           <div className="relative w-full sm:w-72">
@@ -185,14 +189,10 @@ export const ApiKeysPage: React.FC = () => {
                     <td className="px-6 py-4 font-bold text-slate-900 dark:text-slate-100">{key.name}</td>
                     <td className="px-6 py-4 font-mono text-slate-500 dark:text-slate-400 text-[13px]">{key.key_hint || '-'}</td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-black uppercase tracking-wide border ${
-                          key.status === 'ACTIVE'
-                          ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 border-emerald-200 dark:border-emerald-900/50'
-                          : 'bg-rose-50 dark:bg-rose-950/30 text-rose-500 border-rose-200 dark:border-rose-900/50'
-                        }`}>
+                      <Badge variant={key.status === 'ACTIVE' ? 'success' : 'danger'} className="gap-1.5">
                         {key.status === 'ACTIVE' ? <CheckCircle className="w-3 h-3" /> : <Ban className="w-3 h-3" />}
                         {key.status === 'ACTIVE' ? 'AKTIF' : 'DICABUT'}
-                      </span>
+                      </Badge>
                     </td>
                     <td className="px-6 py-4 text-slate-500 dark:text-slate-400 text-[13px]">
                       {new Date(key.created_at).toLocaleString('id-ID')}
@@ -209,21 +209,24 @@ export const ApiKeysPage: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 text-right">
                       {key.status === 'ACTIVE' ? (
-                        <button
+                        <Button
                           onClick={() => handleRevoke(key.id)}
-                          className="inline-flex items-center gap-1.5 text-rose-500 hover:text-rose-600 font-bold text-xs bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100 px-3 py-1.5 rounded-lg transition-colors"
+                          variant="danger"
+                          size="sm"
                         >
-                          <Ban className="w-3.5 h-3.5" />
+                          <Ban className="w-3.5 h-3.5 mr-1.5" />
                           Cabut Akses
-                        </button>
+                        </Button>
                       ) : (
-                        <button
+                        <Button
                           onClick={() => handleDelete(key.id)}
-                          className="inline-flex items-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-rose-600 font-bold text-xs bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:bg-rose-950/30 px-3 py-1.5 rounded-lg transition-colors"
+                          variant="outline"
+                          size="sm"
+                          className="hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-3.5 h-3.5 mr-1.5" />
                           Hapus Permanen
-                        </button>
+                        </Button>
                       )}
                     </td>
                   </tr>
@@ -232,95 +235,91 @@ export const ApiKeysPage: React.FC = () => {
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
 
       {/* Create Modal */}
-      {isCreateModalOpen && !createdKey && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-950 rounded-2xl max-w-md w-full p-6 relative animate-in fade-in zoom-in duration-200">
-            <button
-              onClick={() => setIsCreateModalOpen(false)}
-              className="absolute right-4 top-4 text-slate-400 hover:text-slate-600 dark:text-slate-400"
-            >
-              <Trash2 className="w-5 h-5 hidden" />
-              Tutup
-            </button>
-            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-2">Daftarkan Aplikasi Baru</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-              Berikan nama untuk aplikasi web yang akan diintegrasikan dengan ADMS QRIS.
-            </p>
-            <form onSubmit={handleCreate}>
-              <div className="mb-6">
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase mb-2">Nama Aplikasi</label>
-                <input
-                  type="text"
-                  required
-                  value={newAppName}
-                  onChange={(e) => setNewAppName(e.target.value)}
-                  className="w-full border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-600 font-semibold"
-                  placeholder="Misal: Web Hosting Utama"
-                />
-              </div>
-              <div className="flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsCreateModalOpen(false)}
-                  className="px-4 py-2.5 text-slate-600 dark:text-slate-400 font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded-lg transition-colors"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition-colors shadow-sm"
-                >
-                  Buat Kunci API
-                </button>
-              </div>
-            </form>
+      <Modal
+        isOpen={isCreateModalOpen && !createdKey}
+        onClose={() => setIsCreateModalOpen(false)}
+        title="Daftarkan Aplikasi Baru"
+        maxWidth="md"
+      >
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+          Berikan nama untuk aplikasi web yang akan diintegrasikan dengan ADMS QRIS.
+        </p>
+        <form onSubmit={handleCreate}>
+          <div className="mb-6">
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase mb-2">Nama Aplikasi</label>
+            <input
+              type="text"
+              required
+              value={newAppName}
+              onChange={(e) => setNewAppName(e.target.value)}
+              className="w-full border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-600 font-semibold bg-white dark:bg-slate-900"
+              placeholder="Misal: Web Hosting Utama"
+            />
           </div>
-        </div>
-      )}
+          <div className="flex justify-end gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsCreateModalOpen(false)}
+            >
+              Batal
+            </Button>
+            <Button
+              type="submit"
+            >
+              Buat Kunci API
+            </Button>
+          </div>
+        </form>
+      </Modal>
 
       {/* Success Modal */}
-      {createdKey && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-950 rounded-xl shadow-xl w-full max-w-lg border border-emerald-100 p-6 space-y-4">
-            <div>
-              <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-1">API Key Berhasil Dibuat</h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                Salin dan simpan API Key ini sekarang. <strong className="text-rose-500">Hanya ditampilkan sekali.</strong>
-              </p>
-            </div>
-
-            <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl flex items-center justify-between gap-3">
-              <code className="text-sm font-mono text-slate-800 dark:text-slate-200 break-all select-all font-bold">{createdKey}</code>
-              <button onClick={copyToClipboard}
-                className="p-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors flex-shrink-0">
-                {copied ? <CheckCircle className="w-5 h-5 text-emerald-500" /> : <Copy className="w-5 h-5" />}
-              </button>
-            </div>
-
-            <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-xs text-slate-600 dark:text-slate-400 space-y-1">
-              <p className="font-bold text-slate-700 dark:text-slate-300 mb-2">Untuk akses portal monitoring:</p>
-              <p>Email: <code className="font-mono text-indigo-600 dark:text-indigo-400">it@adms.gateway</code></p>
-              <p>Password: <code className="font-mono text-indigo-600 dark:text-indigo-400">adms123!</code></p>
-              <p className="text-[11px] text-slate-400 mt-1">Login ke ADMS dengan akun IT untuk melihat semua transaksi & dokumentasi API.</p>
-            </div>
-
-            <div className="bg-amber-50 border border-amber-200 p-3 rounded-xl flex gap-3">
-              <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-amber-800 font-medium leading-relaxed">
-                API Key tidak dapat dilihat kembali. Jika hilang, revoke dan buat ulang.
-              </p>
-            </div>
-
-            <button onClick={closeSuccessModal}
-              className="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl transition-colors">
-              Sudah disimpan, tutup
-            </button>
-          </div>
+      <Modal
+        isOpen={createdKey !== null}
+        onClose={closeSuccessModal}
+        title="Kunci API Berhasil Dibuat!"
+        maxWidth="lg"
+      >
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+          Silakan salin Kunci API rahasia berikut. <strong className="text-rose-500">Kunci ini hanya ditampilkan sekali.</strong> Simpan di tempat yang aman (misalnya di <code className="bg-slate-100 dark:bg-slate-800 px-1 rounded">.env</code> pada web hosting Anda).
+        </p>
+        
+        <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl flex items-center justify-between gap-4 mb-4">
+          <code className="text-sm font-mono text-slate-800 dark:text-slate-200 break-all select-all font-bold">{createdKey}</code>
+          <Button
+            onClick={copyToClipboard}
+            variant="outline"
+            size="icon"
+            title="Salin Kunci"
+          >
+            {copied ? <CheckCircle className="w-5 h-5 text-emerald-500" /> : <Copy className="w-5 h-5" />}
+          </Button>
         </div>
-      )}
+
+        <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-xs text-slate-600 dark:text-slate-400 space-y-1 mb-6">
+          <p className="font-bold text-slate-700 dark:text-slate-300 mb-2">Untuk akses portal monitoring:</p>
+          <p>Email: <code className="font-mono text-indigo-600 dark:text-indigo-400">it@adms.gateway</code></p>
+          <p>Password: <code className="font-mono text-indigo-600 dark:text-indigo-400">adms123!</code></p>
+          <p className="text-[11px] text-slate-400 mt-1">Login ke ADMS dengan akun IT untuk melihat semua transaksi & dokumentasi API.</p>
+        </div>
+        
+        <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl flex gap-3 mb-6">
+          <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+          <p className="text-xs text-amber-800 font-medium leading-relaxed">
+            Jika Anda kehilangan kunci ini, Anda tidak dapat melihatnya lagi. Anda harus mencabut (revoke) akses aplikasi ini dan membuat ulang kunci yang baru.
+          </p>
+        </div>
+        
+        <Button
+          onClick={closeSuccessModal}
+          className="w-full py-3 text-sm"
+        >
+          Saya sudah menyimpannya
+        </Button>
+      </Modal>
     </div>
   );
 };

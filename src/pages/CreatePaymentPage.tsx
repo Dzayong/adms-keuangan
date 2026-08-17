@@ -87,8 +87,8 @@ export const CreatePaymentPage: React.FC<Props> = ({ onPaymentCreated, onCancel 
           </div>
         </div>
 
-        <div className="mb-6 p-3.5 bg-blue-50 border border-blue-200 rounded-lg text-blue-800 text-xs flex items-start gap-2 shadow-xs">
-          <div className="mt-0.5 w-4 h-4 rounded-full bg-blue-200 text-blue-700 flex items-center justify-center font-bold shrink-0 text-[10px]">i</div>
+        <div className="mb-6 p-3.5 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50 rounded-lg text-blue-800 dark:text-blue-300 text-xs flex items-start gap-2 shadow-xs">
+          <div className="mt-0.5 w-4 h-4 rounded-full bg-blue-200 dark:bg-blue-900 text-blue-700 dark:text-blue-200 flex items-center justify-center font-bold shrink-0 text-[10px]">i</div>
           <div>
             <strong className="font-bold">Perhatian:</strong> Tagihan dari layanan Hosting/Aplikasi Web akan terbuat secara otomatis oleh sistem, Anda tidak perlu membuatnya di halaman ini.
           </div>
@@ -114,7 +114,7 @@ export const CreatePaymentPage: React.FC<Props> = ({ onPaymentCreated, onCancel 
                 onChange={(e) => setCustomerName(e.target.value)}
                 required
                 placeholder="Contoh: Budi Santoso atau Divisi Keuangan"
-                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-xs text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:border-indigo-600 focus:bg-white dark:bg-slate-950 transition-all"
+                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-xs text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:border-indigo-600 focus:bg-white dark:focus:bg-slate-950 transition-all"
               />
             </div>
           </div>
@@ -130,7 +130,7 @@ export const CreatePaymentPage: React.FC<Props> = ({ onPaymentCreated, onCancel 
                 value={customerPhone}
                 onChange={(e) => setCustomerPhone(e.target.value)}
                 placeholder="Contoh: 081234567890"
-                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-xs text-slate-900 dark:text-slate-100 font-mono focus:outline-none focus:border-indigo-600 focus:bg-white dark:bg-slate-950 transition-all"
+                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-xs text-slate-900 dark:text-slate-100 font-mono focus:outline-none focus:border-indigo-600 focus:bg-white dark:focus:bg-slate-950 transition-all"
               />
             </div>
           </div>
@@ -143,7 +143,7 @@ export const CreatePaymentPage: React.FC<Props> = ({ onPaymentCreated, onCancel 
               <select
                 value={providerCode}
                 onChange={(e) => setProviderCode(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2.5 text-xs text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:border-indigo-600 focus:bg-white dark:bg-slate-950 transition-all appearance-none"
+                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2.5 text-xs text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:border-indigo-600 focus:bg-white dark:focus:bg-slate-950 transition-all appearance-none"
               >
                 <option value="mock">Mock QRIS (Sandbox)</option>
                 <option value="internal_qris">Internal Office QRIS (Static)</option>
@@ -165,7 +165,7 @@ export const CreatePaymentPage: React.FC<Props> = ({ onPaymentCreated, onCancel 
                 onChange={handleAmountChange}
                 required
                 placeholder="0"
-                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-3 text-base font-bold font-mono text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-600 focus:bg-white dark:bg-slate-950 transition-all"
+                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-3 text-base font-bold font-mono text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-600 focus:bg-white dark:focus:bg-slate-950 transition-all"
               />
             </div>
             {amount && (
@@ -186,7 +186,7 @@ export const CreatePaymentPage: React.FC<Props> = ({ onPaymentCreated, onCancel 
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}
                 placeholder="Keterangan tambahan untuk referensi internal..."
-                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-xs text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:border-indigo-600 focus:bg-white dark:bg-slate-950 transition-all"
+                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-xs text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:border-indigo-600 focus:bg-white dark:focus:bg-slate-950 transition-all"
               />
             </div>
           </div>
@@ -195,7 +195,7 @@ export const CreatePaymentPage: React.FC<Props> = ({ onPaymentCreated, onCancel 
             <button
               type="button"
               onClick={onCancel}
-              className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold rounded-lg text-xs transition-colors border border-slate-200 dark:border-slate-800"
+              className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-lg text-xs transition-colors border border-slate-200 dark:border-slate-800"
             >
               Batal
             </button>
