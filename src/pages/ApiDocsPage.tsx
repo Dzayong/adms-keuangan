@@ -154,7 +154,10 @@ export const ApiDocsPage: React.FC = () => {
     setTryResult(p => ({ ...p, [endpointId]: null }));
     try {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (apiKeyInput) headers['Authorization'] = `Bearer ${apiKeyInput}`;
+      if (apiKeyInput) {
+        headers['x-api-key'] = apiKeyInput;
+        headers['X-Idempotency-Key'] = `try-it-${endpointId}-${Date.now()}`;
+      }
       const res = await fetch(`${baseUrl}${path}`, { method, headers, body: body ? JSON.stringify(body) : undefined });
       const json = await res.json();
       setTryResult(p => ({ ...p, [endpointId]: { status: res.status, data: json } }));
@@ -179,7 +182,8 @@ export const ApiDocsPage: React.FC = () => {
 
   // ── Code Examples ──────────────────────────────────────────────
   const curlCreate = `curl -X POST ${baseUrl}/api/v1/payments \\
-  -H "Authorization: Bearer ${displayKey}" \\
+  -H "x-api-key: ${displayKey}" \\
+  -H "X-Idempotency-Key: order-001-$(date +%s)" \\
   -H "Content-Type: application/json" \\
   -d '{
     "amount": 150000,
@@ -192,12 +196,16 @@ export const ApiDocsPage: React.FC = () => {
 
   const laravelCreate = `// app/Services/AdmsService.php
 use Illuminate\\Support\\Facades\\Http;
+use Illuminate\\Support\\Str;
 
 class AdmsService
 {
-    public function createPayment(array $data): array
+    public function createPayment(array $data, string $idempotencyKey): array
     {
-        return Http::withToken(config('services.adms.api_key'))
+        return Http::withHeaders([
+                'x-api-key'          => config('services.adms.api_key'),
+                'X-Idempotency-Key'  => $idempotencyKey,
+            ])
             ->post(config('services.adms.url') . '/api/v1/payments', $data)
             ->throw()
             ->json();
@@ -205,20 +213,20 @@ class AdmsService
 }
 
 // Dalam Controller Anda:
+$idempotencyKey = 'order-' . $order->id . '-' . time();
+
 $result = $adms->createPayment([
-    'amount'        => $request->total,
-    'customerName'  => $request->nama,
-    'customerPhone' => $request->telepon,
+    'amount'        => $order->total,
+    'customerName'  => $order->customer_name,
+    'customerPhone' => $order->customer_phone,
     'description'   => 'Pembayaran SPP Juli 2026',
     'sourceSystem'  => 'SIMAK',
     'callbackUrl'   => route('webhook.adms'),
-]);
+], $idempotencyKey);
 
 // Simpan invoice number, lalu redirect customer
-$invoiceNumber = $result['data']['invoiceNumber'];
-$paymentLink   = $result['data']['paymentLink'];
-
-return redirect($paymentLink);`;
+$order->update(['invoice_number' => $result['data']['invoiceNumber']]);
+return redirect($result['data']['paymentLink']);`;
 
   const reactCreate = `// ⚠️ API Key TIDAK boleh ada di React frontend!
 // Buat endpoint di backend Anda yang meneruskan ke ADMS.
@@ -226,13 +234,16 @@ return redirect($paymentLink);`;
 // --- SERVER SIDE (Express/Node.js) ---
 // routes/payment.js
 app.post('/api/payment/create', async (req, res) => {
+  const idempotencyKey = \`order-\${req.body.orderId || Date.now()}-\${Date.now()}\`;
+
   const response = await fetch(
     \`\${process.env.ADMS_URL}/api/v1/payments\`,
     {
       method: 'POST',
       headers: {
-        'Authorization': \`Bearer \${process.env.ADMS_API_KEY}\`,
-        'Content-Type': 'application/json',
+        'x-api-key':          process.env.ADMS_API_KEY,
+        'X-Idempotency-Key':  idempotencyKey,
+        'Content-Type':       'application/json',
       },
       body: JSON.stringify({
         ...req.body,
@@ -265,10 +276,10 @@ async function handleBayar(order) {
 }`;
 
   const curlGetInvoice = `curl -X GET "${baseUrl}/api/v1/payments/invoice/${tryGetInvoice}" \\
-  -H "Authorization: Bearer ${displayKey}"`;
+  -H "x-api-key: ${displayKey}"`;
 
   const laravelGetInvoice = `// Cek status pembayaran berdasarkan invoice number
-$result = Http::withToken(config('services.adms.api_key'))
+$result = Http::withHeaders(['x-api-key' => config('services.adms.api_key')])
     ->get(config('services.adms.url') . '/api/v1/payments/invoice/' . $invoiceNumber)
     ->throw()
     ->json();
@@ -280,7 +291,16 @@ if ($status === 'PAID') {
     $order->update(['status' => 'paid']);
 }`;
 
-  const reactGetInvoice = `// Polling status dari backend Anda (jangan dari React langsung ke ADMS)
+  const reactGetInvoice = `// Di server Express — proxy ke ADMS dengan x-api-key
+app.get('/api/payment/status/:invoiceNumber', async (req, res) => {
+  const response = await fetch(
+    \`\${process.env.ADMS_URL}/api/v1/payments/invoice/\${req.params.invoiceNumber}\`,
+    { headers: { 'x-api-key': process.env.ADMS_API_KEY } }
+  );
+  res.json(await response.json());
+});
+
+// Di React — polling status dari backend Anda sendiri
 async function checkStatus(invoiceNumber) {
   const res = await fetch(\`/api/payment/status/\${invoiceNumber}\`);
   return res.json();
@@ -605,17 +625,47 @@ app.post('/webhook/adms', express.raw({ type: 'application/json' }), (req, res) 
             <SectionTitle id="auth">Autentikasi</SectionTitle>
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">
               Semua request ke <code className="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-xs font-mono">/api/v1/*</code> memerlukan
-              API Key pada header <code className="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-xs font-mono">Authorization</code>.
+              dua header wajib: <code className="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-xs font-mono">x-api-key</code> dan <code className="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-xs font-mono">X-Idempotency-Key</code>.
             </p>
-            <CodeBlock lang="http header" code={`Authorization: Bearer adms_sk_live_YOUR_API_KEY`} />
+            <CodeBlock lang="http headers" code={`x-api-key: adms_sk_live_YOUR_API_KEY\nX-Idempotency-Key: unique-request-id-anda`} />
 
-            <div className="mt-4 grid sm:grid-cols-2 gap-3">
+            <div className="mt-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden mb-4">
+              <div className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+                <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Headers Wajib</p>
+              </div>
+              <table className="w-full text-xs">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  <tr>
+                    <td className="py-3 pl-4 pr-4 align-top w-52">
+                      <code className="font-mono font-bold text-[#0D1B2A] dark:text-[#C9A84C]">x-api-key</code>
+                      <span className="ml-2 text-[10px] text-rose-500 font-black uppercase">wajib</span>
+                    </td>
+                    <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">API Key yang didapat dari portal ADMS (Client Apps).</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 pl-4 pr-4 align-top">
+                      <code className="font-mono font-bold text-[#0D1B2A] dark:text-[#C9A84C]">X-Idempotency-Key</code>
+                      <span className="ml-2 text-[10px] text-rose-500 font-black uppercase">wajib</span>
+                    </td>
+                    <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">String unik per request untuk mencegah duplikat invoice. Gunakan UUID atau gabungan order_id + timestamp.</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 pl-4 pr-4 align-top">
+                      <code className="font-mono font-bold text-[#0D1B2A] dark:text-[#C9A84C]">Content-Type</code>
+                    </td>
+                    <td className="py-3 pr-4 text-slate-600 dark:text-slate-400"><code className="font-mono">application/json</code> — untuk request dengan body.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-3">
               <InfoBox variant="warn">
                 <strong>Jaga kerahasiaan API Key.</strong> Simpan di environment variable server-side
-                (file <code className="font-mono">.env</code>). Jangan taruh di kode frontend/browser — siapapun bisa mencurinya.
+                (file <code className="font-mono">.env</code>). Jangan taruh di kode frontend/browser.
               </InfoBox>
               <InfoBox variant="tip">
-                Jika API Key bocor atau perlu diganti, admin ADMS bisa mencabut (Revoke) dan buat key baru kapan saja tanpa mengganggu sistem lain.
+                Jika API Key bocor, admin/IT bisa Revoke dan buat key baru kapan saja tanpa mengganggu sistem lain.
               </InfoBox>
             </div>
 
