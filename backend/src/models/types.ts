@@ -1,4 +1,4 @@
-export type UserRole = 'ADMIN' | 'OPERATOR';
+export type UserRole = 'ADMIN' | 'OPERATOR' | 'MERCHANT';
 
 export type TransactionStatus = 
   | 'PENDING' 
@@ -99,4 +99,5 @@ export interface JwtPayload {
   role: UserRole;
   name: string;
   profile_photo?: string;
+  source_system?: string;
 }

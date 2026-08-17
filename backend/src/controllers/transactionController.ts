@@ -18,6 +18,12 @@ export async function getAllTransactions(req: AuthenticatedRequest, res: Respons
     let whereConditions: string[] = [];
     let params: any[] = [];
 
+    // MERCHANT role: hanya lihat transaksi milik sistem mereka
+    if (req.user?.role === 'MERCHANT' && req.user?.source_system) {
+      whereConditions.push('t.source_system = ?');
+      params.push(req.user.source_system);
+    }
+
     if (search) {
       whereConditions.push('(t.invoice_number LIKE ? OR t.customer_name LIKE ? OR t.customer_phone LIKE ?)');
       const searchPattern = `%${search}%`;

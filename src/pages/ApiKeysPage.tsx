@@ -17,7 +17,9 @@ export const ApiKeysPage: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newAppName, setNewAppName] = useState('');
   const [createdKey, setCreatedKey] = useState<string | null>(null);
+  const [createdPortal, setCreatedPortal] = useState<{ email: string; password: string } | null>(null);
   const [copied, setCopied] = useState(false);
+  const [copiedPortal, setCopiedPortal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'REVOKED'>('ALL');
 
@@ -47,6 +49,7 @@ export const ApiKeysPage: React.FC = () => {
       });
       if (res.success && res.data) {
         setCreatedKey(res.data.key);
+        setCreatedPortal(res.data.portal || null);
         setNewAppName('');
         fetchApiKeys();
       }
@@ -99,8 +102,17 @@ export const ApiKeysPage: React.FC = () => {
     }
   };
 
+  const copyPortalCreds = () => {
+    if (createdPortal) {
+      navigator.clipboard.writeText(`Email: ${createdPortal.email}\nPassword: ${createdPortal.password}`);
+      setCopiedPortal(true);
+      setTimeout(() => setCopiedPortal(false), 2000);
+    }
+  };
+
   const closeSuccessModal = () => {
     setCreatedKey(null);
+    setCreatedPortal(null);
     setIsCreateModalOpen(false);
   };
 
@@ -284,35 +296,72 @@ export const ApiKeysPage: React.FC = () => {
       {/* Success Modal */}
       {createdKey && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-950 rounded-xl shadow-xl w-full max-w-lg overflow-hidden border border-emerald-100 p-6">
-            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-2">Kunci API Berhasil Dibuat!</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-              Silakan salin Kunci API rahasia berikut. <strong className="text-rose-500">Kunci ini hanya ditampilkan sekali.</strong> Simpan di tempat yang aman (misalnya di <code className="bg-slate-100 dark:bg-slate-800 px-1 rounded">.env</code> pada web hosting Anda).
-            </p>
-            
-            <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl flex items-center justify-between gap-4 mb-6">
-              <code className="text-sm font-mono text-slate-800 dark:text-slate-200 break-all select-all font-bold">{createdKey}</code>
-              <button
-                onClick={copyToClipboard}
-                className="p-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-400 transition-colors flex-shrink-0 shadow-sm"
-                title="Salin Kunci"
-              >
-                {copied ? <CheckCircle className="w-5 h-5 text-emerald-500" /> : <Copy className="w-5 h-5" />}
-              </button>
-            </div>
-            
-            <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl flex gap-3 mb-6">
-              <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
-              <p className="text-xs text-amber-800 font-medium leading-relaxed">
-                Jika Anda kehilangan kunci ini, Anda tidak dapat melihatnya lagi. Anda harus mencabut (revoke) akses aplikasi ini dan membuat ulang kunci yang baru.
+          <div className="bg-white dark:bg-slate-950 rounded-xl shadow-xl w-full max-w-lg overflow-hidden border border-emerald-100 p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div>
+              <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-1">Aplikasi Berhasil Didaftarkan!</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Simpan semua informasi di bawah ini. <strong className="text-rose-500">Hanya ditampilkan sekali.</strong>
               </p>
             </div>
-            
+
+            {/* API Key */}
+            <div>
+              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">API Key (untuk integrasi sistem)</p>
+              <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-xl flex items-center justify-between gap-3">
+                <code className="text-xs font-mono text-slate-800 dark:text-slate-200 break-all select-all font-bold">{createdKey}</code>
+                <button
+                  onClick={copyToClipboard}
+                  className="p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 rounded-lg text-slate-600 dark:text-slate-400 transition-colors flex-shrink-0"
+                  title="Salin API Key"
+                >
+                  {copied ? <CheckCircle className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Portal Credentials */}
+            {createdPortal && (
+              <div>
+                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Akun Portal (untuk login ke ADMS)</p>
+                <div className="bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 p-3 rounded-xl space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <div className="text-xs text-slate-600 dark:text-slate-400">
+                        <span className="font-semibold">Email:</span>{' '}
+                        <code className="font-mono text-indigo-700 dark:text-indigo-300">{createdPortal.email}</code>
+                      </div>
+                      <div className="text-xs text-slate-600 dark:text-slate-400">
+                        <span className="font-semibold">Password:</span>{' '}
+                        <code className="font-mono text-indigo-700 dark:text-indigo-300">{createdPortal.password}</code>
+                      </div>
+                    </div>
+                    <button
+                      onClick={copyPortalCreds}
+                      className="p-2 bg-white dark:bg-slate-800 border border-indigo-200 dark:border-slate-700 hover:bg-indigo-50 rounded-lg text-indigo-600 transition-colors flex-shrink-0"
+                      title="Salin kredensial portal"
+                    >
+                      {copiedPortal ? <CheckCircle className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-indigo-700 dark:text-indigo-400 font-medium">
+                    Berikan kredensial ini ke tim IT sistem terkait untuk akses portal pencatatan transaksi mereka.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-amber-50 border border-amber-200 p-3 rounded-xl flex gap-3">
+              <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-amber-800 font-medium leading-relaxed">
+                API Key dan password portal tidak dapat dilihat kembali setelah modal ini ditutup. Jika hilang, hapus aplikasi ini dan buat ulang.
+              </p>
+            </div>
+
             <button
               onClick={closeSuccessModal}
               className="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl transition-colors shadow-md"
             >
-              Saya sudah menyimpannya
+              Sudah disimpan, tutup
             </button>
           </div>
         </div>

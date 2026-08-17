@@ -30,18 +30,24 @@ export const Sidebar: React.FC<Props> = ({ userRole }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const allNavItems: NavItem[] = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'transactions', label: 'Transactions', icon: Receipt },
-    { id: 'create_payment', label: 'Manual Payment', icon: PlusCircle },
-    { id: 'reports', label: 'Reports', icon: BarChart3 },
-    { id: 'users', label: 'Users', icon: Users, requireAdmin: true },
-    { id: 'providers', label: 'Providers', icon: ServerCrash, requireAdmin: true },
-    { id: 'settings', label: 'Settings', icon: Settings, requireAdmin: true },
-    { id: 'api_keys', label: 'Client Apps', icon: Key, requireAdmin: true },
-  ];
+  const isMerchant = userRole === 'MERCHANT';
 
-  const navItems = allNavItems.filter(item => !item.requireAdmin || userRole === 'ADMIN');
+  const allNavItems: NavItem[] = isMerchant
+    ? [{ id: 'transactions', label: 'Transaksi Saya', icon: Receipt }]
+    : [
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'transactions', label: 'Transactions', icon: Receipt },
+        { id: 'create_payment', label: 'Manual Payment', icon: PlusCircle },
+        { id: 'reports', label: 'Reports', icon: BarChart3 },
+        { id: 'users', label: 'Users', icon: Users, requireAdmin: true },
+        { id: 'providers', label: 'Providers', icon: ServerCrash, requireAdmin: true },
+        { id: 'settings', label: 'Settings', icon: Settings, requireAdmin: true },
+        { id: 'api_keys', label: 'Client Apps', icon: Key, requireAdmin: true },
+      ];
+
+  const navItems = isMerchant
+    ? allNavItems
+    : allNavItems.filter(item => !item.requireAdmin || userRole === 'ADMIN');
 
   return (
     <aside className="w-64 shrink-0 flex flex-col bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hidden md:flex h-[calc(100vh-4rem)] sticky top-16 select-none overflow-y-auto transition-colors duration-200">

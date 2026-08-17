@@ -34,7 +34,7 @@ router.get('/', async (req, res, next) => {
 router.post('/', async (req, res, next) => {
   try {
     const { name } = req.body;
-    
+
     if (!name || typeof name !== 'string') {
       return res.status(400).json({ success: false, error: { message: 'Application name is required' } });
     }
@@ -44,18 +44,35 @@ router.post('/', async (req, res, next) => {
     const keyHash = bcrypt.hashSync(plaintextKey, 10);
     const keyHint = `adms_sk_test_••••••••••••${randomSecret.slice(-4)}`;
 
-    const { lastInsertRowid } = await runSql(
+    const { lastInsertRowid: apiKeyId } = await runSql(
       `INSERT INTO api_keys (name, key_hash, key_hint, permissions) VALUES (?, ?, ?, ?)`,
       [name, keyHash, keyHint, '["payments:create","payments:read"]']
+    );
+
+    // Auto-create MERCHANT portal account for this app
+    const sourceSystem = name.trim();
+    const slug = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const portalEmail = `${slug}@adms.portal`;
+    const plainPassword = crypto.randomBytes(8).toString('base64url').slice(0, 12);
+    const passHash = bcrypt.hashSync(plainPassword, 10);
+
+    const { lastInsertRowid: userId } = await runSql(
+      `INSERT INTO users (name, email, password_hash, role, source_system, api_key_id, is_active) VALUES (?, ?, ?, 'MERCHANT', ?, ?, 1)`,
+      [sourceSystem, portalEmail, passHash, sourceSystem, apiKeyId]
     );
 
     res.json({
       success: true,
       data: {
-        id: lastInsertRowid,
+        id: apiKeyId,
         name,
         key_hint: keyHint,
-        key: plaintextKey // Sent exactly once
+        key: plaintextKey,
+        portal: {
+          email: portalEmail,
+          password: plainPassword,
+          note: 'Kredensial portal ini hanya ditampilkan sekali. Simpan segera.'
+        }
       }
     });
   } catch (error) {

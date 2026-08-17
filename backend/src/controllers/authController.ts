@@ -42,6 +42,7 @@ export async function login(req: Request, res: Response) {
       role: user.role,
       name: user.name,
       profile_photo: user.profile_photo,
+      source_system: (user as any).source_system ?? undefined,
     });
 
     try {

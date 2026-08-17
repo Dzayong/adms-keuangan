@@ -131,9 +131,13 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
     <div className="space-y-6 pb-12 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-950 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
         <div>
-          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Daftar Transaksi</h2>
+          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">
+            {user?.role === 'MERCHANT' ? 'Transaksi Saya' : 'Daftar Transaksi'}
+          </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Riwayat tagihan dan pembayaran QRIS dari semua aplikasi.
+            {user?.role === 'MERCHANT'
+              ? 'Data pembayaran dari sistem Anda yang tercatat di ADMS.'
+              : 'Riwayat tagihan dan pembayaran QRIS dari semua aplikasi.'}
           </p>
         </div>
         <button
@@ -266,7 +270,7 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
                     <td className="px-4 py-3 text-[11px] text-slate-500 dark:text-slate-400 font-mono">{tx.created_at}</td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1.5 flex-wrap">
-                        {/* Quick verify button for PENDING internal_qris */}
+                        {/* Quick verify button for PENDING internal_qris — MERCHANT tidak bisa */}
                         {tx.status === 'PENDING' && tx.provider_code === 'internal_qris' &&
                           (user?.role === 'ADMIN' || user?.role === 'OPERATOR') && (
                           <button

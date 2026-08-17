@@ -172,6 +172,14 @@ async function initSchemaAndSeed() {
     ALTER TABLE transactions ADD COLUMN IF NOT EXISTS source_system VARCHAR(100) DEFAULT NULL
   `).catch(() => {});
 
+  // Migration: add source_system to users for MERCHANT role
+  await pool.query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS source_system VARCHAR(100) DEFAULT NULL
+  `).catch(() => {});
+  await pool.query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS api_key_id INT DEFAULT NULL
+  `).catch(() => {});
+
   // Seed Providers if empty
   const [providerRows]: any = await pool.query("SELECT COUNT(*) as count FROM payment_providers");
   if (providerRows[0].count === 0) {

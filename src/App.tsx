@@ -70,36 +70,47 @@ function AppContent() {
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 w-full">
           <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={
-              <DashboardPage
-                onNavigateToCreate={() => navigate('/create_payment')}
-                onNavigateToDetail={navigateToDetail}
-                onNavigateToTransactions={() => navigate('/transactions')}
-              />
-            } />
-            <Route path="/transactions" element={<TransactionsPage onNavigateToDetail={navigateToDetail} />} />
-            <Route path="/transactions/:id" element={<PaymentDetailPageWrapper onBack={() => navigate('/transactions')} />} />
-            <Route path="/create_payment" element={<CreatePaymentPage onPaymentCreated={handlePaymentCreated} onCancel={() => navigate('/dashboard')} />} />
-            <Route path="/reports" element={<ReportsPage />} />
-
-            {user.role === 'ADMIN' ? (
+            {user.role === 'MERCHANT' ? (
               <>
-                <Route path="/settings" element={<SettingsPage />} />
-                <Route path="/users" element={<UsersPage />} />
-                <Route path="/providers" element={<ProvidersPage />} />
-                <Route path="/api_keys" element={<ApiKeysPage />} />
+                <Route path="/" element={<Navigate to="/transactions" replace />} />
+                <Route path="/transactions" element={<TransactionsPage onNavigateToDetail={navigateToDetail} />} />
+                <Route path="/transactions/:id" element={<PaymentDetailPageWrapper onBack={() => navigate('/transactions')} />} />
+                <Route path="*" element={<Navigate to="/transactions" replace />} />
               </>
             ) : (
               <>
-                <Route path="/settings" element={<AccessDenied />} />
-                <Route path="/users" element={<AccessDenied />} />
-                <Route path="/providers" element={<AccessDenied />} />
-                <Route path="/api_keys" element={<AccessDenied />} />
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/dashboard" element={
+                  <DashboardPage
+                    onNavigateToCreate={() => navigate('/create_payment')}
+                    onNavigateToDetail={navigateToDetail}
+                    onNavigateToTransactions={() => navigate('/transactions')}
+                  />
+                } />
+                <Route path="/transactions" element={<TransactionsPage onNavigateToDetail={navigateToDetail} />} />
+                <Route path="/transactions/:id" element={<PaymentDetailPageWrapper onBack={() => navigate('/transactions')} />} />
+                <Route path="/create_payment" element={<CreatePaymentPage onPaymentCreated={handlePaymentCreated} onCancel={() => navigate('/dashboard')} />} />
+                <Route path="/reports" element={<ReportsPage />} />
+
+                {user.role === 'ADMIN' ? (
+                  <>
+                    <Route path="/settings" element={<SettingsPage />} />
+                    <Route path="/users" element={<UsersPage />} />
+                    <Route path="/providers" element={<ProvidersPage />} />
+                    <Route path="/api_keys" element={<ApiKeysPage />} />
+                  </>
+                ) : (
+                  <>
+                    <Route path="/settings" element={<AccessDenied />} />
+                    <Route path="/users" element={<AccessDenied />} />
+                    <Route path="/providers" element={<AccessDenied />} />
+                    <Route path="/api_keys" element={<AccessDenied />} />
+                  </>
+                )}
+
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </>
             )}
-
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </main>
       </div>
