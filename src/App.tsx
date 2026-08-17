@@ -87,6 +87,7 @@ function AppContent() {
                 <Route path="/" element={<Navigate to="/transactions" replace />} />
                 <Route path="/transactions" element={<TransactionsPage onNavigateToDetail={navigateToDetail} />} />
                 <Route path="/transactions/:id" element={<PaymentDetailPageWrapper onBack={() => navigate('/transactions')} />} />
+                <Route path="/api_keys" element={<ApiKeysPage />} />
                 <Route path="/developer" element={<ApiDocsPage />} />
                 <Route path="*" element={<Navigate to="/transactions" replace />} />
               </>

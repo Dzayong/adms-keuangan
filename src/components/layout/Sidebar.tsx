@@ -41,6 +41,7 @@ export const Sidebar: React.FC<Props> = ({ userRole, isOpen, onClose }) => {
   const allNavItems: NavItem[] = isRestricted
     ? [
         { id: 'transactions', label: isIT ? 'Semua Transaksi' : 'Transaksi Saya', icon: Receipt },
+        { id: 'api_keys', label: 'Client Apps', icon: Key },
         { id: 'developer', label: 'Developer API', icon: Code2 },
       ]
     : [

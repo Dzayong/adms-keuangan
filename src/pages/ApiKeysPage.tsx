@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Key, Plus, Trash2, Copy, AlertTriangle, CheckCircle, Clock, Search, Filter, Ban } from 'lucide-react';
+import { Key, Plus, Trash2, Copy, AlertTriangle, CheckCircle, Clock, Search, Filter, Ban, Download } from 'lucide-react';
 import { apiFetch } from '../services/api';
 import { Card } from '../components/ui/Card.js';
 import { Button } from '../components/ui/Button.js';
@@ -106,6 +106,31 @@ export const ApiKeysPage: React.FC = () => {
   const closeSuccessModal = () => {
     setCreatedKey(null);
     setIsCreateModalOpen(false);
+  };
+
+  const downloadEnvFile = () => {
+    if (!createdKey) return;
+    const content = [
+      `# ADMS QRIS — API Credentials`,
+      `# Generated: ${new Date().toLocaleString('id-ID')}`,
+      `# App: ${newAppName || 'Aplikasi Baru'}`,
+      ``,
+      `ADMS_URL=${window.location.origin}`,
+      `ADMS_API_KEY=${createdKey}`,
+      `ADMS_WEBHOOK_SECRET=`,
+      ``,
+      `# Portal monitoring (baca saja):`,
+      `# URL   : ${window.location.origin}`,
+      `# Email : it@adms.gateway`,
+      `# Pass  : adms123!`,
+    ].join('\n');
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = '.env.adms';
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -313,12 +338,22 @@ export const ApiKeysPage: React.FC = () => {
           </p>
         </div>
         
-        <Button
-          onClick={closeSuccessModal}
-          className="w-full py-3 text-sm"
-        >
-          Saya sudah menyimpannya
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button
+            onClick={downloadEnvFile}
+            variant="outline"
+            className="flex-1 py-3 text-sm gap-2"
+          >
+            <Download className="w-4 h-4" />
+            Download .env
+          </Button>
+          <Button
+            onClick={closeSuccessModal}
+            className="flex-1 py-3 text-sm"
+          >
+            Saya sudah menyimpannya
+          </Button>
+        </div>
       </Modal>
     </div>
   );

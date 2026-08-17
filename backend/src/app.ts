@@ -72,7 +72,7 @@ export async function createApp() {
   app.use('/api/reports', reportRoutes);
   app.use('/api/settings', settingRoutes);
 
-  app.use('/api/api-keys', authMiddleware, roleMiddleware(['ADMIN']), apiKeyRoutes);
+  app.use('/api/api-keys', authMiddleware, roleMiddleware(['ADMIN', 'IT']), apiKeyRoutes);
 
   // Other Internal API v1 Routes
   app.use('/api/v1/payments', apiV1PaymentRoutes);
