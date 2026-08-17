@@ -47,7 +47,7 @@ export const Sidebar: React.FC<Props> = ({ userRole, isOpen, onClose }) => {
     : [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'transactions', label: 'Transactions', icon: Receipt },
-        { id: 'create_payment', label: 'Manual Payment', icon: PlusCircle },
+        // { id: 'create_payment', label: 'Manual Payment', icon: PlusCircle },
         { id: 'reports', label: 'Reports', icon: BarChart3 },
         { id: 'users', label: 'Users', icon: Users, requireAdmin: true },
         { id: 'providers', label: 'Providers', icon: ServerCrash, requireAdmin: true },
