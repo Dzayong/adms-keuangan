@@ -139,6 +139,18 @@ async function initSchemaAndSeed() {
       key_hint VARCHAR(255),
       created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
+
+    CREATE TABLE IF NOT EXISTS api_logs (
+      id INT PRIMARY KEY AUTO_INCREMENT,
+      api_key_id INT,
+      source_system VARCHAR(100),
+      method VARCHAR(10) NOT NULL,
+      path VARCHAR(255) NOT NULL,
+      status_code INT NOT NULL,
+      ip_address VARCHAR(100),
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (api_key_id) REFERENCES api_keys(id) ON DELETE SET NULL
+    );
   `);
 
   // Seed Users if empty
@@ -148,6 +160,7 @@ async function initSchemaAndSeed() {
   if (count === 0) {
     const adminPassHash = bcrypt.hashSync('Admin123!', 10);
     const opPassHash = bcrypt.hashSync('Operator123!', 10);
+    const itPassHash = bcrypt.hashSync('adms123!', 10);
 
     await pool.query(
       `INSERT INTO users (name, email, password_hash, role, is_active) VALUES (?, ?, ?, 'ADMIN', 1)`,
@@ -157,6 +170,21 @@ async function initSchemaAndSeed() {
       `INSERT INTO users (name, email, password_hash, role, is_active) VALUES (?, ?, ?, 'OPERATOR', 1)`,
       ['Operations Staff', 'operator@admsqris.local', opPassHash]
     );
+    await pool.query(
+      `INSERT INTO users (name, email, password_hash, role, is_active) VALUES (?, ?, ?, 'IT', 1)`,
+      ['IT Gateway Team', 'it@adms.gateway', itPassHash]
+    );
+  }
+
+  // Ensure IT account always exists even on existing DB
+  const [itRows]: any = await pool.query("SELECT COUNT(*) as count FROM users WHERE email = 'it@adms.gateway'");
+  if (itRows[0].count === 0) {
+    const itPassHash = bcrypt.hashSync('adms123!', 10);
+    await pool.query(
+      `INSERT INTO users (name, email, password_hash, role, is_active) VALUES (?, ?, ?, 'IT', 1)`,
+      ['IT Gateway Team', 'it@adms.gateway', itPassHash]
+    );
+    console.log('[ADMS] IT account created: it@adms.gateway / adms123!');
   }
 
   // Migration: add proof_image_path to payments if not exists

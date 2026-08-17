@@ -71,7 +71,7 @@ function AppContent() {
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 w-full">
           <Routes>
-            {user.role === 'MERCHANT' ? (
+            {(user.role === 'MERCHANT' || user.role === 'IT') ? (
               <>
                 <Route path="/" element={<Navigate to="/transactions" replace />} />
                 <Route path="/transactions" element={<TransactionsPage onNavigateToDetail={navigateToDetail} />} />

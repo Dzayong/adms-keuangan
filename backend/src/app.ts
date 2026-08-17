@@ -18,6 +18,7 @@ import apiV1PaymentRoutes from './routes/api/v1/paymentRoutes.js';
 import apiV1InternalMerchantRoutes from './routes/api/v1/internalMerchantRoutes.js';
 import publicRoutes from './routes/publicRoutes.js';
 import { autoExpireTransactions } from './controllers/transactionController.js';
+import { runSql } from './config/db.js';
 import path from 'path';
 
 export async function createApp() {
@@ -43,6 +44,23 @@ export async function createApp() {
 
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+
+  // API Request Logger — catat semua request ke /api/v1/*
+  app.use('/api/v1', (req: any, res, next) => {
+    const start = Date.now();
+    res.on('finish', () => {
+      const duration = Date.now() - start;
+      const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || '';
+      const apiKeyId = req.apiKeyId || null;
+      const sourceSystem = req.sourceSystem || null;
+      console.log(`[API] ${req.method} ${req.path} → ${res.statusCode} (${duration}ms) src=${sourceSystem || '-'} ip=${ip}`);
+      runSql(
+        `INSERT INTO api_logs (api_key_id, source_system, method, path, status_code, ip_address) VALUES (?, ?, ?, ?, ?, ?)`,
+        [apiKeyId, sourceSystem, req.method, req.path, res.statusCode, ip]
+      ).catch(() => {});
+    });
+    next();
+  });
 
   // API Routes
   app.use('/api/auth', authRoutes);

@@ -32,10 +32,12 @@ export const Sidebar: React.FC<Props> = ({ userRole }) => {
   const navigate = useNavigate();
 
   const isMerchant = userRole === 'MERCHANT';
+  const isIT = userRole === 'IT';
+  const isRestricted = isMerchant || isIT;
 
-  const allNavItems: NavItem[] = isMerchant
+  const allNavItems: NavItem[] = isRestricted
     ? [
-        { id: 'transactions', label: 'Transaksi Saya', icon: Receipt },
+        { id: 'transactions', label: isIT ? 'Semua Transaksi' : 'Transaksi Saya', icon: Receipt },
         { id: 'developer', label: 'Developer API', icon: Code2 },
       ]
     : [
@@ -50,7 +52,7 @@ export const Sidebar: React.FC<Props> = ({ userRole }) => {
         { id: 'developer', label: 'Developer API', icon: Code2 },
       ];
 
-  const navItems = isMerchant
+  const navItems = isRestricted
     ? allNavItems
     : allNavItems.filter(item => !item.requireAdmin || userRole === 'ADMIN');
 

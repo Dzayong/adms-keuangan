@@ -1,4 +1,4 @@
-export type UserRole = 'ADMIN' | 'OPERATOR' | 'MERCHANT';
+export type UserRole = 'ADMIN' | 'OPERATOR' | 'MERCHANT' | 'IT';
 
 export type TransactionStatus = 
   | 'PENDING' 

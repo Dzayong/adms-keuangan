@@ -18,7 +18,8 @@ export async function getAllTransactions(req: AuthenticatedRequest, res: Respons
     let whereConditions: string[] = [];
     let params: any[] = [];
 
-    // MERCHANT role: hanya lihat transaksi milik sistem mereka
+    // MERCHANT: hanya lihat transaksi milik sistem mereka
+    // IT: lihat semua transaksi (tidak difilter)
     if (req.user?.role === 'MERCHANT' && req.user?.source_system) {
       whereConditions.push('t.source_system = ?');
       params.push(req.user.source_system);

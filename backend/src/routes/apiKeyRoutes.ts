@@ -49,17 +49,7 @@ router.post('/', async (req, res, next) => {
       [name, keyHash, keyHint, '["payments:create","payments:read"]']
     );
 
-    // Auto-create MERCHANT portal account for this app
-    const sourceSystem = name.trim();
-    const slug = name.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const portalEmail = `${slug}@adms.portal`;
-    const plainPassword = crypto.randomBytes(8).toString('base64url').slice(0, 12);
-    const passHash = bcrypt.hashSync(plainPassword, 10);
-
-    const { lastInsertRowid: userId } = await runSql(
-      `INSERT INTO users (name, email, password_hash, role, source_system, api_key_id, is_active) VALUES (?, ?, ?, 'MERCHANT', ?, ?, 1)`,
-      [sourceSystem, portalEmail, passHash, sourceSystem, apiKeyId]
-    );
+    console.log(`[API KEY] Created: "${name}" (id=${apiKeyId}) hint=${keyHint}`);
 
     res.json({
       success: true,
@@ -68,11 +58,6 @@ router.post('/', async (req, res, next) => {
         name,
         key_hint: keyHint,
         key: plaintextKey,
-        portal: {
-          email: portalEmail,
-          password: plainPassword,
-          note: 'Kredensial portal ini hanya ditampilkan sekali. Simpan segera.'
-        }
       }
     });
   } catch (error) {
