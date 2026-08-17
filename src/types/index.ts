@@ -37,6 +37,7 @@ export interface Transaction {
   provider_reference?: string;
   payment_method?: string;
   provider_code?: string;
+  proof_image_path?: string | null;
 }
 
 export interface PaymentLog {

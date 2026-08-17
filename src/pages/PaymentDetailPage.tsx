@@ -17,6 +17,8 @@ import {
   Check,
   ShieldAlert,
   Send,
+  Share2,
+  ImageIcon,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.js';
 
@@ -175,6 +177,12 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
     }
   };
 
+  const copyPaymentLink = () => {
+    const link = `${window.location.origin}/pay/${tx?.invoice_number}`;
+    navigator.clipboard.writeText(link);
+    setSimMessage(`Link pembayaran disalin: ${link}`);
+  };
+
   const formatCountdown = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -201,6 +209,7 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
     );
   }
 
+  // eslint-disable-next-line no-console
   console.log('[INTERNAL QR DEBUG]', {
     providerReference: tx.provider_reference,
     paymentMethod: tx.payment_method,
@@ -378,15 +387,42 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
             </div>
           )}
 
-          <div className="pt-2 flex items-center gap-2">
+          <div className="pt-2 flex items-center gap-2 flex-wrap">
             <button
               onClick={copyQrText}
               className="flex-1 py-2 px-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1.5 border border-slate-200 dark:border-slate-800"
             >
               {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copied ? 'Payload Copied!' : 'Copy QR Raw Payload'}</span>
+              <span>{copied ? 'Disalin!' : 'Copy QR Payload'}</span>
             </button>
+            {tx.provider_code === 'internal_qris' && tx.status === 'PENDING' && (
+              <button
+                onClick={copyPaymentLink}
+                className="py-2 px-3 bg-blue-50 dark:bg-blue-950/30 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 border border-blue-200 dark:border-blue-900/50"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+                <span>Salin Link Bayar</span>
+              </button>
+            )}
           </div>
+
+          {/* Bukti bayar dari customer */}
+          {tx.proof_image_path && (
+            <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+              <div className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1.5 mb-2">
+                <ImageIcon className="w-3.5 h-3.5 text-blue-500" />
+                Bukti Bayar (dikirim customer)
+              </div>
+              <a href={tx.proof_image_path} target="_blank" rel="noreferrer">
+                <img
+                  src={tx.proof_image_path}
+                  alt="Bukti pembayaran"
+                  className="w-full max-h-48 object-contain rounded-lg border-2 border-blue-200 dark:border-blue-800 cursor-pointer hover:opacity-80 transition-opacity bg-slate-50 dark:bg-slate-900"
+                />
+              </a>
+              <p className="text-[10px] text-blue-600 mt-1 font-medium">Klik untuk buka gambar penuh</p>
+            </div>
+          )}
         </div>
       </div>
 

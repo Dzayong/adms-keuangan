@@ -5,23 +5,25 @@ import { StatusBadge } from '../components/common/StatusBadge.js';
 import { Modal } from '../components/common/Modal.js';
 import {
   Search,
-  Filter,
   Eye,
   RefreshCw,
   ChevronLeft,
   ChevronRight,
   Ban,
-  Calendar,
   X,
-  Clock,
   CheckCircle2,
+  ShieldCheck,
+  Share2,
+  ImageIcon,
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext.js';
 
 interface Props {
   onNavigateToDetail: (id: number) => void;
 }
 
 export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
+  const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
@@ -94,6 +96,24 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
     } else {
       alert(res.message || 'Gagal membatalkan transaksi.');
     }
+  };
+
+  const handleQuickVerify = async (tx: Transaction) => {
+    if (!confirm(`Pastikan pembayaran sudah masuk di aplikasi DANA/bank sebelum konfirmasi.\n\nVerifikasi pembayaran dari ${tx.customer_name} sebesar ${formatRupiah(tx.amount)}?`)) return;
+    const paymentId = tx.payment_id;
+    if (!paymentId) return alert('Tidak ada data pembayaran.');
+    const res = await apiFetch(`/payments/${paymentId}/verify`, { method: 'POST' });
+    if (res.success) {
+      fetchTransactions(pagination.page);
+    } else {
+      alert(res.message || 'Gagal memverifikasi pembayaran.');
+    }
+  };
+
+  const copyPaymentLink = (invoiceNumber: string) => {
+    const link = `${window.location.origin}/pay/${invoiceNumber}`;
+    navigator.clipboard.writeText(link);
+    alert(`Link pembayaran disalin:\n${link}`);
   };
 
   const formatRupiah = (amount: number) => {
@@ -245,19 +265,48 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
                     </td>
                     <td className="px-4 py-3 text-[11px] text-slate-500 dark:text-slate-400 font-mono">{tx.created_at}</td>
                     <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
+                      <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                        {/* Quick verify button for PENDING internal_qris */}
+                        {tx.status === 'PENDING' && tx.provider_code === 'internal_qris' &&
+                          (user?.role === 'ADMIN' || user?.role === 'OPERATOR') && (
+                          <button
+                            onClick={() => handleQuickVerify(tx)}
+                            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md text-[11px] font-bold transition-colors flex items-center gap-1 shadow-2xs"
+                            title="Verifikasi pembayaran"
+                          >
+                            <ShieldCheck className="w-3 h-3" />
+                            <span>Verifikasi</span>
+                          </button>
+                        )}
+                        {/* Proof indicator */}
+                        {tx.proof_image_path && tx.status === 'PENDING' && (
+                          <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[10px] font-bold border border-blue-200 flex items-center gap-0.5">
+                            <ImageIcon className="w-2.5 h-2.5" />
+                            Bukti
+                          </span>
+                        )}
                         <button
                           onClick={() => onNavigateToDetail(tx.id)}
                           className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-[11px] font-bold transition-colors flex items-center gap-1 shadow-2xs"
                         >
                           <Eye className="w-3 h-3" />
-                          <span>Lihat QR</span>
+                          <span>Detail</span>
                         </button>
+                        {/* Share payment link */}
+                        {tx.status === 'PENDING' && tx.provider_code === 'internal_qris' && (
+                          <button
+                            onClick={() => copyPaymentLink(tx.invoice_number)}
+                            className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-600 dark:text-slate-400 rounded-md text-[11px] font-semibold transition-colors border border-slate-200 dark:border-slate-800"
+                            title="Salin link pembayaran untuk customer"
+                          >
+                            <Share2 className="w-3 h-3" />
+                          </button>
+                        )}
                         <button
                           onClick={() => openTxDetail(tx)}
                           className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-md text-[11px] font-semibold transition-colors border border-slate-200 dark:border-slate-800"
                         >
-                          Log Webhook
+                          Log
                         </button>
                       </div>
                     </td>
@@ -338,6 +387,24 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
               </div>
             )}
 
+            {/* Bukti Bayar */}
+            {selectedTx.proof_image_path && (
+              <div>
+                <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2 flex items-center gap-1.5">
+                  <ImageIcon className="w-3.5 h-3.5 text-blue-500" />
+                  Bukti Pembayaran (diunggah customer)
+                </div>
+                <a href={selectedTx.proof_image_path} target="_blank" rel="noreferrer">
+                  <img
+                    src={selectedTx.proof_image_path}
+                    alt="Bukti bayar"
+                    className="max-h-48 w-full object-contain rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 cursor-pointer hover:opacity-80 transition-opacity"
+                  />
+                </a>
+                <p className="text-[10px] text-slate-400 mt-1">Klik gambar untuk membuka full size</p>
+              </div>
+            )}
+
             {/* Audit Logs */}
             <div>
               <h4 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 uppercase tracking-wider mb-2">
@@ -360,14 +427,24 @@ export const TransactionsPage: React.FC<Props> = ({ onNavigateToDetail }) => {
               )}
             </div>
 
-            <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800 flex-wrap">
+              {selectedTx.status === 'PENDING' && selectedTx.provider_code === 'internal_qris' &&
+                (user?.role === 'ADMIN' || user?.role === 'OPERATOR') && (
+                <button
+                  onClick={() => { handleQuickVerify(selectedTx); setIsDetailOpen(false); }}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition-colors flex items-center gap-1.5"
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>Verifikasi Lunas</span>
+                </button>
+              )}
               {selectedTx.status === 'PENDING' && (
                 <button
                   onClick={() => handleCancelTx(selectedTx.id)}
                   className="px-4 py-2 bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100 text-rose-700 font-bold rounded-xl text-xs transition-colors flex items-center gap-1.5"
                 >
                   <Ban className="w-4 h-4" />
-                  <span>Batalkan Transaksi</span>
+                  <span>Batalkan</span>
                 </button>
               )}
               <button

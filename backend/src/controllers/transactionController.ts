@@ -49,16 +49,19 @@ export async function getAllTransactions(req: AuthenticatedRequest, res: Respons
 
     // Fetch Data
     const dataSql = `
-      SELECT 
-        t.*, 
+      SELECT
+        t.*,
         u.name as creator_name,
         p.id as payment_id,
         p.qr_content,
         p.provider_reference,
-        p.payment_method
+        p.payment_method,
+        p.proof_image_path,
+        pp.code as provider_code
       FROM transactions t
       LEFT JOIN users u ON t.created_by = u.id
       LEFT JOIN payments p ON p.transaction_id = t.id
+      LEFT JOIN payment_providers pp ON pp.id = p.provider_id
       ${whereClause}
       ORDER BY t.id DESC
       LIMIT ? OFFSET ?
@@ -89,16 +92,19 @@ export async function getTransactionById(req: AuthenticatedRequest, res: Respons
     }
 
     const transaction = await getSql<Transaction>(`
-      SELECT 
-        t.*, 
+      SELECT
+        t.*,
         u.name as creator_name,
         p.id as payment_id,
         p.qr_content,
         p.provider_reference,
-        p.payment_method
+        p.payment_method,
+        p.proof_image_path,
+        pp.code as provider_code
       FROM transactions t
       LEFT JOIN users u ON t.created_by = u.id
       LEFT JOIN payments p ON p.transaction_id = t.id
+      LEFT JOIN payment_providers pp ON pp.id = p.provider_id
       WHERE t.id = ?
     `, [id]);
 
@@ -230,4 +236,40 @@ export async function cancelTransaction(req: AuthenticatedRequest, res: Response
   } catch (err: any) {
     return sendError(res, 'Gagal membatalkan transaksi.', 500);
   }
+}
+
+export async function getPendingVerificationCount(req: AuthenticatedRequest, res: Response) {
+  try {
+    const result = await querySql<{ count: number }>(`
+      SELECT COUNT(*) as count
+      FROM transactions t
+      JOIN payments p ON p.transaction_id = t.id
+      JOIN payment_providers pp ON pp.id = p.provider_id
+      WHERE t.status = 'PENDING' AND pp.code = 'internal_qris'
+    `);
+    return sendSuccess(res, { count: result[0]?.count || 0 });
+  } catch (err: any) {
+    return sendError(res, 'Gagal mengambil data.', 500);
+  }
+}
+
+export async function autoExpireTransactions(): Promise<number> {
+  const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+  const expired = await querySql<{ id: number }>(
+    `SELECT id FROM transactions WHERE status = 'PENDING' AND expired_at < ?`,
+    [now]
+  );
+  if (expired.length === 0) return 0;
+
+  const ids = expired.map(r => r.id);
+  const placeholders = ids.map(() => '?').join(',');
+  await runSql(
+    `UPDATE transactions SET status = 'EXPIRED', updated_at = ? WHERE id IN (${placeholders})`,
+    [now, ...ids]
+  );
+  await runSql(
+    `UPDATE payments SET status = 'EXPIRED', updated_at = ? WHERE transaction_id IN (${placeholders})`,
+    [now, ...ids]
+  );
+  return ids.length;
 }

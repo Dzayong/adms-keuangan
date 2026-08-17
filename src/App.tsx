@@ -12,6 +12,7 @@ import { SettingsPage } from './pages/SettingsPage.js';
 import { UsersPage } from './pages/UsersPage.js';
 import { ProvidersPage } from './pages/ProvidersPage.js';
 import { ApiKeysPage } from './pages/ApiKeysPage.js';
+import { PublicPaymentPage } from './pages/PublicPaymentPage.js';
 import { Navbar } from './components/layout/Navbar.js';
 import { Sidebar } from './components/layout/Sidebar.js';
 import { AccessDenied } from './components/ui/AccessDenied.js';
@@ -34,7 +35,18 @@ function AppContent() {
     return (
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/pay/:invoiceNumber" element={<PublicPaymentPage />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    );
+  }
+
+  // Public payment page accessible even when logged in (renders without sidebar/navbar)
+  const currentPath = window.location.pathname;
+  if (currentPath.startsWith('/pay/')) {
+    return (
+      <Routes>
+        <Route path="/pay/:invoiceNumber" element={<PublicPaymentPage />} />
       </Routes>
     );
   }

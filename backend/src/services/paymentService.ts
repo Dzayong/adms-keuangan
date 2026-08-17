@@ -19,6 +19,8 @@ export interface CreatePaymentParams {
   idempotencyKey?: string;
   userId?: number;
   providerCode?: string;
+  callbackUrl?: string;
+  sourceSystem?: string;
 }
 
 /**
@@ -52,7 +54,7 @@ export function generatePayloadFingerprint(payload: { amount: number, customerNa
 }
 
 export async function createPaymentService(params: CreatePaymentParams) {
-  const { amount, customerName, customerPhone = '', description = '', idempotencyKey, userId = 1, providerCode } = params;
+  const { amount, customerName, customerPhone = '', description = '', idempotencyKey, userId = 1, providerCode, callbackUrl, sourceSystem } = params;
 
   // Fetch expiry setting (default 15 mins)
   const expirySetting = await getSql<{ value: string }>('SELECT value FROM settings WHERE \`key\` = ?', ['mock_expiry_minutes']);
@@ -107,10 +109,10 @@ export async function createPaymentService(params: CreatePaymentParams) {
 
   // Insert Transaction
   const txInsert = await runSql(`
-    INSERT INTO transactions 
-    (invoice_number, customer_name, customer_phone, amount, description, status, expired_at, idempotency_key, created_by, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, 'PENDING', ?, ?, ?, ?, ?)
-  `, [invoiceNumber, customerName, customerPhone, amount, description, expiredAtStr, idempotencyKey || null, userId, nowStr, nowStr]);
+    INSERT INTO transactions
+    (invoice_number, customer_name, customer_phone, amount, description, status, expired_at, idempotency_key, created_by, callback_url, source_system, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, 'PENDING', ?, ?, ?, ?, ?, ?, ?)
+  `, [invoiceNumber, customerName, customerPhone, amount, description, expiredAtStr, idempotencyKey || null, userId, callbackUrl || null, sourceSystem || null, nowStr, nowStr]);
 
   const transactionId = txInsert.lastInsertRowid;
 
@@ -201,6 +203,8 @@ export async function createPaymentService(params: CreatePaymentParams) {
       qrContent: providerResult.qrContent,
       providerReference: providerResult.providerReference,
       paymentMethod: providerResult.paymentMethod,
+      callbackUrl: callbackUrl || null,
+      sourceSystem: sourceSystem || null,
     }
   };
 }

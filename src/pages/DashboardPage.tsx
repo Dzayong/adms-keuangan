@@ -15,6 +15,7 @@ import {
   Activity,
   QrCode,
   ArrowRight,
+  ShieldCheck,
 } from 'lucide-react';
 
 interface Props {
@@ -35,6 +36,14 @@ export const DashboardPage: React.FC<Props> = ({
   const [selectedMonth, setSelectedMonth] = useState('');
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [pendingVerificationCount, setPendingVerificationCount] = useState(0);
+
+  const fetchPendingVerifications = async () => {
+    const res = await apiFetch('/transactions/pending-verifications');
+    if (res.success && res.data) {
+      setPendingVerificationCount(res.data.count || 0);
+    }
+  };
 
   const fetchDashboardData = async () => {
     setIsLoading(true);
@@ -55,6 +64,7 @@ export const DashboardPage: React.FC<Props> = ({
 
   useEffect(() => {
     fetchDashboardData();
+    fetchPendingVerifications();
   }, [filterType, selectedMonth, selectedYear]);
 
   const formatRupiah = (amount: number) => {
@@ -77,6 +87,29 @@ export const DashboardPage: React.FC<Props> = ({
 
   return (
     <div className="space-y-6 animate-fade-in pb-12">
+      {/* Pending Verification Alert */}
+      {pendingVerificationCount > 0 && (
+        <button
+          onClick={onNavigateToTransactions}
+          className="w-full flex items-center justify-between gap-3 p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-700 rounded-xl text-left hover:bg-amber-100 dark:hover:bg-amber-950/50 transition-colors group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-amber-500 flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <div className="text-sm font-bold text-amber-800 dark:text-amber-200">
+                {pendingVerificationCount} Pembayaran Menunggu Verifikasi Manual
+              </div>
+              <div className="text-xs text-amber-600 dark:text-amber-400">
+                Periksa mutasi QRIS dan klik Verifikasi untuk mengonfirmasi pembayaran masuk.
+              </div>
+            </div>
+          </div>
+          <ArrowRight className="w-4 h-4 text-amber-600 group-hover:translate-x-1 transition-transform shrink-0" />
+        </button>
+      )}
+
       {/* Top Section Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-950 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
         <div>

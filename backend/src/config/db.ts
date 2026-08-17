@@ -20,7 +20,8 @@ export async function getDb(): Promise<mysql.Pool> {
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
-    multipleStatements: true
+    multipleStatements: true,
+    dateStrings: true,
   });
 
   await initSchemaAndSeed();
@@ -104,6 +105,7 @@ async function initSchemaAndSeed() {
       payment_method VARCHAR(50) NOT NULL DEFAULT 'QRIS',
       status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
       paid_at DATETIME,
+      proof_image_path TEXT DEFAULT NULL,
       created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (transaction_id) REFERENCES transactions(id),
@@ -156,6 +158,19 @@ async function initSchemaAndSeed() {
       ['Operations Staff', 'operator@admsqris.local', opPassHash]
     );
   }
+
+  // Migration: add proof_image_path to payments if not exists
+  await pool.query(`
+    ALTER TABLE payments ADD COLUMN IF NOT EXISTS proof_image_path TEXT DEFAULT NULL
+  `).catch(() => {});
+
+  // Migration: add callback_url and source_system to transactions
+  await pool.query(`
+    ALTER TABLE transactions ADD COLUMN IF NOT EXISTS callback_url TEXT DEFAULT NULL
+  `).catch(() => {});
+  await pool.query(`
+    ALTER TABLE transactions ADD COLUMN IF NOT EXISTS source_system VARCHAR(100) DEFAULT NULL
+  `).catch(() => {});
 
   // Seed Providers if empty
   const [providerRows]: any = await pool.query("SELECT COUNT(*) as count FROM payment_providers");

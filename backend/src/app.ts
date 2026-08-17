@@ -16,6 +16,8 @@ import providerRoutes from './routes/providerRoutes.js';
 import apiKeyRoutes from './routes/apiKeyRoutes.js';
 import apiV1PaymentRoutes from './routes/api/v1/paymentRoutes.js';
 import apiV1InternalMerchantRoutes from './routes/api/v1/internalMerchantRoutes.js';
+import publicRoutes from './routes/publicRoutes.js';
+import { autoExpireTransactions } from './controllers/transactionController.js';
 import path from 'path';
 
 export async function createApp() {
@@ -23,6 +25,10 @@ export async function createApp() {
 
   // Initialize DB & Seed Data
   await getDb();
+
+  // Auto-expire: run on startup then every 60 seconds
+  autoExpireTransactions().catch(() => {});
+  setInterval(() => autoExpireTransactions().catch(() => {}), 60_000);
 
   // Security & Utility Middlewares
   app.use(helmet({
@@ -52,6 +58,9 @@ export async function createApp() {
 
   // Other Internal API v1 Routes
   app.use('/api/v1/payments', apiV1PaymentRoutes);
+
+  // Public routes (no auth required — for customer payment page)
+  app.use('/api/public', publicRoutes);
 
   // Serve uploads
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));

@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { z } from 'zod';
-import { getSql, runSql, runTransaction } from '../config/db.js';
+import { getSql, runSql, runTransaction, querySql } from '../config/db.js';
+import { fireWebhook } from '../utils/webhookDelivery.js';
 import { Transaction, Payment } from '../models/types.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 import { AuthenticatedRequest } from '../middleware/auth.js';
@@ -210,6 +211,29 @@ export async function verifyPayment(req: AuthenticatedRequest, res: Response) {
 
     // Execute atomically
     await runTransaction(queries);
+
+    // Fire webhook to callback_url if registered (non-blocking)
+    const fullTx = await getSql<{ callback_url: string | null; source_system: string | null; customer_phone: string; amount: number; description: string }>(
+      'SELECT callback_url, source_system, customer_phone, amount, description FROM transactions WHERE id = ?',
+      [transaction.id]
+    );
+    if (fullTx?.callback_url) {
+      fireWebhook(fullTx.callback_url, {
+        event: 'payment.paid',
+        invoiceNumber: transaction.invoice_number,
+        transactionId: transaction.id,
+        paymentId: transaction.payment_id || 0,
+        amount: fullTx.amount,
+        customerName: transaction.customer_name,
+        customerPhone: fullTx.customer_phone,
+        description: fullTx.description,
+        status: 'PAID',
+        paidAt: nowStr,
+        paymentMethod: transaction.payment_method || 'QRIS',
+        sourceSystem: fullTx.source_system,
+        timestamp: new Date().toISOString(),
+      }).catch(() => {});
+    }
 
     return sendSuccess(res, {
       transactionId: transaction.id,

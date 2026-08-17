@@ -9,6 +9,8 @@ const apiCreatePaymentSchema = z.object({
   amount: z.number().int('Nominal pembayaran harus bilangan bulat').positive('Nominal pembayaran harus lebih besar dari 0'),
   description: z.string().max(255, 'Deskripsi maksimal 255 karakter').optional().default(''),
   providerCode: z.string().optional(),
+  callbackUrl: z.string().url('callbackUrl harus berupa URL yang valid').optional(),
+  sourceSystem: z.string().max(100).optional(),
 });
 
 function sendApiResponse(res: Response, statusCode: number, success: boolean, data?: any, errorCode?: string, errorMessage?: string) {
@@ -36,7 +38,7 @@ export async function apiCreatePayment(req: ApiAuthenticatedRequest, res: Respon
       return sendApiResponse(res, 400, false, undefined, 'MISSING_IDEMPOTENCY_KEY', 'Missing X-Idempotency-Key header.');
     }
 
-    const { customerName, customerPhone, amount, description, providerCode } = parseResult.data;
+    const { customerName, customerPhone, amount, description, providerCode, callbackUrl, sourceSystem } = parseResult.data;
 
     try {
       const result = await createPaymentService({
@@ -46,15 +48,17 @@ export async function apiCreatePayment(req: ApiAuthenticatedRequest, res: Respon
         description,
         idempotencyKey,
         providerCode,
-        // Since it's an API, there is no direct user ID. We can map the API key ID to created_by
-        // or just use 1 (System Admin) for now to fulfill the DB constraint.
-        userId: 1 
+        callbackUrl,
+        sourceSystem,
+        userId: 1
       });
 
+      const appUrl = (process.env.APP_URL || '').replace(/\/$/, '');
       const responsePayload: any = {
         transactionId: result.data.transactionId,
         paymentId: result.data.paymentId,
         invoiceNumber: result.data.invoiceNumber,
+        paymentLink: `${appUrl}/pay/${result.data.invoiceNumber}`,
         amount: result.data.amount,
         customerName: result.data.customerName,
         customerPhone: result.data.customerPhone,
@@ -103,51 +107,63 @@ export async function apiCreatePayment(req: ApiAuthenticatedRequest, res: Respon
   }
 }
 
+export async function apiGetPaymentByInvoice(req: ApiAuthenticatedRequest, res: Response) {
+  try {
+    const { invoiceNumber } = req.params;
+    const { getSql: dbGetSql } = await import('../../../config/db.js');
+    const tx = await dbGetSql<{ id: number }>('SELECT id FROM transactions WHERE invoice_number = ?', [invoiceNumber]);
+    if (!tx) {
+      return sendApiResponse(res, 404, false, undefined, 'NOT_FOUND', 'Payment not found');
+    }
+    return apiGetPaymentById(tx.id, res);
+  } catch (err: any) {
+    console.error('API Error getting payment by invoice:', err);
+    return sendApiResponse(res, 500, false, undefined, 'INTERNAL_SERVER_ERROR', 'Internal Server Error');
+  }
+}
+
+async function apiGetPaymentById(id: number, res: Response) {
+  const result = await getPaymentDetailService(id);
+  if (!result) {
+    return sendApiResponse(res, 404, false, undefined, 'NOT_FOUND', 'Payment not found');
+  }
+
+  const appUrl = (process.env.APP_URL || '').replace(/\/$/, '');
+  const cleanData: Record<string, any> = {
+    transactionId: result.transaction.id,
+    paymentId: result.transaction.payment_id,
+    invoiceNumber: result.transaction.invoice_number,
+    paymentLink: `${appUrl}/pay/${result.transaction.invoice_number}`,
+    amount: result.transaction.amount,
+    customerName: result.transaction.customer_name,
+    customerPhone: result.transaction.customer_phone,
+    description: result.transaction.description,
+    status: result.transaction.status,
+    paymentMethod: result.transaction.payment_method,
+    expiredAt: result.transaction.expired_at,
+    paidAt: (result.transaction as any).payment_paid_at,
+    qrContent: (result.transaction as any).qr_content,
+  };
+
+  const createdLog = result.logs.find(l => l.event_type === 'PAYMENT_CREATED');
+  if (createdLog?.payload) {
+    try {
+      const payload = JSON.parse(createdLog.payload);
+      if (payload.merchantName) cleanData.merchantName = payload.merchantName;
+      if (payload.nmid) cleanData.nmid = payload.nmid;
+    } catch (_) {}
+  }
+
+  return sendApiResponse(res, 200, true, cleanData);
+}
+
 export async function apiGetPayment(req: ApiAuthenticatedRequest, res: Response) {
   try {
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) {
       return sendApiResponse(res, 400, false, undefined, 'INVALID_REQUEST', 'Invalid Payment ID');
     }
-
-    const result = await getPaymentDetailService(id);
-
-    if (!result) {
-      return sendApiResponse(res, 404, false, undefined, 'NOT_FOUND', 'Payment not found');
-    }
-
-    // Return a clean representation, hiding logs and internal details if necessary.
-    // The requirement is to expose a clean API response contract.
-    const cleanData: Record<string, any> = {
-      transactionId: result.transaction.id,
-      paymentId: result.transaction.payment_id,
-      invoiceNumber: result.transaction.invoice_number,
-      amount: result.transaction.amount,
-      customerName: result.transaction.customer_name,
-      customerPhone: result.transaction.customer_phone,
-      description: result.transaction.description,
-      status: result.transaction.status,
-      paymentMethod: result.transaction.payment_method,
-      expiredAt: result.transaction.expired_at,
-      paidAt: (result.transaction as any).payment_paid_at,
-      qrContent: (result.transaction as any).qr_content,
-    };
-
-    // If it's an internal static QRIS, we also want to expose the merchant name and NMID
-    // from the logs. The service might pass it in a structured way.
-    // Let's get the rawPayload from the last PAYMENT_CREATED log if available.
-    const createdLog = result.logs.find(l => l.event_type === 'PAYMENT_CREATED');
-    if (createdLog && createdLog.payload) {
-      try {
-        const payload = JSON.parse(createdLog.payload);
-        if (payload.merchantName) cleanData.merchantName = payload.merchantName;
-        if (payload.nmid) cleanData.nmid = payload.nmid;
-      } catch (e) {
-        // Ignore JSON parse errors for logs
-      }
-    }
-
-    return sendApiResponse(res, 200, true, cleanData);
+    return apiGetPaymentById(id, res);
   } catch (err: any) {
     console.error('API Error getting payment:', err);
     return sendApiResponse(res, 500, false, undefined, 'INTERNAL_SERVER_ERROR', 'Internal Server Error');

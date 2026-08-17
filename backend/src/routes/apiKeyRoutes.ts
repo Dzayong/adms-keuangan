@@ -45,8 +45,8 @@ router.post('/', async (req, res, next) => {
     const keyHint = `adms_sk_test_••••••••••••${randomSecret.slice(-4)}`;
 
     const { lastInsertRowid } = await runSql(
-      `INSERT INTO api_keys (name, key_hash, key_hint) VALUES (?, ?, ?)`,
-      [name, keyHash, keyHint]
+      `INSERT INTO api_keys (name, key_hash, key_hint, permissions) VALUES (?, ?, ?, ?)`,
+      [name, keyHash, keyHint, '["payments:create","payments:read"]']
     );
 
     res.json({

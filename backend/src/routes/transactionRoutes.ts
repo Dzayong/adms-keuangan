@@ -4,6 +4,7 @@ import {
   getTransactionById,
   getDashboardStats,
   cancelTransaction,
+  getPendingVerificationCount,
 } from '../controllers/transactionController.js';
 import { authMiddleware, roleMiddleware } from '../middleware/auth.js';
 
@@ -12,6 +13,7 @@ const router = Router();
 router.use(authMiddleware);
 
 router.get('/dashboard', getDashboardStats);
+router.get('/pending-verifications', getPendingVerificationCount);
 router.get('/', getAllTransactions);
 router.get('/:id', getTransactionById);
 router.post('/:id/cancel', roleMiddleware(['ADMIN']), cancelTransaction);
