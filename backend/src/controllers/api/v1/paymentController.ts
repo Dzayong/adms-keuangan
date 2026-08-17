@@ -49,7 +49,7 @@ export async function apiCreatePayment(req: ApiAuthenticatedRequest, res: Respon
         idempotencyKey,
         providerCode,
         callbackUrl,
-        sourceSystem,
+        sourceSystem: sourceSystem ?? req.apiApp?.name,
         userId: 1
       });
 
@@ -70,26 +70,13 @@ export async function apiCreatePayment(req: ApiAuthenticatedRequest, res: Respon
         paymentMethod: result.data.paymentMethod,
       };
 
-      if (!result.isIdempotent) {
-        // If it was just created, get raw payload fields injected by provider
-        const paymentLog = await import('../../../config/db.js').then(db => db.getSql<{payload: string}>('SELECT payload FROM payment_logs WHERE payment_id = ? AND event_type = ? ORDER BY id DESC', [result.data.paymentId, 'PAYMENT_CREATED']));
-        if (paymentLog?.payload) {
-          try {
-            const parsed = JSON.parse(paymentLog.payload);
-            if (parsed.merchantName) responsePayload.merchantName = parsed.merchantName;
-            if (parsed.nmid) responsePayload.nmid = parsed.nmid;
-          } catch(e) {}
-        }
-      } else {
-        // If idempotent, fetch the payment log
-        const paymentLog = await import('../../../config/db.js').then(db => db.getSql<{payload: string}>('SELECT payload FROM payment_logs WHERE payment_id = ? AND event_type = ? ORDER BY id DESC', [result.data.paymentId, 'PAYMENT_CREATED']));
-        if (paymentLog?.payload) {
-          try {
-            const parsed = JSON.parse(paymentLog.payload);
-            if (parsed.merchantName) responsePayload.merchantName = parsed.merchantName;
-            if (parsed.nmid) responsePayload.nmid = parsed.nmid;
-          } catch(e) {}
-        }
+      const paymentLog = await import('../../../config/db.js').then(db => db.getSql<{payload: string}>('SELECT payload FROM payment_logs WHERE payment_id = ? AND event_type = ? ORDER BY id DESC', [result.data.paymentId, 'PAYMENT_CREATED']));
+      if (paymentLog?.payload) {
+        try {
+          const parsed = JSON.parse(paymentLog.payload);
+          if (parsed.merchantName) responsePayload.merchantName = parsed.merchantName;
+          if (parsed.nmid) responsePayload.nmid = parsed.nmid;
+        } catch(e) {}
       }
 
       return sendApiResponse(res, result.isIdempotent ? 200 : 201, true, responsePayload);

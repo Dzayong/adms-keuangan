@@ -51,8 +51,8 @@ export async function createApp() {
     res.on('finish', () => {
       const duration = Date.now() - start;
       const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || '';
-      const apiKeyId = req.apiKeyId || null;
-      const sourceSystem = req.sourceSystem || null;
+      const apiKeyId = req.apiApp?.id || null;
+      const sourceSystem = req.apiApp?.name || null;
       console.log(`[API] ${req.method} ${req.path} → ${res.statusCode} (${duration}ms) src=${sourceSystem || '-'} ip=${ip}`);
       runSql(
         `INSERT INTO api_logs (api_key_id, source_system, method, path, status_code, ip_address) VALUES (?, ?, ?, ?, ?, ?)`,

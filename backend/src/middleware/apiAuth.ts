@@ -23,7 +23,7 @@ export async function apiAuth(req: ApiAuthenticatedRequest, res: Response, next:
 
     let matchedApp = null;
     for (const keyRecord of activeKeys) {
-      if (bcrypt.compareSync(apiKey, keyRecord.key_hash)) {
+      if (await bcrypt.compare(apiKey, keyRecord.key_hash)) {
         matchedApp = keyRecord;
         break;
       }
