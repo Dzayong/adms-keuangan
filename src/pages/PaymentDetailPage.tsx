@@ -209,16 +209,8 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
     );
   }
 
-  // eslint-disable-next-line no-console
-  console.log('[INTERNAL QR DEBUG]', {
-    providerReference: tx.provider_reference,
-    paymentMethod: tx.payment_method,
-    qrContent: tx.qr_content,
-    qrContentType: typeof tx.qr_content
-  });
-
   const resolvedQrUrl = tx.qr_content?.startsWith('/')
-    ? `http://localhost:3010${tx.qr_content}`
+    ? `${window.location.origin}${tx.qr_content}`
     : tx.qr_content;
 
   return (
