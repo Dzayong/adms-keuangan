@@ -13,6 +13,7 @@ import { UsersPage } from './pages/UsersPage.js';
 import { ProvidersPage } from './pages/ProvidersPage.js';
 import { ApiKeysPage } from './pages/ApiKeysPage.js';
 import { PublicPaymentPage } from './pages/PublicPaymentPage.js';
+import { ApiDocsPage } from './pages/ApiDocsPage.js';
 import { Navbar } from './components/layout/Navbar.js';
 import { Sidebar } from './components/layout/Sidebar.js';
 import { AccessDenied } from './components/ui/AccessDenied.js';
@@ -75,6 +76,7 @@ function AppContent() {
                 <Route path="/" element={<Navigate to="/transactions" replace />} />
                 <Route path="/transactions" element={<TransactionsPage onNavigateToDetail={navigateToDetail} />} />
                 <Route path="/transactions/:id" element={<PaymentDetailPageWrapper onBack={() => navigate('/transactions')} />} />
+                <Route path="/developer" element={<ApiDocsPage />} />
                 <Route path="*" element={<Navigate to="/transactions" replace />} />
               </>
             ) : (
@@ -91,6 +93,7 @@ function AppContent() {
                 <Route path="/transactions/:id" element={<PaymentDetailPageWrapper onBack={() => navigate('/transactions')} />} />
                 <Route path="/create_payment" element={<CreatePaymentPage onPaymentCreated={handlePaymentCreated} onCancel={() => navigate('/dashboard')} />} />
                 <Route path="/reports" element={<ReportsPage />} />
+                <Route path="/developer" element={<ApiDocsPage />} />
 
                 {user.role === 'ADMIN' ? (
                   <>

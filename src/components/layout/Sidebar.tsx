@@ -9,7 +9,8 @@ import {
   Info,
   Users,
   ServerCrash,
-  Key
+  Key,
+  Code2
 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.js';
@@ -33,7 +34,10 @@ export const Sidebar: React.FC<Props> = ({ userRole }) => {
   const isMerchant = userRole === 'MERCHANT';
 
   const allNavItems: NavItem[] = isMerchant
-    ? [{ id: 'transactions', label: 'Transaksi Saya', icon: Receipt }]
+    ? [
+        { id: 'transactions', label: 'Transaksi Saya', icon: Receipt },
+        { id: 'developer', label: 'Developer API', icon: Code2 },
+      ]
     : [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'transactions', label: 'Transactions', icon: Receipt },
@@ -43,6 +47,7 @@ export const Sidebar: React.FC<Props> = ({ userRole }) => {
         { id: 'providers', label: 'Providers', icon: ServerCrash, requireAdmin: true },
         { id: 'settings', label: 'Settings', icon: Settings, requireAdmin: true },
         { id: 'api_keys', label: 'Client Apps', icon: Key, requireAdmin: true },
+        { id: 'developer', label: 'Developer API', icon: Code2 },
       ];
 
   const navItems = isMerchant
