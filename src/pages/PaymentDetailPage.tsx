@@ -248,18 +248,8 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
                 alt="QRIS Kantor"
                 className="w-full h-auto object-contain rounded"
                 style={{ display: 'block', visibility: 'visible', opacity: 1 }}
-                onLoad={(e) => {
-                  const img = e.currentTarget;
-                  console.log('[QR LOAD]', {
-                    src: img.src,
-                    naturalWidth: img.naturalWidth,
-                    naturalHeight: img.naturalHeight,
-                    width: img.width,
-                    height: img.height
-                  });
-                }}
                 onError={(e) => {
-                  console.error('[QR ERROR]', e.currentTarget.src);
+                  (e.currentTarget as HTMLImageElement).style.display = 'none';
                 }}
               />
             ) : (
