@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { CheckCircle2, Upload, AlertCircle, Clock, RefreshCw, QrCode, FileText } from 'lucide-react';
+import { CheckCircle2, Upload, AlertCircle, Clock, RefreshCw, QrCode, FileText, Download } from 'lucide-react';
+import QRCode from 'qrcode';
 
 interface PublicPaymentData {
   invoiceNumber: string;
@@ -27,6 +28,34 @@ export function PublicPaymentPage() {
   const [uploadDone, setUploadDone] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const renderQrCode = async (text: string) => {
+    if (canvasRef.current) {
+      try {
+        await QRCode.toCanvas(canvasRef.current, text, {
+          width: 200,
+          margin: 1,
+          color: {
+            dark: '#000000',
+            light: '#ffffff',
+          },
+        });
+      } catch (err) {
+        console.error('Failed to generate QR', err);
+      }
+    }
+  };
+
+  const handleDownloadQR = () => {
+    if (canvasRef.current && data) {
+      const url = canvasRef.current.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `QRIS-${data.invoiceNumber}.png`;
+      a.click();
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -45,6 +74,13 @@ export function PublicPaymentPage() {
   };
 
   useEffect(() => { fetchData(); }, [invoiceNumber]);
+
+  useEffect(() => {
+    if (data?.qrContent && data.providerCode === 'internal_qris') {
+      // Small timeout to ensure canvas is rendered
+      setTimeout(() => renderQrCode(data.qrContent as string), 50);
+    }
+  }, [data?.qrContent, data?.providerCode]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -155,10 +191,17 @@ export function PublicPaymentPage() {
               <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                 Scan QR Untuk Membayar
               </p>
-              <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-4 bg-white shadow-sm ring-1 ring-slate-100 dark:ring-slate-800">
-                <img src={data.qrContent} alt="QRIS" className="w-48 h-48 object-contain mix-blend-multiply" />
+              <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-4 bg-white shadow-sm ring-1 ring-slate-100 dark:ring-slate-800 flex justify-center w-[230px] max-w-full">
+                <canvas ref={canvasRef} className="max-w-full rounded" />
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 text-center max-w-[250px]">
+              <button
+                onClick={handleDownloadQR}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm rounded-lg transition-colors w-[230px] max-w-full shadow-sm"
+              >
+                <Download className="w-4 h-4" />
+                Download QRIS
+              </button>
+              <p className="text-xs text-slate-500 dark:text-slate-400 text-center max-w-[250px] mt-2">
                 Buka aplikasi m-banking atau e-wallet Anda, lalu scan QR code di atas.
               </p>
             </div>

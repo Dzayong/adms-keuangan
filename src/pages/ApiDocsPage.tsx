@@ -408,9 +408,9 @@ app.post('/webhook/adms', express.raw({ type: 'application/json' }), (req, res) 
 });`;
 
   return (
-    <div className="min-h-screen -m-4 sm:-m-6 lg:-m-8">
+    <div className="flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm h-[calc(100vh-8rem)] lg:h-[calc(100vh-10rem)]">
       {/* Top Bar */}
-      <div className="sticky top-0 z-30 bg-[#0D1B2A] border-b border-[#1E3A5F] px-6 py-3 flex items-center justify-between gap-4">
+      <div className="shrink-0 bg-[#0D1B2A] border-b border-[#1E3A5F] px-6 py-3 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
           <Code2 className="w-5 h-5 text-[#C9A84C] flex-shrink-0" />
           <span className="text-white font-black text-sm tracking-tight whitespace-nowrap">ADMS Developer Portal</span>
@@ -433,9 +433,9 @@ app.post('/webhook/adms', express.raw({ type: 'application/json' }), (req, res) 
         </div>
       </div>
 
-      <div className="flex">
+      <div className="flex flex-1 min-h-0">
         {/* Left Sidebar */}
-        <aside className="w-60 shrink-0 sticky top-[52px] h-[calc(100vh-52px)] overflow-y-auto bg-[#0D1B2A] border-r border-[#1E3A5F] py-6 hidden lg:block">
+        <aside className="w-60 shrink-0 overflow-y-auto bg-[#0D1B2A] border-r border-[#1E3A5F] py-6 hidden lg:block">
           <div className="px-4 mb-6">
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">API Key Anda</p>
             <input
@@ -482,7 +482,8 @@ app.post('/webhook/adms', express.raw({ type: 'application/json' }), (req, res) 
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 max-w-3xl px-6 lg:px-10 py-10 space-y-0">
+        <main className="flex-1 min-w-0 overflow-y-auto px-6 lg:px-10 py-10 space-y-0">
+          <div className="max-w-3xl mx-auto">
 
           {/* ── QUICK START ── */}
           <section id="quickstart" className="scroll-mt-24">
@@ -1425,6 +1426,7 @@ function PaymentStatus({ invoiceNumber }) {
             </div>
           </section>
 
+          </div>
         </main>
       </div>
     </div>

@@ -146,28 +146,7 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
     }
   };
 
-  // Handle Manual Verification
-  const handleManualVerify = async () => {
-    if (!window.confirm('Pastikan transaksi benar-benar terlihat pada sistem merchant/bank QRIS sebelum mengonfirmasi. Lanjutkan verifikasi pembayaran ini?')) {
-      return;
-    }
 
-    setIsSimulating(true);
-    setSimMessage('');
-
-    const res = await apiFetch(`/payments/${transactionId}/verify`, {
-      method: 'POST',
-    });
-
-    setIsSimulating(false);
-
-    if (res.success) {
-      setSimMessage('Pembayaran berhasil diverifikasi secara manual!');
-      fetchPaymentData();
-    } else {
-      setSimMessage(res.message || 'Gagal memverifikasi pembayaran.');
-    }
-  };
 
   const copyQrText = () => {
     if (tx?.qr_content) {
@@ -296,14 +275,7 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
                   <CheckCircle2 className="w-4 h-4 text-green-700 dark:text-emerald-500" />
                   <span>PAYMENT SETTLED SUCCESSFULLY</span>
                 </div>
-                {tx.provider_code === 'internal_qris' && logs.some(l => l.event_type === 'MANUAL_STATIC_QRIS') && (
-                  <div className="text-[10px] text-green-700 dark:text-emerald-400 font-mono flex items-center justify-center gap-1">
-                    <ShieldAlert className="w-3 h-3" />
-                    Verified by: {
-                      JSON.parse(logs.find(l => l.event_type === 'MANUAL_STATIC_QRIS')?.payload || '{}').verifierName || 'Admin'
-                    }
-                  </div>
-                )}
+
               </div>
             )}
 
@@ -475,42 +447,7 @@ export const PaymentDetailPage: React.FC<Props> = ({ transactionId, onBack }) =>
         </div>
       )}
 
-      {/* Manual Verification Panel for Internal Static QRIS - ADMIN & OPERATOR */}
-      {(user?.role === 'ADMIN' || user?.role === 'OPERATOR') && tx.provider_code === 'internal_qris' && tx.status === 'PENDING' && (
-        <div className="bg-slate-900 border border-slate-800 text-white rounded-xl p-6 shadow-xl space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded bg-blue-500 text-white font-bold flex items-center justify-center shrink-0">
-                <ShieldAlert className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-white">Manual Verification</h3>
-                <p className="text-[11px] text-slate-400">
-                  Verifikasi pembayaran QRIS statis kantor secara manual berdasarkan mutasi rekening.
-                </p>
-              </div>
-            </div>
-          </div>
 
-          {simMessage && (
-            <div className="p-3 bg-slate-800 border border-blue-500/50 rounded-lg text-xs text-blue-300 font-mono font-semibold flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-blue-400 shrink-0" />
-              <span>{simMessage}</span>
-            </div>
-          )}
-
-          <div className="pt-1 flex">
-            <button
-              disabled={isSimulating || tx.status !== 'PENDING'}
-              onClick={handleManualVerify}
-              className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold text-sm rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg"
-            >
-              <CheckCircle2 className="w-4 h-4" />
-              <span>Verifikasi Pembayaran (Telah Dibayar)</span>
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

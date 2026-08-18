@@ -47,4 +47,10 @@
   body {
     @apply bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-50;
   }
+
+  /* Hide native Edge/IE password reveal eye icon to avoid duplicates */
+  input[type="password"]::-ms-reveal,
+  input[type="password"]::-ms-clear {
+    display: none;
+  }
 }

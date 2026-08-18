@@ -91,14 +91,7 @@ export async function createApp() {
     });
   });
 
-  // Serve React Frontend (production build)
-  const distPath = path.join(process.cwd(), 'dist');
-  app.use(express.static(distPath));
 
-  // SPA Fallback — serve index.html for any non-API route
-  app.get(/^(?!\/api).*/, (req, res) => {
-    res.sendFile(path.join(distPath, 'index.html'));
-  });
 
   // Global Error Handler (e.g. for malformed JSON)
   app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

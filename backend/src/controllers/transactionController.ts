@@ -280,3 +280,22 @@ export async function autoExpireTransactions(): Promise<number> {
   );
   return ids.length;
 }
+
+export async function getLatestPaidTransaction(req: AuthenticatedRequest, res: Response) {
+  try {
+    let whereClause = "WHERE status = 'PAID'";
+    let params: any[] = [];
+
+    // Filter by source system if merchant
+    if (req.user?.role === 'MERCHANT' && req.user?.source_system) {
+      whereClause += " AND source_system = ?";
+      params.push(req.user.source_system);
+    }
+
+    const rows = await querySql<{id: number}>(`SELECT id FROM transactions ${whereClause} ORDER BY updated_at DESC LIMIT 1`, params);
+    return sendSuccess(res, { id: rows.length > 0 ? rows[0].id : null });
+  } catch (err: any) {
+    console.error('Error fetching latest paid transaction:', err);
+    return sendError(res, 'Gagal mengambil data transaksi terakhir.', 500);
+  }
+}

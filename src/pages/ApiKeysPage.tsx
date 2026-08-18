@@ -25,9 +25,65 @@ export const ApiKeysPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'REVOKED'>('ALL');
 
+  // Webhook settings
+  const [webhookUrl, setWebhookUrl] = useState('');
+  const [isSavingWebhook, setIsSavingWebhook] = useState(false);
+  const [isTestingWebhook, setIsTestingWebhook] = useState(false);
+
   useEffect(() => {
     fetchApiKeys();
+    fetchWebhookConfig();
   }, []);
+
+  const fetchWebhookConfig = async () => {
+    try {
+      const res = await apiFetch('/users/me');
+      if (res.success && res.data) {
+        setWebhookUrl(res.data.webhook_url || '');
+      }
+    } catch (error) {
+      console.error('Failed to fetch user data for webhook', error);
+    }
+  };
+
+  const handleSaveWebhook = async () => {
+    setIsSavingWebhook(true);
+    try {
+      const res = await apiFetch('/users/me/webhook', {
+        method: 'PUT',
+        body: JSON.stringify({ webhook_url: webhookUrl })
+      });
+      if (res.success) {
+        alert('URL Webhook berhasil disimpan!');
+      } else {
+        alert(res.message || 'Gagal menyimpan URL Webhook');
+      }
+    } catch (error) {
+      alert('Terjadi kesalahan saat menyimpan URL Webhook');
+    } finally {
+      setIsSavingWebhook(false);
+    }
+  };
+
+  const handleTestWebhook = async () => {
+    if (!webhookUrl) return alert('Silakan masukkan URL Webhook terlebih dahulu.');
+    setIsTestingWebhook(true);
+    try {
+      const res = await apiFetch('/users/me/test-webhook', {
+        method: 'POST',
+        body: JSON.stringify({ webhook_url: webhookUrl })
+      });
+      if (res.success) {
+        alert('Ping tes webhook berhasil dikirim! Silakan periksa server Anda.');
+      } else {
+        alert(res.message || 'Gagal mengirim tes webhook');
+      }
+    } catch (error) {
+      alert('Terjadi kesalahan saat mencoba mengirim tes webhook');
+    } finally {
+      setIsTestingWebhook(false);
+    }
+  };
 
   const fetchApiKeys = async () => {
     try {
@@ -157,6 +213,31 @@ export const ApiKeysPage: React.FC = () => {
           Daftarkan Aplikasi Baru
         </Button>
       </div>
+
+      <Card className="p-6 mb-6">
+        <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">Konfigurasi Webhook Global</h2>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+          URL ini akan dipanggil setiap kali ada transaksi yang statusnya berubah menjadi <strong>PAID</strong>, jika parameter <code>callback_url</code> tidak dikirim saat pembuatan transaksi.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 items-end">
+          <div className="flex-1 w-full">
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase mb-2">URL Webhook</label>
+            <input
+              type="url"
+              placeholder="https://api.domain-anda.com/webhook"
+              value={webhookUrl}
+              onChange={(e) => setWebhookUrl(e.target.value)}
+              className="w-full border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-600 font-medium bg-white dark:bg-slate-950"
+            />
+          </div>
+          <Button onClick={handleSaveWebhook} disabled={isSavingWebhook} className="whitespace-nowrap">
+            {isSavingWebhook ? 'Menyimpan...' : 'Simpan URL'}
+          </Button>
+          <Button onClick={handleTestWebhook} disabled={isTestingWebhook || !webhookUrl} variant="outline" className="whitespace-nowrap">
+            {isTestingWebhook ? 'Mengirim...' : 'Tes Webhook'}
+          </Button>
+        </div>
+      </Card>
 
       <Card className="overflow-hidden w-full shadow-xs">
         {/* Toolbar & Filters */}

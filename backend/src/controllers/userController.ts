@@ -121,3 +121,44 @@ export async function toggleUserStatus(req: AuthenticatedRequest, res: Response)
     return sendError(res, 'Gagal memperbarui status pengguna.', 500);
   }
 }
+
+export async function updateWebhookUrl(req: AuthenticatedRequest, res: Response) {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return sendError(res, 'Akses ditolak.', 401);
+    }
+    
+    const { webhook_url } = req.body;
+    
+    // allow empty webhook_url (to remove it)
+    if (webhook_url !== undefined && webhook_url !== null) {
+      // Very basic URL validation
+      if (webhook_url !== '' && !webhook_url.startsWith('http://') && !webhook_url.startsWith('https://')) {
+        return sendError(res, 'Format URL webhook tidak valid (harus diawali http:// atau https://).', 400);
+      }
+    }
+
+    const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    await runSql(`UPDATE users SET webhook_url = ?, updated_at = ? WHERE id = ?`, [webhook_url || null, nowStr, userId]);
+
+    return sendSuccess(res, {}, 'URL Webhook berhasil diperbarui.');
+  } catch (err) {
+    console.error('Error updating webhook url:', err);
+    return sendError(res, 'Gagal memperbarui URL Webhook.', 500);
+  }
+}
+
+export async function getMe(req: AuthenticatedRequest, res: Response) {
+  try {
+    const userId = req.user?.id;
+    if (!userId) return sendError(res, 'Akses ditolak.', 401);
+
+    const users = await querySql<User>(`SELECT id, name, email, role, profile_photo, is_active, webhook_url, created_at, updated_at FROM users WHERE id = ?`, [userId]);
+    if (users.length === 0) return sendError(res, 'User tidak ditemukan.', 404);
+
+    return sendSuccess(res, users[0]);
+  } catch (err) {
+    return sendError(res, 'Gagal mengambil data pengguna.', 500);
+  }
+}

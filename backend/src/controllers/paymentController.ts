@@ -212,13 +212,15 @@ export async function verifyPayment(req: AuthenticatedRequest, res: Response) {
     // Execute atomically
     await runTransaction(queries);
 
-    // Fire webhook to callback_url if registered (non-blocking)
-    const fullTx = await getSql<{ callback_url: string | null; source_system: string | null; customer_phone: string; amount: number; description: string }>(
-      'SELECT callback_url, source_system, customer_phone, amount, description FROM transactions WHERE id = ?',
+    // Fire webhook to callback_url or user's webhook_url if registered (non-blocking)
+    const fullTx = await getSql<{ callback_url: string | null; source_system: string | null; customer_phone: string; amount: number; description: string; user_webhook: string | null }>(
+      'SELECT t.callback_url, t.source_system, t.customer_phone, t.amount, t.description, u.webhook_url as user_webhook FROM transactions t JOIN users u ON t.created_by = u.id WHERE t.id = ?',
       [transaction.id]
     );
-    if (fullTx?.callback_url) {
-      fireWebhook(fullTx.callback_url, {
+    
+    const targetUrl = fullTx?.callback_url || fullTx?.user_webhook;
+    if (targetUrl) {
+      fireWebhook(targetUrl, {
         event: 'payment.paid',
         invoiceNumber: transaction.invoice_number,
         transactionId: transaction.id,

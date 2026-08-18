@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { apiFetch } from '../services/api.js';
 import { DashboardStats, Transaction, ChartDataPoint } from '../types/index.js';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { StatusBadge } from '../components/common/StatusBadge.js';
 import {
   Wallet,
@@ -16,6 +17,7 @@ import {
   QrCode,
   ArrowRight,
   ShieldCheck,
+  MoreHorizontal
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card.js';
 import { Button } from '../components/ui/Button.js';
@@ -38,14 +40,7 @@ export const DashboardPage: React.FC<Props> = ({
   const [selectedMonth, setSelectedMonth] = useState('');
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [pendingVerificationCount, setPendingVerificationCount] = useState(0);
 
-  const fetchPendingVerifications = async () => {
-    const res = await apiFetch('/transactions/pending-verifications');
-    if (res.success && res.data) {
-      setPendingVerificationCount(res.data.count || 0);
-    }
-  };
 
   const fetchDashboardData = async () => {
     setIsLoading(true);
@@ -66,7 +61,7 @@ export const DashboardPage: React.FC<Props> = ({
 
   useEffect(() => {
     fetchDashboardData();
-    fetchPendingVerifications();
+
   }, [filterType, selectedMonth, selectedYear]);
 
   const formatRupiah = (amount: number) => {
@@ -89,28 +84,7 @@ export const DashboardPage: React.FC<Props> = ({
 
   return (
     <div className="space-y-6 animate-fade-in pb-12">
-      {/* Pending Verification Alert */}
-      {pendingVerificationCount > 0 && (
-        <button
-          onClick={onNavigateToTransactions}
-          className="w-full flex items-center justify-between gap-3 p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-700 rounded-xl text-left hover:bg-amber-100 dark:hover:bg-amber-950/50 transition-colors group"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-amber-500 flex items-center justify-center shrink-0">
-              <ShieldCheck className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <div className="text-sm font-bold text-amber-800 dark:text-amber-200">
-                {pendingVerificationCount} Pembayaran Menunggu Verifikasi Manual
-              </div>
-              <div className="text-xs text-amber-600 dark:text-amber-400">
-                Periksa mutasi QRIS dan klik Verifikasi untuk mengonfirmasi pembayaran masuk.
-              </div>
-            </div>
-          </div>
-          <ArrowRight className="w-4 h-4 text-amber-600 group-hover:translate-x-1 transition-transform shrink-0" />
-        </button>
-      )}
+
 
       {/* Top Section Header */}
       <Card className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 shadow-xs">
@@ -161,66 +135,103 @@ export const DashboardPage: React.FC<Props> = ({
           >
             <RefreshCw className="w-4 h-4" />
           </Button>
-          <Button
-            onClick={onNavigateToCreate}
-          >
-            <PlusCircle className="w-4 h-4 mr-2" />
-            <span>Manual Payment</span>
-          </Button>
+
         </div>
       </Card>
 
       {/* Grid of 4 Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
         {/* Card 1: Total Volume */}
-        <Card className="p-5 shadow-xs">
-          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-            Semua Transaksi (Dibuat)
+        <div className="relative overflow-hidden bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm group">
+          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 group-hover:scale-110 transition-all duration-500">
+            <Wallet className="w-24 h-24 text-slate-500" />
+          </div>
+          <div className="relative z-10 flex items-center justify-between mb-4">
+            <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400">
+              <Wallet className="w-5 h-5" />
+            </div>
+            <span className="text-[10px] font-bold px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-full uppercase tracking-widest">Semua Waktu</span>
+          </div>
+          <p className="relative z-10 text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+            Total Transaksi
           </p>
-          <h2 className="text-2xl font-black text-slate-800 dark:text-slate-200 font-mono">
+          <h2 className="relative z-10 text-2xl font-black text-slate-800 dark:text-white font-mono tracking-tight">
             {formatRupiah(stats?.total_amount || 0)}
           </h2>
-          <div className="mt-2 text-[10px] text-emerald-600 dark:text-emerald-500 font-bold">
-            {stats?.total_count || 0} Total Transaksi Tercatat
+          <div className="relative z-10 mt-3 flex items-center gap-1.5 text-xs text-slate-500 font-medium bg-slate-50 dark:bg-slate-800/50 w-fit px-2 py-1 rounded-md">
+            <Activity className="w-3.5 h-3.5" />
+            <span>{stats?.total_count || 0} Invoice Dibuat</span>
           </div>
-        </Card>
+        </div>
 
         {/* Card 2: Successful */}
-        <div className="bg-emerald-50 dark:bg-emerald-950/30 p-5 rounded-xl border border-emerald-200 dark:border-emerald-900/50 shadow-xs">
-          <p className="text-[11px] font-bold text-emerald-700 dark:text-emerald-500 uppercase tracking-wider mb-1">
+        <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-emerald-700 p-6 rounded-2xl border border-emerald-600 shadow-lg shadow-emerald-500/20 text-white group">
+          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 group-hover:scale-110 transition-all duration-500">
+            <CheckCircle2 className="w-24 h-24 text-white" />
+          </div>
+          <div className="relative z-10 flex items-center justify-between mb-4">
+            <div className="w-10 h-10 rounded-xl bg-emerald-400/30 flex items-center justify-center backdrop-blur-sm border border-emerald-400/30">
+              <CheckCircle2 className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-[10px] font-bold px-2 py-1 bg-emerald-400/20 border border-emerald-400/30 rounded-full uppercase tracking-widest">Lunas</span>
+          </div>
+          <p className="relative z-10 text-[11px] font-bold text-emerald-100 uppercase tracking-wider mb-1">
             Berhasil (Uang Masuk)
           </p>
-          <h2 className="text-2xl font-black text-emerald-900 dark:text-emerald-400 font-mono">
+          <h2 className="relative z-10 text-2xl font-black font-mono tracking-tight">
             {formatRupiah(stats?.paid_amount || 0)}
           </h2>
-          <div className="mt-2 text-[10px] text-emerald-700 dark:text-emerald-500 font-bold">
-            {stats?.paid_count || 0} Transaksi Lunas
+          <div className="relative z-10 mt-3 flex items-center gap-1.5 text-xs text-emerald-50 font-medium bg-emerald-900/30 w-fit px-2 py-1 rounded-md">
+            <Activity className="w-3.5 h-3.5" />
+            <span>{stats?.paid_count || 0} Pembayaran Berhasil</span>
           </div>
         </div>
 
-        {/* Card 3: Pending with Yellow Left Border */}
-        <div className="bg-indigo-50 dark:bg-indigo-950/30 p-5 rounded-xl border border-indigo-200 dark:border-indigo-900/50 shadow-xs">
-          <p className="text-[11px] font-bold text-yellow-700 dark:text-yellow-500 uppercase tracking-wider mb-1">
+        {/* Card 3: Pending */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-amber-500 to-orange-600 p-6 rounded-2xl border border-amber-600 shadow-lg shadow-amber-500/20 text-white group cursor-pointer" onClick={onNavigateToTransactions}>
+          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 group-hover:scale-110 transition-all duration-500">
+            <Clock className="w-24 h-24 text-white" />
+          </div>
+          <div className="relative z-10 flex items-center justify-between mb-4">
+            <div className="w-10 h-10 rounded-xl bg-amber-400/30 flex items-center justify-center backdrop-blur-sm border border-amber-400/30">
+              <Clock className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-[10px] font-bold px-2 py-1 bg-amber-400/20 border border-amber-400/30 rounded-full uppercase tracking-widest">Pending</span>
+          </div>
+          <p className="relative z-10 text-[11px] font-bold text-amber-100 uppercase tracking-wider mb-1">
             Menunggu Pembayaran
           </p>
-          <h2 className="text-2xl font-black text-yellow-900 dark:text-yellow-400 font-mono">
+          <h2 className="relative z-10 text-2xl font-black font-mono tracking-tight">
             {formatRupiah(stats?.pending_amount || 0)}
           </h2>
-          <div className="mt-2 text-[10px] text-yellow-700 dark:text-yellow-500 font-bold underline cursor-pointer" onClick={onNavigateToTransactions}>
-            {stats?.pending_count || 0} Belum Dibayar
+          <div className="relative z-10 mt-3 flex items-center justify-between gap-1.5 text-xs text-amber-50 font-medium bg-orange-900/30 w-fit px-2 py-1 rounded-md">
+            <div className="flex items-center gap-1.5">
+              <Activity className="w-3.5 h-3.5" />
+              <span>{stats?.pending_count || 0} Belum Dibayar</span>
+            </div>
           </div>
         </div>
 
-        {/* Card 4: Failed / Expired */}
-        <div className="bg-rose-50 dark:bg-rose-950/30 p-5 rounded-xl border border-rose-200 dark:border-rose-900/50 shadow-xs">
-          <p className="text-[11px] font-bold text-rose-700 dark:text-rose-500 uppercase tracking-wider mb-1">
+        {/* Card 4: Failed */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-rose-500 to-red-600 p-6 rounded-2xl border border-rose-600 shadow-lg shadow-rose-500/20 text-white group">
+          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 group-hover:scale-110 transition-all duration-500">
+            <XCircle className="w-24 h-24 text-white" />
+          </div>
+          <div className="relative z-10 flex items-center justify-between mb-4">
+            <div className="w-10 h-10 rounded-xl bg-rose-400/30 flex items-center justify-center backdrop-blur-sm border border-rose-400/30">
+              <XCircle className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-[10px] font-bold px-2 py-1 bg-rose-400/20 border border-rose-400/30 rounded-full uppercase tracking-widest">Gagal</span>
+          </div>
+          <p className="relative z-10 text-[11px] font-bold text-rose-100 uppercase tracking-wider mb-1">
             Gagal / Kedaluwarsa
           </p>
-          <h2 className="text-2xl font-black text-rose-900 dark:text-rose-400 font-mono">
+          <h2 className="relative z-10 text-2xl font-black font-mono tracking-tight">
             {formatRupiah(stats?.failed_amount || 0)}
           </h2>
-          <div className="mt-2 text-[10px] text-rose-700 dark:text-rose-500 font-medium">
-            {stats?.failed_count || 0} Transaksi Batal/Kedaluwarsa
+          <div className="relative z-10 mt-3 flex items-center gap-1.5 text-xs text-rose-50 font-medium bg-red-900/30 w-fit px-2 py-1 rounded-md">
+            <Activity className="w-3.5 h-3.5" />
+            <span>{stats?.failed_count || 0} Transaksi Batal</span>
           </div>
         </div>
       </div>
@@ -306,68 +317,93 @@ export const DashboardPage: React.FC<Props> = ({
           </Card>
 
           {/* Daily Chart */}
-          <Card className="shadow-xs p-5">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-indigo-600" />
-                <h3 className="font-bold text-slate-800 dark:text-slate-200 text-xs uppercase tracking-wider">
-                  Pendapatan 7 Hari Terakhir
-                </h3>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                </div>
+                <div>
+                  <h3 className="font-black text-slate-800 dark:text-white text-base">
+                    Grafik Pendapatan
+                  </h3>
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                    Statistik pembayaran berhasil 7 hari terakhir
+                  </p>
+                </div>
               </div>
-              <span className="text-[10px] font-mono text-slate-400">CURRENCY: IDR</span>
+              <div className="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Currency: <span className="text-indigo-600 dark:text-indigo-400">IDR</span></span>
+              </div>
             </div>
 
             {chartData.length === 0 ? (
-              <div className="py-8 text-center text-slate-400 text-xs flex flex-col items-center justify-center">
-                <div className="w-16 h-16 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mb-3">
-                  <TrendingUp className="w-6 h-6 text-slate-200" />
+              <div className="py-12 text-center flex flex-col items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/50">
+                <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-full shadow-sm flex items-center justify-center mb-4">
+                  <TrendingUp className="w-6 h-6 text-slate-300 dark:text-slate-600" />
                 </div>
-                Belum ada data grafik pendapatan.
+                <p className="text-sm font-bold text-slate-500 dark:text-slate-400">Belum Ada Data Grafik</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Lakukan transaksi untuk melihat pergerakan uang masuk.</p>
               </div>
             ) : (
-              <div className="relative h-48 mt-6">
-                {/* Background Grid Lines */}
-                <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-20">
-                  <div className="border-t border-slate-300 w-full"></div>
-                  <div className="border-t border-slate-300 w-full"></div>
-                  <div className="border-t border-slate-300 w-full"></div>
-                  <div className="border-t border-slate-300 w-full"></div>
-                </div>
-                
-                <div className="relative flex items-end justify-between gap-1 sm:gap-2 h-full pb-6 pt-4 px-1">
-                  {chartData.map((pt, idx) => {
-                    const maxVal = Math.max(...chartData.map((d) => d.paid_amount), 1);
-                    const heightPct = Math.max(8, Math.round((pt.paid_amount / maxVal) * 100));
-
-                    return (
-                      <div key={idx} className="flex-1 flex flex-col items-center group h-full justify-end relative">
-                        {/* Compact label above bar */}
-                        <div className="absolute -top-5 text-[9px] font-bold text-slate-400 group-hover:text-indigo-600 transition-colors">
-                          {formatCompactRupiah(pt.paid_amount)}
-                        </div>
-                        
-                        {/* Tooltip on hover */}
-                        <div className="absolute -top-9 text-[9px] font-mono font-bold text-white bg-slate-800 px-2 py-1 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-all z-10 whitespace-nowrap translate-y-1 group-hover:translate-y-0 pointer-events-none">
-                          {formatRupiah(pt.paid_amount)}
-                        </div>
-                        
-                        {/* Bar */}
-                        <div
-                          style={{ height: `${heightPct}%` }}
-                          className="w-full max-w-[36px] bg-gradient-to-t from-indigo-600 to-indigo-400 rounded-t-md transition-all duration-300 group-hover:from-indigo-500 group-hover:to-indigo-300 shadow-sm"
-                        />
-                        
-                        {/* Date Label */}
-                        <span className="absolute -bottom-5 text-[9px] font-mono font-bold text-slate-500 dark:text-slate-400">
-                          {pt.date.split('-').slice(1).join('/')}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
+              <div className="relative h-[320px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.4} />
+                        <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" opacity={0.3} />
+                    <XAxis 
+                      dataKey="date" 
+                      tickFormatter={(val) => val.split('-').slice(1).join('/')} 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 600 }}
+                      dy={15}
+                    />
+                    <YAxis
+                      tickFormatter={(val) => `${val / 1000}k`}
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 600 }}
+                      dx={-10}
+                      width={50}
+                    />
+                    <Tooltip
+                      cursor={{ stroke: '#818cf8', strokeWidth: 1, strokeDasharray: '3 3' }}
+                      content={({ active, payload, label }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <div className="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 p-4 rounded-xl shadow-xl min-w-[160px]">
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-100 dark:border-slate-700 pb-2">{label}</p>
+                              <div className="flex flex-col gap-1">
+                                <span className="text-[10px] font-semibold text-slate-500">Pendapatan Masuk</span>
+                                <span className="text-lg font-black text-indigo-600 dark:text-indigo-400 font-mono">
+                                  {formatRupiah(payload[0].value as number)}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="paid_amount" 
+                      stroke="#4f46e5" 
+                      strokeWidth={3} 
+                      fill="url(#colorAmount)" 
+                      activeDot={{ r: 6, fill: '#4f46e5', stroke: '#fff', strokeWidth: 3, shadowColor: '#4f46e5', shadowBlur: 10 }}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
             )}
-          </Card>
+          </div>
         </div>
 
         {/* Right Column (1 Col wide) - Dark Mock QR Generator & Activity Log */}
