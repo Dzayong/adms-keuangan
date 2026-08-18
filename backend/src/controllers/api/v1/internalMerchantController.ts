@@ -102,7 +102,7 @@ export async function updateInternalMerchant(req: Request, res: Response) {
     const finalImagePath = imagePath || current.qris_image_path;
 
     await runSql(
-      'UPDATE internal_merchants SET name = ?, nmid = ?, is_active = ?, qris_image_path = ?, updated_at = NOW() WHERE id = ?',
+      'UPDATE internal_merchants SET name = ?, nmid = ?, is_active = ?, qris_image_path = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
       [name, nmid, isActive ? 1 : 0, finalImagePath, current.id]
     );
 

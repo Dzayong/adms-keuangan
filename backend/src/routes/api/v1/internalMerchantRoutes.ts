@@ -11,6 +11,6 @@ router.get('/', roleMiddleware(['ADMIN', 'OPERATOR']), getInternalMerchant);
 
 // Apply strict 1MB limit specifically to this upload route, bypassing the global limit if needed.
 // Express allows route-specific body parsers. 
-router.put('/', roleMiddleware(['ADMIN']), express.json({ limit: '1mb' }), updateInternalMerchant);
+router.put('/', roleMiddleware(['ADMIN']), express.json({ limit: '5mb' }), updateInternalMerchant);
 
 export default router;

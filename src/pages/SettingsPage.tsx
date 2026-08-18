@@ -392,8 +392,6 @@ export const SettingsPage: React.FC = () => {
             </div>
           </div>
 
-          </div>
-
           {/* Internal QRIS Settings */}
           <div className={`p-5 rounded-xl border ${internalMerchantActive ? 'bg-white dark:bg-slate-950 border-emerald-200 dark:border-emerald-900/50 shadow-xs' : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800'} space-y-4 transition-colors`}>
             <div className="flex items-center justify-between">
