@@ -206,6 +206,14 @@ export class DanaPaymentProvider implements PaymentProvider {
       throw new ProviderError('dana', 'DANA Provider network timeout', 504);
     }
 
+    // Debug: log full error to diagnose DANA auth issues
+    console.error('[DANA SDK RAW ERROR]', JSON.stringify({
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+      headers: error.response?.headers,
+    }, null, 2));
+
     const status = error.response?.status;
     const data = error.response?.data;
 
