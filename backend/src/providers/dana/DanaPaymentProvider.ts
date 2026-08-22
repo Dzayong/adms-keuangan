@@ -74,7 +74,11 @@ export class DanaPaymentProvider implements PaymentProvider {
           value: data.amount.toFixed(2),
           currency: "IDR"
         },
-        validUpTo: new Date(Date.now() + 30 * 60000).toISOString(),
+        validUpTo: (() => {
+          const d = new Date(Date.now() + 30 * 60000);
+          const jakarta = new Date(d.getTime() + 7 * 3600 * 1000);
+          return jakarta.toISOString().slice(0, 19) + '+07:00';
+        })(),
         urlParams: [
           {
             url: `${this.config.origin}/api/payments/webhook/dana`,
