@@ -13,11 +13,17 @@ export async function getPaymentProviderByCode(code: string): Promise<PaymentPro
   if (code === 'dana') {
     // DANA credentials are never stored in the database.
     // They are injected purely via environment variables.
+    const wrapPem = (key: string, type: 'PRIVATE KEY' | 'PUBLIC KEY') => {
+      if (!key || key.includes('-----BEGIN')) return key;
+      const lines = key.match(/.{1,64}/g)?.join('\n') || key;
+      return `-----BEGIN ${type}-----\n${lines}\n-----END ${type}-----`;
+    };
+
     const config: DanaConfig = {
       merchantId: process.env.DANA_MERCHANT_ID || '',
       partnerId: process.env.DANA_X_PARTNER_ID || '',
-      privateKey: process.env.DANA_PRIVATE_KEY || '',
-      publicKey: process.env.DANA_PUBLIC_KEY || '',
+      privateKey: wrapPem(process.env.DANA_PRIVATE_KEY || '', 'PRIVATE KEY'),
+      publicKey: wrapPem(process.env.DANA_PUBLIC_KEY || '', 'PUBLIC KEY'),
       origin: process.env.DANA_ORIGIN || '',
       environment: process.env.DANA_ENVIRONMENT || 'sandbox',
       externalStoreId: process.env.DANA_EXTERNAL_STORE_ID || ''
