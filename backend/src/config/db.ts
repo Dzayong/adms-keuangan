@@ -1,96 +1,34 @@
-import initSqlJs, { Database } from 'sql.js';
+import mysql from 'mysql2/promise';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import dotenv from 'dotenv';
-import path from 'path';
 
-// Pastikan dotenv membaca .env di root
-dotenv.config({ path: path.join(process.cwd(), '../.env') });
+let pool: mysql.Pool | null = null;
 
-let db: Database | null = null;
-let poolWrapper: any = null;
+export async function getDb(): Promise<mysql.Pool> {
+  if (pool) return pool;
 
-export async function getDb(): Promise<any> {
-  if (poolWrapper) return poolWrapper;
+  pool = mysql.createPool({
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'adms_qris',
+    waitForConnections: true,
+    connectionLimit: 10,
+    multipleStatements: true,
+  });
 
-  const SQL = await initSqlJs();
-  db = new SQL.Database(); // In-memory database
-
-  poolWrapper = new PoolWrapper();
   await initSchemaAndSeed();
-  return poolWrapper;
+  return pool;
 }
 
-export function saveDb() {
-  // no-op for in-memory dummy
-}
-
-class PoolWrapper {
-  private formatSql(sql: string) {
-    let s = sql.replace(/AUTO_INCREMENT/gi, 'AUTOINCREMENT');
-    s = s.replace(/ON UPDATE CURRENT_TIMESTAMP/gi, '');
-    s = s.replace(/INSERT IGNORE INTO/gi, 'INSERT OR IGNORE INTO');
-    return s;
-  }
-
-  async query(sql: string, params: any[] = []) {
-    sql = this.formatSql(sql);
-    if (!db) throw new Error("DB not init");
-    
-    try {
-      if (params.length === 0 && sql.includes(';')) {
-         db.exec(sql);
-         return [[]];
-      }
-      const stmt = db.prepare(sql);
-      stmt.bind(params);
-      const rows = [];
-      while(stmt.step()) {
-        rows.push(stmt.getAsObject());
-      }
-      stmt.free();
-      return [rows];
-    } catch(e) {
-      console.error("SQL Error in query:", sql, e);
-      throw e;
-    }
-  }
-
-  async execute(sql: string, params: any[] = []) {
-    sql = this.formatSql(sql);
-    if (!db) throw new Error("DB not init");
-    
-    try {
-      db.run(sql, params);
-      const res = db.exec("SELECT last_insert_rowid() as id, changes() as c");
-      const insertId = res[0]?.values[0][0] || 0;
-      const affectedRows = res[0]?.values[0][1] || 0;
-      return [{ insertId, affectedRows }];
-    } catch(e) {
-      console.error("SQL Error in execute:", sql, e);
-      throw e;
-    }
-  }
-
-  async getConnection() {
-    return {
-      beginTransaction: async () => { db?.exec("BEGIN TRANSACTION"); },
-      commit: async () => { db?.exec("COMMIT"); },
-      rollback: async () => { db?.exec("ROLLBACK"); },
-      execute: this.execute.bind(this),
-      release: () => {}
-    };
-  }
-}
+export function saveDb() {}
 
 async function initSchemaAndSeed() {
-  const pool = poolWrapper;
   if (!pool) return;
-  
-  // Create tables
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id INT PRIMARY KEY AUTO_INCREMENT,
       name VARCHAR(255) NOT NULL,
       email VARCHAR(255) NOT NULL UNIQUE,
       password_hash VARCHAR(255) NOT NULL,
@@ -101,11 +39,11 @@ async function initSchemaAndSeed() {
       api_key_id INT DEFAULT NULL,
       webhook_url VARCHAR(255) DEFAULT NULL,
       created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     );
 
     CREATE TABLE IF NOT EXISTS transactions (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id INT PRIMARY KEY AUTO_INCREMENT,
       invoice_number VARCHAR(255) NOT NULL UNIQUE,
       customer_name VARCHAR(255) NOT NULL,
       customer_phone VARCHAR(50) DEFAULT '',
@@ -119,12 +57,12 @@ async function initSchemaAndSeed() {
       callback_url TEXT DEFAULT NULL,
       source_system VARCHAR(100) DEFAULT NULL,
       created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (created_by) REFERENCES users(id)
     );
 
     CREATE TABLE IF NOT EXISTS login_logs (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id INT PRIMARY KEY AUTO_INCREMENT,
       user_id INT NOT NULL,
       user_name VARCHAR(255) NOT NULL,
       ip_address VARCHAR(255),
@@ -134,27 +72,27 @@ async function initSchemaAndSeed() {
     );
 
     CREATE TABLE IF NOT EXISTS payment_providers (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id INT PRIMARY KEY AUTO_INCREMENT,
       name VARCHAR(255) NOT NULL,
       code VARCHAR(255) NOT NULL UNIQUE,
       environment VARCHAR(50) NOT NULL DEFAULT 'sandbox',
       is_active TINYINT(1) NOT NULL DEFAULT 1,
       created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     );
 
     CREATE TABLE IF NOT EXISTS internal_merchants (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id INT PRIMARY KEY AUTO_INCREMENT,
       name VARCHAR(255) NOT NULL,
       nmid VARCHAR(255) UNIQUE NOT NULL,
       qris_image_path TEXT NOT NULL,
       is_active TINYINT(1) NOT NULL DEFAULT 1,
       created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     );
 
     CREATE TABLE IF NOT EXISTS payments (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id INT PRIMARY KEY AUTO_INCREMENT,
       transaction_id INT NOT NULL,
       provider_id INT NOT NULL,
       provider_reference VARCHAR(255) NOT NULL,
@@ -164,13 +102,13 @@ async function initSchemaAndSeed() {
       paid_at DATETIME,
       proof_image_path TEXT DEFAULT NULL,
       created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (transaction_id) REFERENCES transactions(id),
       FOREIGN KEY (provider_id) REFERENCES payment_providers(id)
     );
 
     CREATE TABLE IF NOT EXISTS payment_logs (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id INT PRIMARY KEY AUTO_INCREMENT,
       payment_id INT NOT NULL,
       event_type VARCHAR(255) NOT NULL,
       reference VARCHAR(255) NOT NULL,
@@ -180,14 +118,14 @@ async function initSchemaAndSeed() {
     );
 
     CREATE TABLE IF NOT EXISTS settings (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id INT PRIMARY KEY AUTO_INCREMENT,
       \`key\` VARCHAR(255) NOT NULL UNIQUE,
       value TEXT NOT NULL,
-      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     );
 
     CREATE TABLE IF NOT EXISTS api_keys (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id INT PRIMARY KEY AUTO_INCREMENT,
       name VARCHAR(255) NOT NULL,
       key_hash VARCHAR(255) NOT NULL,
       permissions TEXT NOT NULL,
@@ -198,7 +136,7 @@ async function initSchemaAndSeed() {
     );
 
     CREATE TABLE IF NOT EXISTS api_logs (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id INT PRIMARY KEY AUTO_INCREMENT,
       api_key_id INT,
       source_system VARCHAR(100),
       method VARCHAR(10) NOT NULL,
@@ -210,11 +148,8 @@ async function initSchemaAndSeed() {
     );
   `);
 
-  // Seed Users if empty
-  const [userRows]: any = await pool.query("SELECT COUNT(*) as count FROM users");
-  const count = userRows[0].count;
-
-  if (count === 0) {
+  const [[{ count: userCount }]]: any = await pool.query("SELECT COUNT(*) as count FROM users");
+  if (userCount === 0) {
     const adminPassHash = bcrypt.hashSync('Admin123!', 10);
     const opPassHash = bcrypt.hashSync('Operator123!', 10);
     const itPassHash = bcrypt.hashSync('adms123!', 10);
@@ -233,9 +168,8 @@ async function initSchemaAndSeed() {
     );
   }
 
-  // Ensure IT account always exists even on existing DB
-  const [itRows]: any = await pool.query("SELECT COUNT(*) as count FROM users WHERE email = 'it@adms.gateway'");
-  if (itRows[0].count === 0) {
+  const [[{ count: itCount }]]: any = await pool.query("SELECT COUNT(*) as count FROM users WHERE email = 'it@adms.gateway'");
+  if (itCount === 0) {
     const itPassHash = bcrypt.hashSync('adms123!', 10);
     await pool.execute(
       `INSERT INTO users (name, email, password_hash, role, is_active) VALUES (?, ?, ?, 'IT', 1)`,
@@ -244,29 +178,26 @@ async function initSchemaAndSeed() {
     console.log('[ADMS] IT account created: it@adms.gateway / adms123!');
   }
 
-  // Seed Providers if empty
-  const [providerRows]: any = await pool.query("SELECT COUNT(*) as count FROM payment_providers");
-  if (providerRows[0].count === 0) {
+  const [[{ count: providerCount }]]: any = await pool.query("SELECT COUNT(*) as count FROM payment_providers");
+  if (providerCount === 0) {
     await pool.query(
-      `INSERT INTO payment_providers (id, name, code, environment, is_active) VALUES 
+      `INSERT INTO payment_providers (id, name, code, environment, is_active) VALUES
       (1, 'Mock QRIS', 'mock', 'sandbox', 1),
       (2, 'DANA QRIS (Placeholder)', 'dana', 'sandbox', 0),
       (3, 'Internal Office QRIS', 'internal_qris', 'sandbox', 1)`
     );
   }
 
-  // Seed Internal Merchants if empty
-  const [merchantRows]: any = await pool.query("SELECT COUNT(*) as count FROM internal_merchants");
-  if (merchantRows[0].count === 0) {
+  const [[{ count: merchantCount }]]: any = await pool.query("SELECT COUNT(*) as count FROM internal_merchants");
+  if (merchantCount === 0) {
     await pool.execute(
       'INSERT INTO internal_merchants (name, nmid, qris_image_path) VALUES (?, ?, ?)',
       ['Toko Default', 'ID102030405060708', '/qris-default.jpg']
     );
   }
 
-  // Seed API Keys if empty
-  const [apiKeyRows]: any = await pool.query("SELECT COUNT(*) as count FROM api_keys");
-  if (apiKeyRows[0].count === 0) {
+  const [[{ count: apiKeyCount }]]: any = await pool.query("SELECT COUNT(*) as count FROM api_keys");
+  if (apiKeyCount === 0) {
     const randomSecret = crypto.randomBytes(32).toString('hex');
     const plaintextKey = `adms_sk_test_${randomSecret}`;
     const keyHash = bcrypt.hashSync(plaintextKey, 10);
@@ -284,9 +215,8 @@ async function initSchemaAndSeed() {
     console.log('=============================================================\n');
   }
 
-  // Seed Settings if empty
-  const [settingRows]: any = await pool.query("SELECT COUNT(*) as count FROM settings");
-  if (settingRows[0].count === 0) {
+  const [[{ count: settingCount }]]: any = await pool.query("SELECT COUNT(*) as count FROM settings");
+  if (settingCount === 0) {
     const defaultSettings = [
       ['company_name', 'PT ADMS Solusi Digital'],
       ['company_email', 'contact@admsqris.local'],
@@ -300,38 +230,8 @@ async function initSchemaAndSeed() {
     ];
 
     for (const [k, v] of defaultSettings) {
-      await pool.execute(`INSERT OR IGNORE INTO settings (\`key\`, value) VALUES (?, ?)`, [k, v]);
+      await pool.execute('INSERT IGNORE INTO settings (`key`, value) VALUES (?, ?)', [k, v]);
     }
-  }
-
-  // Seed sample transactions if none exist
-  const [txRows]: any = await pool.query("SELECT COUNT(*) as count FROM transactions");
-  if (txRows[0].count === 0) {
-    const now = new Date();
-    const formattedNow = now.toISOString().replace('T', ' ').substring(0, 19);
-    const expiredAt = new Date(now.getTime() + 15 * 60000).toISOString().replace('T', ' ').substring(0, 19);
-
-    await pool.execute(`
-      INSERT INTO transactions (invoice_number, customer_name, customer_phone, amount, description, status, expired_at, created_by, created_at)
-      VALUES (?, ?, ?, ?, ?, 'PAID', ?, 1, ?)
-    `, ['INV-20260810-000001', 'Kantin Utama ADMS', '081234567890', 150000, 'Pembayaran Catering Meeting', expiredAt, formattedNow]);
-
-    await pool.execute(`
-      INSERT INTO transactions (invoice_number, customer_name, customer_phone, amount, description, status, expired_at, created_by, created_at)
-      VALUES (?, ?, ?, ?, ?, 'PENDING', ?, 2, ?)
-    `, ['INV-20260810-000002', 'Budi Santoso - Divisi IT', '081987654321', 75000, 'Pembelian Supplies Kantor', expiredAt, formattedNow]);
-
-    // Create corresponding payment for transaction 1
-    await pool.execute(`
-      INSERT INTO payments (transaction_id, provider_id, provider_reference, qr_content, payment_method, status, paid_at)
-      VALUES (1, 1, 'MOCK-REF-000001', '00020101021226670016COM.DANA.WWW0118936009110000000001021551234567890123452045812530336054061500005802ID5918ADMS QRIS INTERNAL6012JAKARTA SEL6304A1B2', 'QRIS', 'PAID', ?)
-    `, [formattedNow]);
-
-    // Create corresponding payment for transaction 2
-    await pool.execute(`
-      INSERT INTO payments (transaction_id, provider_id, provider_reference, qr_content, payment_method, status)
-      VALUES (2, 1, 'MOCK-REF-000002', '00020101021226670016COM.DANA.WWW011893600911000000000102155123456789012345204581253033605403750005802ID5918ADMS QRIS INTERNAL6012JAKARTA SEL6304C3D4', 'QRIS', 'PENDING')
-    `, []);
   }
 }
 
@@ -349,26 +249,25 @@ export async function getSql<T>(sql: string, params: any[] = []): Promise<T | nu
 export async function runSql(sql: string, params: any[] = []): Promise<{ lastInsertRowid: number; changes: number }> {
   const p = await getDb();
   const [result]: any = await p.execute(sql, params);
-  
-  const lastInsertRowid = result.insertId || 0;
-  const changes = result.affectedRows || 0;
-  
-  return { lastInsertRowid, changes };
+  return {
+    lastInsertRowid: result.insertId || 0,
+    changes: result.affectedRows || 0,
+  };
 }
 
 export async function runTransaction(queries: { sql: string; params?: any[] }[]): Promise<void> {
   const p = await getDb();
-  const connection = await p.getConnection();
+  const conn = await p.getConnection();
   try {
-    await connection.beginTransaction();
-    for (const query of queries) {
-      await connection.execute(query.sql, query.params || []);
+    await conn.beginTransaction();
+    for (const q of queries) {
+      await conn.execute(q.sql, q.params || []);
     }
-    await connection.commit();
-  } catch (error) {
-    await connection.rollback();
-    throw error;
+    await conn.commit();
+  } catch (err) {
+    await conn.rollback();
+    throw err;
   } finally {
-    connection.release();
+    conn.release();
   }
 }
