@@ -211,16 +211,16 @@ export class DanaPaymentProvider implements PaymentProvider {
     // Debug: log full error to diagnose DANA auth issues
     console.error('[DANA SDK RAW ERROR]', JSON.stringify({
       message: error.message,
-      status: error.response?.status,
-      data: error.response?.data,
-      headers: error.response?.headers,
+      status: error.status ?? error.response?.status,
+      rawResponse: error.rawResponse ?? error.response?.data,
+      errorMessage: error.errorMessage,
     }, null, 2));
 
-    const status = error.response?.status;
-    const data = error.response?.data;
+    const status = error.status ?? error.response?.status;
+    const data = error.rawResponse ?? error.response?.data;
 
     if (status === 401 || status === 403) {
-      throw new ProviderError('dana', 'AUTHENTICATION_ERROR: Invalid DANA credentials', 401);
+      throw new ProviderError('dana', `AUTHENTICATION_ERROR: ${JSON.stringify(data) || 'Invalid DANA credentials'}`, 401);
     }
 
     if (status === 400 || status === 422 || error.name === 'ValidationError') {
