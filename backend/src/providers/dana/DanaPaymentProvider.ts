@@ -45,10 +45,6 @@ export class DanaPaymentProvider implements PaymentProvider {
   }
 
   private validateConfig() {
-    if (this.config.environment !== 'sandbox') {
-      throw new ProviderError(this.code, 'Only sandbox environment is supported in Phase 3.3', 400);
-    }
-
     if (!this.config.partnerId || !this.config.privateKey || !this.config.merchantId) {
       throw new ProviderError(this.code, 'DANA Provider SNAP credentials not configured', 500);
     }
@@ -208,23 +204,16 @@ export class DanaPaymentProvider implements PaymentProvider {
       throw new ProviderError('dana', 'DANA Provider network timeout', 504);
     }
 
-    // Debug: log full error to diagnose DANA auth issues
-    console.error('[DANA SDK RAW ERROR]', JSON.stringify({
-      message: error.message,
-      status: error.status ?? error.response?.status,
-      rawResponse: error.rawResponse ?? error.response?.data,
-      errorMessage: error.errorMessage,
-    }, null, 2));
-
     const status = error.status ?? error.response?.status;
     const data = error.rawResponse ?? error.response?.data;
+    const msg = data?.responseMessage || data?.message || error.message || '';
 
     if (status === 401 || status === 403) {
-      throw new ProviderError('dana', `AUTHENTICATION_ERROR: ${JSON.stringify(data) || 'Invalid DANA credentials'}`, 401);
+      throw new ProviderError('dana', `AUTHENTICATION_ERROR: ${msg}`, 401);
     }
 
     if (status === 400 || status === 422 || error.name === 'ValidationError') {
-      throw new ProviderError('dana', `VALIDATION_ERROR: ${data?.message || error.message || 'Invalid request payload'}`, 400);
+      throw new ProviderError('dana', `VALIDATION_ERROR: ${msg}`, 400);
     }
 
     if (status === 429) {
@@ -235,6 +224,6 @@ export class DanaPaymentProvider implements PaymentProvider {
       throw new ProviderError('dana', 'PROVIDER_UNAVAILABLE: DANA API is currently unavailable', 502);
     }
 
-    throw new ProviderError('dana', `UNKNOWN_PROVIDER_ERROR: An unknown error occurred with DANA API. ${error.message || ''}`, 500);
+    throw new ProviderError('dana', `UNKNOWN_PROVIDER_ERROR: ${msg}`, 500);
   }
 }
