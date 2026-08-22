@@ -14,6 +14,7 @@ import crypto from 'crypto';
 export interface DanaConfig {
   merchantId: string;
   partnerId: string;
+  clientSecret: string;
   privateKey: string;
   publicKey: string;
   origin: string;
@@ -35,6 +36,7 @@ export class DanaPaymentProvider implements PaymentProvider {
     // Explicit environment mapping to SDK constructor
     this.danaClient = new Dana({
       partnerId: this.config.partnerId,
+      clientSecret: this.config.clientSecret,
       privateKey: this.config.privateKey,
       origin: this.config.origin,
       env: this.config.environment

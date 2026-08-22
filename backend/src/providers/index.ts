@@ -22,6 +22,7 @@ export async function getPaymentProviderByCode(code: string): Promise<PaymentPro
     const config: DanaConfig = {
       merchantId: process.env.DANA_MERCHANT_ID || '',
       partnerId: process.env.DANA_X_PARTNER_ID || '',
+      clientSecret: process.env.DANA_CLIENT_SECRET || '',
       privateKey: wrapPem(process.env.DANA_PRIVATE_KEY || '', 'PRIVATE KEY'),
       publicKey: wrapPem(process.env.DANA_PUBLIC_KEY || '', 'PUBLIC KEY'),
       origin: process.env.DANA_ORIGIN || '',
